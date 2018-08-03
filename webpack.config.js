@@ -1,5 +1,6 @@
-/* global __dirname */
-var webpack = require("webpack");
+// we just use "tsc" command
+
+/*var webpack = require("webpack");
 
 module.exports = {
 	mode: "none",
@@ -23,11 +24,13 @@ module.exports = {
 		//"react": "React",
 		"react": "commonjs react",
 		"react-dom": "commonjs react-dom",
+		"js-vextensions": "commonjs js-vextensions",
 		"react-vextensions": "commonjs react-vextensions",
-    },
+		"webpack-runtime-require": "commonjs webpack-runtime-require",
+	},
     /*module: {
         noParse: ["react"]
-    },*/
+    },*#/
     module: {
 		rules: [
 			{
@@ -45,4 +48,4 @@ module.exports = {
 		new webpack.NoEmitOnErrorsPlugin(),
 		//new webpack.IgnorePlugin(/react/),
 	]
-};
+};*/

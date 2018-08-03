@@ -3,7 +3,7 @@
 		//"rootDir": ".", // technically, there's an "index.ts" file in root; we ignore because it's only needed for typescript type-resolving
 		"rootDir": "Source",
 		//"baseUrl": "Source", // keep commented; this way, we remember to always use relative paths (needed for in-node-modules typescript type-resolving)
-		//"outDir": "dist",
+		"outDir": "dist",
 		/*"module": "system", // needed only for outFile prop, which is needed only for dist.d.ts file
 		"outFile": "dist/dist.js",*/
 

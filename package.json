@@ -2,9 +2,10 @@
 	"name": "vwebapp-framework",
 	"version": "0.1.0",
 	"description": "The framework code for my web-apps, collected into a library for easy reuse.",
+	"module": "Source/index.ts",
 	"scripts": {
 		"dev": "webpack --config webpack.config.js --inline --colors --progress --watch",
-		"dist": "babel src/index.jsx -u -o dist/index.js --stage 1 --presets react"
+		"dist": "babel Source/index.jsx -u -o dist/index.js --stage 1 --presets react"
 	},
 	"repository": {
 		"type": "git",
