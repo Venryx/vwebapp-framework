@@ -2,23 +2,26 @@ import "js-vextensions";
 import {ParseModuleData, Require, GetModuleNameFromPath} from "webpack-runtime-require";
 import React from "react/lib/ReactWithAddons";
 
-export function SetUpRR() {
+export function SetUpRR(addFromVendorDLL = true) {
 	setTimeout(()=> {
 		ParseModuleData(true);
 		G({R: Require});
 		let RR = {};
 
 		let moduleEntries = (Require as any).Props();
+		
 		// add modules from dll-bundle as well
-		for (let dllEntry of Require["dll_reference vendor"].c.Props()) {
-			let moduleName = GetModuleNameFromPath(dllEntry.name);
-			Require[moduleName] = dllEntry.value.exports;
-			moduleEntries.push({name: moduleName, value: dllEntry.value.exports});
+		if (addFromVendorDLL) {
+			for (let dllEntry of Require["dll_reference vendor"].c.Props()) {
+				let moduleName = GetModuleNameFromPath(dllEntry.name);
+				Require[moduleName] = dllEntry.value.exports;
+				moduleEntries.push({name: moduleName, value: dllEntry.value.exports});
+			}
 		}
 		
 		for (let {name: moduleName, value: moduleExports} of moduleEntries) {
-			if (moduleExports == null) continue;
-			//if (moduleExports == null || (IsString(moduleExports) && moduleExports == "[failed to retrieve module exports]")) continue;
+			//if (moduleExports == null) continue;
+			if (moduleExports == null || (IsString(moduleExports) && moduleExports == "[failed to retrieve module exports]")) continue;
 
 			for (let key in moduleExports) {
 				let finalKey = key;

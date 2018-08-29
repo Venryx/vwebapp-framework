@@ -2,9 +2,11 @@
 	"name": "vwebapp-framework",
 	"version": "0.1.0",
 	"description": "The framework code for my web-apps, collected into a library for easy reuse.",
-	"module": "Source/index.ts",
+	"module_disabled": "Source/index.ts",
+	"main_disabled": "dist/index.js",
 	"scripts": {
-		"dev": "webpack --config webpack.config.js --inline --colors --progress --watch",
+		"dev_old": "webpack --config webpack.config.js --inline --colors --progress --watch",
+		"dev": "tsc",
 		"dist": "babel Source/index.jsx -u -o dist/index.js --stage 1 --presets react"
 	},
 	"repository": {

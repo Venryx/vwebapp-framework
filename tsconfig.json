@@ -14,14 +14,18 @@
 		//"maxNodeModulesJsDepth": 1,
 
 		// compiler options
-		"target": "es2015",
+		//"target": "es2015",
+		// we are requiring the tsc output-files directly, so we need them to be es5 (webpack doesn't compile node_modules subfiles apparently)
+		"target": "es5",
+		"lib": ["dom", "es6", "dom.iterable", "scripthost"], // default libs for {target:es6/2015}
+
 		//"allowJs": true,
 		"jsx": "react",
 		"noImplicitAny": false,
 		"experimentalDecorators": true,
 		"allowSyntheticDefaultImports": true,
 		"declaration": true,
-		"declarationDir": "."
+		"declarationDir": "dist"
 	},
 	"files": ["Source/index.ts"],
 	"include": [
