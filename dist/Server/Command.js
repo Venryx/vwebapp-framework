@@ -35,16 +35,17 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-// dynamic imports
-var u; // from "updeep";
-var GetUserID; // from "Store/firebase/users";
-var DBPath, GetPathParts, ApplyDBUpdates, RemoveHelpers; // from "../Frame/Database/DatabaseHelpers";
-var HandleError; // from "../Frame/General/Errors";
-function Command_Init(imports) {
-    //({MaybeLog} = imports);
-    (u = imports.u, GetUserID = imports.GetUserID, DBPath = imports.DBPath, GetPathParts = imports.GetPathParts, ApplyDBUpdates = imports.ApplyDBUpdates, RemoveHelpers = imports.RemoveHelpers, HandleError = imports.HandleError);
+var Imports = /** @class */ (function () {
+    function Imports() {
+    }
+    return Imports;
+}());
+exports.Imports = Imports;
+var i;
+function VInit_Command(imports) {
+    i = imports;
 }
-exports.Command_Init = Command_Init;
+exports.VInit_Command = VInit_Command;
 // content
 // ==========
 var CommandUserInfo = /** @class */ (function () {
@@ -73,7 +74,7 @@ function OnCurrentCommandFinished() {
 }
 var Command = /** @class */ (function () {
     function Command(payload) {
-        this.userInfo = { id: GetUserID() }; // temp
+        this.userInfo = { id: i.GetUserID() }; // temp
         this.type = this.constructor.name;
         this.payload = payload;
         //this.Extend(payload);
@@ -99,11 +100,11 @@ var Command = /** @class */ (function () {
                         return [3 /*break*/, 0];
                     case 2:
                         currentCommandRun_listeners = [];
-                        MaybeLog(function (a) { return a.commands; }, function () { return "Running command. @type:" + _this.constructor.name + " @payload(" + ToJSON(_this.payload, function (k, v) { return v === undefined ? null : v; }) + ")"; });
+                        i.MaybeLog(function (a) { return a.commands; }, function () { return "Running command. @type:" + _this.constructor.name + " @payload(" + ToJSON(_this.payload, function (k, v) { return v === undefined ? null : v; }) + ")"; });
                         _a.label = 3;
                     case 3:
                         _a.trys.push([3, , 7, 8]);
-                        RemoveHelpers(this.payload); // have this run locally, before sending, to save on bandwidth
+                        i.RemoveHelpers(this.payload); // have this run locally, before sending, to save on bandwidth
                         this.Validate_Early();
                         return [4 /*yield*/, this.Prepare()];
                     case 4:
@@ -115,13 +116,13 @@ var Command = /** @class */ (function () {
                         //FixDBUpdates(dbUpdates);
                         //await store.firebase.helpers.DBRef().update(dbUpdates);
                         //await (store as any).firestore.update(dbUpdates);
-                        return [4 /*yield*/, ApplyDBUpdates(DBPath(), dbUpdates)];
+                        return [4 /*yield*/, i.ApplyDBUpdates(null, dbUpdates)];
                     case 6:
                         //FixDBUpdates(dbUpdates);
                         //await store.firebase.helpers.DBRef().update(dbUpdates);
                         //await (store as any).firestore.update(dbUpdates);
                         _a.sent();
-                        MaybeLog(function (a) { return a.commands; }, function () { return "Finishing command. @type:" + _this.constructor.name + " @payload(" + ToJSON(_this.payload, function (k, v) { return v === undefined ? null : v; }) + ")"; });
+                        i.MaybeLog(function (a) { return a.commands; }, function () { return "Finishing command. @type:" + _this.constructor.name + " @payload(" + ToJSON(_this.payload, function (k, v) { return v === undefined ? null : v; }) + ")"; });
                         return [3 /*break*/, 8];
                     case 7:
                         OnCurrentCommandFinished();
@@ -161,7 +162,7 @@ function MergeDBUpdates(baseUpdatesMap, updatesToMergeMap) {
             var updateToMerge_relativePath = updateToMerge.path.substr((update.path + "/").length);
             //if (updateToMerge.data) {
             // assume that the update-to-merge has priority, so have it completely overwrite the data at its path
-            update.data = u.updateIn(updateToMerge_relativePath.replace(/\//g, "."), u.constant(updateToMerge.data), update.data);
+            update.data = i.u.updateIn(updateToMerge_relativePath.replace(/\//g, "."), i.u.constant(updateToMerge.data), update.data);
             /*} else {
                 update.data = null;
             }*/
@@ -183,21 +184,4 @@ function MergeDBUpdates(baseUpdatesMap, updatesToMergeMap) {
     return finalUpdatesMap;
 }
 exports.MergeDBUpdates = MergeDBUpdates;
-// template
-// ==========
-/*
-    Validate_Early() {
-    }
-
-    async Prepare() {
-    }
-    async Validate() {
-    }
-
-    GetDBUpdates() {
-        let updates = {
-        };
-        return updates;
-    }
-*/ 
 //# sourceMappingURL=Command.js.map

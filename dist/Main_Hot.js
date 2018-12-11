@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 require("js-vextensions");
 var webpack_runtime_require_1 = require("webpack-runtime-require");
-var ReactWithAddons_1 = require("react/lib/ReactWithAddons");
+var React = require("react");
 function SetUpRR(addFromVendorDLL) {
     if (addFromVendorDLL === void 0) { addFromVendorDLL = true; }
     setTimeout(function () {
@@ -44,8 +44,8 @@ function SetUpRR(addFromVendorDLL) {
 exports.SetUpRR = SetUpRR;
 // patch React.createElement to do early prop validation
 // ==========
-var createElement_old = ReactWithAddons_1.default.createElement;
-ReactWithAddons_1.default.createElement = function (componentClass, props) {
+var createElement_old = React.createElement;
+React["createElement"] = function (componentClass, props) {
     if (componentClass.ValidateProps) {
         componentClass.ValidateProps(props);
     }

@@ -1,4 +1,14 @@
-export declare function Command_Init(imports: any): void;
+export declare class Imports {
+    MaybeLog: any;
+    u: any;
+    GetUserID: any;
+    DBPath: any;
+    GetPathParts: any;
+    ApplyDBUpdates: any;
+    RemoveHelpers: any;
+    HandleError: any;
+}
+export declare function VInit_Command(imports: Imports): void;
 export declare class CommandUserInfo {
     id: string;
 }

@@ -1,6 +1,6 @@
 import "js-vextensions";
 import {ParseModuleData, Require, GetModuleNameFromPath} from "webpack-runtime-require";
-import React from "react/lib/ReactWithAddons";
+import * as React from "react";
 
 export function SetUpRR(addFromVendorDLL = true) {
 	setTimeout(()=> {
@@ -44,7 +44,7 @@ export function SetUpRR(addFromVendorDLL = true) {
 // ==========
 
 let createElement_old = React.createElement;
-React.createElement = function(componentClass, props) {
+React["createElement" as any] = function(componentClass, props) {
 	if (componentClass.ValidateProps) {
 		componentClass.ValidateProps(props);
 	}
