@@ -1,0 +1,1 @@
+{"version":3,"file":"UserAgent.js","sourceRoot":"","sources":["../../../Source/Utils/General/UserAgent.ts"],"names":[],"mappings":";;AAAA,6CAAsC;AAEtC,8GAA8G;AACjG,QAAA,iBAAiB,GAAG,CAAC,QAAQ,EAAE,SAAS,EAAE,QAAQ,EAAE,gBAAgB,EAAE,eAAe,CAAC,CAAC;AAkBpG,IAAI,MAAM,GAAG,IAAI,uBAAQ,EAAE,CAAC;AAC5B;IACC,OAAO,MAAM,CAAC,UAAU,EAAE,CAAC;AAC5B,CAAC;AAFD,gCAEC;AACD;;;;;GAKG"}

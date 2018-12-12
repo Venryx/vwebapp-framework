@@ -1,41 +1,38 @@
 {
-    "compilerOptions": {
-		//"rootDir": ".", // technically, there's an "index.ts" file in root; we ignore because it's only needed for typescript type-resolving
-		"rootDir": "Source",
-		//"baseUrl": "Source", // keep commented; this way, we remember to always use relative paths (needed for in-node-modules typescript type-resolving)
-		"outDir": "dist",
-		/*"module": "system", // needed only for outFile prop, which is needed only for dist.d.ts file
-		"outFile": "dist/dist.js",*/
+	"compilerOptions": {
+	  //"rootDir": ".", // technically, there's an "index.ts" file in root; we ignore because it's only needed for typescript type-resolving
+	  "rootDir": "Source",
+	  //"baseUrl": "Source", // keep commented; this way, we remember to always use relative paths (needed for in-node-modules typescript type-resolving)
+	  //"outDir": "Dist",
+	  /*"module": "system", // needed only for outFile prop, which is needed only for dist.d.ts file
+	  "outFile": "Dist/dist.js",*/
+	  //"module": "esnext",
 
-		// general
-		"sourceMap": true,
-		"watch": true,
-		"moduleResolution": "node",
-		//"maxNodeModulesJsDepth": 1,
+	  // general
+	  "sourceMap": true,
+	  "watch": true,
+	  "moduleResolution": "node",
+	  //"maxNodeModulesJsDepth": 1,
 
-		// compiler options
-		//"target": "es2015",
-		// we are requiring the tsc output-files directly, so we need them to be es5 (webpack doesn't compile node_modules subfiles apparently)
-		"target": "es5",
-		"lib": ["dom", "es6", "dom.iterable", "scripthost"], // default libs for {target:es6/2015}
-
-		//"allowJs": true,
-		"jsx": "react",
-		"noImplicitAny": false,
-		"experimentalDecorators": true,
-		"allowSyntheticDefaultImports": true,
-		"declaration": true,
-		"declarationDir": "dist"
-	},
-	"files": ["Source/index.ts"],
-	"include": [
-		"Typings/**/*.d.ts",
-		"Source/**/*.ts",
-		"Source/**/*.tsx"
-	],
-	"exclude": [
-		"dist",
-		"node_modules"
-	],
-	"compileOnSave": true
+	  // compiler options
+	  "target": "es2015",
+	  //"allowJs": true,
+	  "jsx": "react",
+	  "noImplicitAny": false,
+	  "experimentalDecorators": true,
+	  "allowSyntheticDefaultImports": true,
+	  "declaration": true,
+	  "declarationDir": "."
+  },
+  //"files": ["Source/index.ts"],
+  "include": [
+	  "Typings/**/*.d.ts",
+	  "Source/**/*.ts",
+	  "Source/**/*.tsx"
+  ],
+  "exclude": [
+	  "Dist",
+	  "node_modules"
+  ],
+  "compileOnSave": true
 }

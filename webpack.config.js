@@ -1,3 +1,5 @@
+// this file is not currently in use; instead, users of this package just import files directly from the Source folder
+
 var webpack = require("webpack");
 
 module.exports = {

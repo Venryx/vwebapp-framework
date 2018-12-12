@@ -1,7 +1,7 @@
 export class Imports {
 	dbVersion; env_short; __DEV__; State; firestoreDB; g; store; // globals
 	firebase; // from "firebase";
-	SplitStringBySlash_Cached; // from "Frame/Database/StringSplitCache";
+	SplitStringBySlash_Cached; // from "Utils/Database/StringSplitCache";
 	DeepGet; DeepSet; GetTreeNodesInObjTree; // from "js-vextensions";
 	ShallowChanged; // from "react-vextensions";
 	ClearRequestedPaths; GetRequestedPaths; RequestPath; SetListeners; UnsetListeners; // from "./FirebaseConnect";
@@ -583,3 +583,26 @@ function isPlainObject(input) {
 		Object.getPrototypeOf(input) === Object.prototype
 	);
 }*/
+//export interface FirebaseApp extends firebase.app.App {
+export type FirebaseApp = firebase.app.App & {
+	// added by react-redux-firebase
+	_,
+	helpers: {
+		ref(path: string), //: firebase.DatabaseReference,
+		set,
+		uniqueSet,
+		push,
+		remove,
+		update,
+		login(options: {provider: "email?" | "google" | "facebook" | "twitter" | "github" | "anonymous?" | "?", type: "popup" | "?"}),
+		logout(),
+		uploadFile,
+		uploadFiles,
+		deleteFile,
+		createUser,
+		resetPassword,
+		watchEvent,
+		unWatchEvent,
+		storage(), //: firebase.FirebaseStorage,
+	},
+};
