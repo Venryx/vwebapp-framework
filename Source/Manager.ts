@@ -1,13 +1,11 @@
-import { Log } from "./Utils/General/Logging";
 import { VURL } from "js-vextensions";
-import { routerForBrowser } from "redux-little-router";
-import { routerReducer } from "./Utils/Store/CreateStore";
 
 export type RootState = any; // temp
 
 export type Omit<T, K extends keyof T> = Pick<T, ({ [P in keyof T]: P } & { [P in K]: never })[keyof T]>;
 export class Manager {
 	GetExtraReducers() {
+		let { routerReducer } = require("./Utils/Store/CreateStore");
 		return {
 			router: routerReducer,
 		};
@@ -16,15 +14,18 @@ export class Manager {
 	/*onPopulated = new Promise((resolve, reject)=>this.onPopulated_resolve = resolve);
 	onPopulated_resolve: Function;*/
 	//Populate(data: Omit<Manager, "onPopulated" | "onPopulated_resolve" | "Populate">) {
-	Populate(data: Omit<Manager, "Populate" | "GetExtraReducers">) {
+	Populate(data: Omit<Manager, "Populate" | "GetExtraReducers" | "store" | "firestoreDB">) {
 		this.Extend(data);
 
 		// set globals
-		G({Log});
+		G({Log: require("./Utils/General/Logging").Log});
 
 		//this.onPopulated_resolve();
 		OnPopulated_listeners.forEach(a=>a());
 	}
+	// shortcuts
+	get store() { return this.GetStore(); }
+	get firestoreDB() { return this.store.firebase.firestore(); }
 
 	env_short: string;
 	devEnv: boolean;
@@ -40,9 +41,8 @@ export class Manager {
 	GetSyncLoadActionsForURL: (url: VURL, directURLChange: boolean)=>any[];
 	GetNewURL: ()=>VURL;
 
-	store: any;
+	GetStore: ()=>any;
 	firebaseConfig: any;
-	firestoreDB: any;
 	MakeRootReducer: ()=>((state, action)=>any);
 
 	globalConnectorPropGetters: {[key: string]: (state: any, props: any)=>any};
@@ -51,6 +51,7 @@ export class Manager {
 	
 	GetAuth: ()=>any;
 	IsAuthValid: (auth)=>boolean;
+	GetUserID: ()=>string;
 }
 export const manager = new Manager();
 

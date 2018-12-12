@@ -1,7 +1,7 @@
 :global {
 	@import "Markdown";
 	//@import "~katex/dist/katex.min.css"; // has issues with fonts atm (trying to load from server from "/node_modules...")
-	@import "~normalize.css/normalize";
+	//@import "~normalize.css/normalize";
 	@import "~react-datetime/css/react-datetime.css";
 	@import "~rc-tooltip/assets/bootstrap.css";
 	@import "~rc-slider/assets/index.css";
@@ -49,7 +49,7 @@
 		margin: 0;
 		padding: 0;
 		height: 100%;
-		background-color: $background;
+		//background-color: $background;
 		font-family: 'Roboto', 'Open Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
 		font-size: 15px;
 		/*@include desktop {

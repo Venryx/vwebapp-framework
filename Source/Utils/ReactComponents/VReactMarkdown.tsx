@@ -56,7 +56,7 @@ export class VReactMarkdown extends BaseComponent
 		}
 
 		return (
-			<div {...containerProps}>
+			<div {...containerProps_final}>
 				<ReactMarkdown {...rest} source={source} renderers={renderers_final}/>
 			</div>
 		);

@@ -1,18 +1,6 @@
-export class Imports {
-	MaybeLog; // globals
-	u; // from "updeep";
-	GetUserID; // from "Store/firebase/users";
-	DBPath; GetPathParts; ApplyDBUpdates; RemoveHelpers; // from "../Utils/Database/DatabaseHelpers";
-	HandleError; // from "../Utils/General/Errors";
-}
-
-var i: Imports;
-export function VInit_Command(imports: Imports) {
-	i = imports;
-}
-
-// content
-// ==========
+import { ApplyDBUpdates, RemoveHelpers } from "../Utils/Database/DatabaseHelpers";
+import { manager } from "../Manager";
+import u from "updeep";
 
 export class CommandUserInfo {
 	id: string;
@@ -34,7 +22,7 @@ function OnCurrentCommandFinished() {
 
 export abstract class Command<Payload> {
 	constructor(payload: Payload) {
-		this.userInfo = {id: i.GetUserID()}; // temp
+		this.userInfo = {id: manager.GetUserID()}; // temp
 		this.type = this.constructor.name;
 		this.payload = payload;
 		//this.Extend(payload);
@@ -64,10 +52,10 @@ export abstract class Command<Payload> {
 		}
 		currentCommandRun_listeners = [];
 
-		i.MaybeLog(a=>a.commands, ()=>`Running command. @type:${this.constructor.name} @payload(${ToJSON(this.payload, (k, v)=>v === undefined ? null : v)})`);
+		//MaybeLog(a=>a.commands, ()=>`Running command. @type:${this.constructor.name} @payload(${ToJSON(this.payload, (k, v)=>v === undefined ? null : v)})`);
 
 		try {
-			i.RemoveHelpers(this.payload); // have this run locally, before sending, to save on bandwidth
+			RemoveHelpers(this.payload); // have this run locally, before sending, to save on bandwidth
 
 			this.Validate_Early();
 			await this.Prepare();
@@ -78,9 +66,9 @@ export abstract class Command<Payload> {
 			//await store.firebase.helpers.DBRef().update(dbUpdates);
 			//await (store as any).firestore.update(dbUpdates);
 
-			await i.ApplyDBUpdates(null, dbUpdates);
+			await ApplyDBUpdates(null, dbUpdates);
 
-			i.MaybeLog(a=>a.commands, ()=>`Finishing command. @type:${this.constructor.name} @payload(${ToJSON(this.payload, (k, v)=>v === undefined ? null : v)})`);
+			//MaybeLog(a=>a.commands, ()=>`Finishing command. @type:${this.constructor.name} @payload(${ToJSON(this.payload, (k, v)=>v === undefined ? null : v)})`);
 		} finally {
 			OnCurrentCommandFinished();
 		}
@@ -131,7 +119,7 @@ export function MergeDBUpdates(baseUpdatesMap, updatesToMergeMap) {
 
 			//if (updateToMerge.data) {
 			// assume that the update-to-merge has priority, so have it completely overwrite the data at its path
-			update.data = i.u.updateIn(updateToMerge_relativePath.replace(/\//g, "."), i.u.constant(updateToMerge.data), update.data);
+			update.data = u.updateIn(updateToMerge_relativePath.replace(/\//g, "."), u.constant(updateToMerge.data), update.data);
 			/*} else {
 				update.data = null;
 			}*/

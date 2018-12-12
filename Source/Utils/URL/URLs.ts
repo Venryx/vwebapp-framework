@@ -1,8 +1,8 @@
 import { GetCurrentURLString, VURL } from "js-vextensions";
 import { manager } from "../../Manager";
+import { State } from "../Store/StoreHelpers";
 
 export function GetCurrentURL(fromAddressBar = false) {
-	let {State} = require("Store");
 	return fromAddressBar ? VURL.Parse(GetCurrentURLString()) : VURL.FromState(State("router"));
 }
 export function NormalizeURL(url: VURL) {
