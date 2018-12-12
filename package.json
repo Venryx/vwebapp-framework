@@ -3,10 +3,9 @@
 	"version": "0.1.0",
 	"description": "The framework code for my web-apps, collected into a library for easy reuse.",
 	"module_disabled": "Source/index.ts",
-	"main_disabled": "dist/index.js",
+	"main": "dist/index.js",
 	"scripts": {
-		"dev_old": "webpack --config webpack.config.js --inline --colors --progress --watch",
-		"dev": "tsc",
+		"dev_disabled": "webpack --config webpack.config.js --inline --colors --progress --watch",
 		"dist": "babel Source/index.jsx -u -o dist/index.js --stage 1 --presets react"
 	},
 	"repository": {

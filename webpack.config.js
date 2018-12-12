@@ -1,6 +1,4 @@
-// we just use "tsc" command
-
-/*var webpack = require("webpack");
+var webpack = require("webpack");
 
 module.exports = {
 	mode: "none",
@@ -48,4 +46,4 @@ module.exports = {
 		new webpack.NoEmitOnErrorsPlugin(),
 		//new webpack.IgnorePlugin(/react/),
 	]
-};*/
+};
