@@ -1,1 +1,6 @@
 /node_modules
+
+# temp, till we figure out how to stop these getting generated (by host project)
+/Server/
+/Utils/
+/Manager.d.ts
