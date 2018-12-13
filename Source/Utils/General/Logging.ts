@@ -79,3 +79,18 @@ export function LogError(message, appendStackTrace = false, logLater = false) {
 	console.error("LogError) " + message);
 	return message;
 }
+
+class LogTypes {
+	// from vwebapp-framework
+	pageViews = false;
+	urlLoads = false;
+	cacheUpdates = false;
+	commands = false;
+}
+export function ShouldLog(shouldLogFunc: (logTypes: LogTypes)=>boolean) {
+	return shouldLogFunc(window["logTypes"] || {});
+}
+export function MaybeLog(shouldLogFunc: (logTypes: LogTypes)=>boolean, logMessageGetter: ()=>string) {
+	if (!ShouldLog(shouldLogFunc)) return;
+	Log(logMessageGetter());
+}

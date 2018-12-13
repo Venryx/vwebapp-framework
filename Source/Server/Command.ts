@@ -1,6 +1,7 @@
-import { ApplyDBUpdates, RemoveHelpers } from "../Utils/Database/DatabaseHelpers";
+import { ApplyDBUpdates, RemoveHelpers, DBPath } from "../Utils/Database/DatabaseHelpers";
 import { manager } from "../Manager";
 import u from "updeep";
+import { MaybeLog } from "../Utils/General/Logging";
 
 export class CommandUserInfo {
 	id: string;
@@ -52,7 +53,7 @@ export abstract class Command<Payload> {
 		}
 		currentCommandRun_listeners = [];
 
-		//MaybeLog(a=>a.commands, ()=>`Running command. @type:${this.constructor.name} @payload(${ToJSON(this.payload, (k, v)=>v === undefined ? null : v)})`);
+		MaybeLog(a=>a.commands, ()=>`Running command. @type:${this.constructor.name} @payload(${ToJSON(this.payload, (k, v)=>v === undefined ? null : v)})`);
 
 		try {
 			RemoveHelpers(this.payload); // have this run locally, before sending, to save on bandwidth
@@ -66,9 +67,9 @@ export abstract class Command<Payload> {
 			//await store.firebase.helpers.DBRef().update(dbUpdates);
 			//await (store as any).firestore.update(dbUpdates);
 
-			await ApplyDBUpdates(null, dbUpdates);
+			await ApplyDBUpdates(DBPath(), dbUpdates);
 
-			//MaybeLog(a=>a.commands, ()=>`Finishing command. @type:${this.constructor.name} @payload(${ToJSON(this.payload, (k, v)=>v === undefined ? null : v)})`);
+			MaybeLog(a=>a.commands, ()=>`Finishing command. @type:${this.constructor.name} @payload(${ToJSON(this.payload, (k, v)=>v === undefined ? null : v)})`);
 		} finally {
 			OnCurrentCommandFinished();
 		}

@@ -1,8 +1,7 @@
 import "js-vextensions";
 import {ParseModuleData, Require, GetModuleNameFromPath} from "webpack-runtime-require";
-import * as React from "react";
 
-export function SetUpRR(addFromVendorDLL = true) {
+export function ExposeModuleExports(addFromVendorDLL = true) {
 	setTimeout(()=> {
 		ParseModuleData(true);
 		G({R: Require});
@@ -39,14 +38,3 @@ export function SetUpRR(addFromVendorDLL = true) {
 		G({RR});
 	}, 500); // wait a bit, since otherwise some modules are missed/empty during ParseModuleData it seems
 }
-
-// patch React.createElement to do early prop validation
-// ==========
-
-let createElement_old = React.createElement;
-React["createElement" as any] = function(componentClass, props) {
-	if (componentClass.ValidateProps) {
-		componentClass.ValidateProps(props);
-	}
-	return createElement_old.apply(this, arguments);
-};

@@ -1,6 +1,7 @@
 import { GetCurrentURLString, VURL } from "js-vextensions";
 import { manager } from "../../Manager";
 import { State } from "../Store/StoreHelpers";
+import { MaybeLog } from "../General/Logging";
 
 export function GetCurrentURL(fromAddressBar = false) {
 	return fromAddressBar ? VURL.Parse(GetCurrentURLString()) : VURL.FromState(State("router"));
@@ -70,7 +71,7 @@ export function GetSyncLoadActionsForURL(url: VURL, directURLChange: boolean) {
 // maybe temp; easier than using the "fromURL" prop, since AddressBarWrapper class currently doesn't have access to the triggering action itself
 export var loadingURL = false;
 export async function LoadURL(urlStr: string) {
-	//MaybeLog(a=>a.urlLoads, ()=>"Loading url: " + urlStr);
+	MaybeLog(a=>a.urlLoads, ()=>"Loading url: " + urlStr);
 	loadingURL = true;
 
 	//if (!GetPath(GetUrlPath(url)).startsWith("global/map")) return;

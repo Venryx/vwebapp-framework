@@ -9,6 +9,7 @@ import { SplitStringBySlash_Cached } from "../Database/StringSplitCache";
 import { RootState, manager } from "../../Manager";
 import ReactGA from "react-ga";
 import { State } from "./StoreHelpers";
+import { MaybeLog } from "../General/Logging";
 
 // use this to intercept dispatches (for debugging)
 /*let oldDispatch = store.dispatch;
@@ -80,7 +81,7 @@ export function RecordPageView(url: VURL) {
 		ReactGA.set({page: url.toString({domain: false})});
 		ReactGA.pageview(url.toString({domain: false}) || "/");
 	}
-	//MaybeLog(a=>a.pageViews, ()=>"Page-view: " + url);
+	MaybeLog(a=>a.pageViews, ()=>"Page-view: " + url);
 }
 
 let postInitCalled = false;

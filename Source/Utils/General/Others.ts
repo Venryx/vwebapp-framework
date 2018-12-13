@@ -1,5 +1,6 @@
 import {RemoveHelpers} from "../Database/DatabaseHelpers";
 import {VRect, Vector2i} from "js-vextensions";
+import { AddSchema } from "../../Server/Server";  
 
 export function GetUpdates(oldData, newData, useNullInsteadOfUndefined = true) {
 	let result = {};
