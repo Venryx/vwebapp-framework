@@ -7,7 +7,7 @@ export class CommandUserInfo {
 	id: string;
 }
 
-export let commandsWaitingToComplete = 0;
+export let commandsWaitingToComplete = [];
 
 let currentCommandRun_listeners = null;
 async function WaitTillCurrentCommandFinishes() {
@@ -64,11 +64,11 @@ export abstract class Command<Payload, ReturnData = void> {
 
 	/** [async] Validates the data, prepares it, and executes it -- thus applying it into the database. */
 	async Run(): Promise<ReturnData> {
-		if (commandsWaitingToComplete > 0) {
-			MaybeLog(a => a.commands, l => l(`Queing command, since ${commandsWaitingToComplete} ${commandsWaitingToComplete == 1 ? "is" : "are"} already waiting for completion.${""
+		if (commandsWaitingToComplete.length > 0) {
+			MaybeLog(a => a.commands, l => l(`Queing command, since ${commandsWaitingToComplete} ${commandsWaitingToComplete.length == 1 ? "is" : "are"} already waiting for completion.${""
 				}@type:`, this.constructor.name, ' @payload(', this.payload, ')'));
 		}
-		commandsWaitingToComplete++;
+		commandsWaitingToComplete.push(this);
 		while (currentCommandRun_listeners) {
 			await WaitTillCurrentCommandFinishes();
 		}
@@ -88,7 +88,7 @@ export abstract class Command<Payload, ReturnData = void> {
 			// MaybeLog(a=>a.commands, ()=>`Finishing command. @type:${this.constructor.name} @payload(${ToJSON(this.payload)}) @dbUpdates(${ToJSON(dbUpdates)})`);
 			MaybeLog(a => a.commands, l => l('Finishing command. @type:', this.constructor.name, ' @command(', this, ') @dbUpdates(', dbUpdates, ')'));
 		} finally {
-			commandsWaitingToComplete--;
+			commandsWaitingToComplete.Remove(this);
 			OnCurrentCommandFinished();
 		}
 
