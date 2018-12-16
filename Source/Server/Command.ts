@@ -65,7 +65,7 @@ export abstract class Command<Payload, ReturnData = void> {
 	/** [async] Validates the data, prepares it, and executes it -- thus applying it into the database. */
 	async Run(): Promise<ReturnData> {
 		if (commandsWaitingToComplete.length > 0) {
-			MaybeLog(a => a.commands, l => l(`Queing command, since ${commandsWaitingToComplete} ${commandsWaitingToComplete.length == 1 ? "is" : "are"} already waiting for completion.${""
+			MaybeLog(a => a.commands, l => l(`Queing command, since ${commandsWaitingToComplete.length} ${commandsWaitingToComplete.length == 1 ? "is" : "are"} already waiting for completion.${""
 				}@type:`, this.constructor.name, ' @payload(', this.payload, ')'));
 		}
 		commandsWaitingToComplete.push(this);
