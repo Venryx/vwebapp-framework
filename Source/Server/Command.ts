@@ -1,4 +1,4 @@
-import { ApplyDBUpdates, RemoveHelpers, DBPath } from "../Utils/Database/DatabaseHelpers";
+import { ApplyDBUpdates, RemoveHelpers, DBPath, ApplyDBUpdates_InChunks, maxDBUpdatesPerBatch } from "../Utils/Database/DatabaseHelpers";
 import { manager } from "../Manager";
 import u from "updeep";
 import { MaybeLog } from "../Utils/General/Logging";
@@ -63,7 +63,7 @@ export abstract class Command<Payload, ReturnData = void> {
 	}
 
 	/** [async] Validates the data, prepares it, and executes it -- thus applying it into the database. */
-	async Run(): Promise<ReturnData> {
+	async Run(maxUpdatesPerChunk = maxDBUpdatesPerBatch): Promise<ReturnData> {
 		if (commandsWaitingToComplete.length > 0) {
 			MaybeLog(a => a.commands, l => l(`Queing command, since ${commandsWaitingToComplete.length} ${commandsWaitingToComplete.length == 1 ? "is" : "are"} already waiting for completion.${""
 				}@type:`, this.constructor.name, ' @payload(', this.payload, ')'));
@@ -83,7 +83,7 @@ export abstract class Command<Payload, ReturnData = void> {
 			//await this.Validate_LateHeavy(dbUpdates);
 			// FixDBUpdates(dbUpdates);
 			// await store.firebase.helpers.DBRef().update(dbUpdates);
-			await ApplyDBUpdates(DBPath(), dbUpdates);
+			await ApplyDBUpdates_InChunks(DBPath(), dbUpdates, maxUpdatesPerChunk);
 
 			// MaybeLog(a=>a.commands, ()=>`Finishing command. @type:${this.constructor.name} @payload(${ToJSON(this.payload)}) @dbUpdates(${ToJSON(dbUpdates)})`);
 			MaybeLog(a => a.commands, l => l('Finishing command. @type:', this.constructor.name, ' @command(', this, ') @dbUpdates(', dbUpdates, ')'));

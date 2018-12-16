@@ -5,6 +5,8 @@ import { GetTreeNodesInObjTree, DeepSet, DeepGet } from "js-vextensions";
 import { RequestPath, inConnectFunc, ClearRequestedPaths, GetRequestedPaths, UnsetListeners, SetListeners } from "./FirebaseConnect";
 import { State_Base } from "../Store/StoreHelpers";
 import { ShallowChanged } from "react-vextensions";
+import u from "updeep";
+import { MaybeLog } from "../General/Logging";
 
 OnPopulated(()=> {
 	G({firebase_: firebase}); // doesn't show as R.firebase, fsr
@@ -536,6 +538,46 @@ export async function ApplyDBUpdates(rootPath: string, dbUpdates: Object) {
 		}
 		await batch.commit();
 	}
+}
+
+export const maxDBUpdatesPerBatch = 500;
+export async function ApplyDBUpdates_InChunks(rootPath: string, dbUpdates: Object, updatesPerChunk = maxDBUpdatesPerBatch) {
+	const dbUpdates_pairs = dbUpdates.Pairs();
+
+	const dbUpdates_pairs_chunks = [];
+	for (let offset = 0; offset < dbUpdates_pairs.length; offset += updatesPerChunk) {
+		const chunk = dbUpdates_pairs.slice(offset, offset + updatesPerChunk);
+		dbUpdates_pairs_chunks.push(chunk);
+	}
+
+	for (const [index, dbUpdates_pairs_chunk] of dbUpdates_pairs_chunks.entries()) {
+		const dbUpdates_chunk = dbUpdates_pairs_chunk.ToMap(a => a.key, a => a.value);
+		MaybeLog(a => a.commands, l => l`Applying db-updates chunk #${index + 1} of ${dbUpdates_pairs_chunks.length}...`);
+		await ApplyDBUpdates(rootPath, dbUpdates_chunk);
+	}
+}
+
+export function ApplyDBUpdates_Local(dbData: any, dbUpdates: Object) {
+	let result = dbData;
+	for (const { name: path, value } of Clone(dbUpdates).Props()) {
+		if (value != null) {
+			result = u.updateIn(path.replace(/\//g, '.'), u.constant(value), result);
+		} else {
+			result = u.updateIn(path.split('/').slice(0, -1).join('.'), u.omit(path.split('/').slice(-1)), result);
+		}
+	}
+
+	// firebase deletes becoming-empty collections/documents (and we pre-process-delete becoming-empty fields), so we do the same here
+	const nodes = GetTreeNodesInObjTree(result, true);
+	let emptyNodes;
+	do {
+		emptyNodes = nodes.filter(a => typeof a.Value === 'object' && (a.Value == null || a.Value.VKeys(true).length === 0));
+		for (const node of emptyNodes) {
+			delete node.obj[node.prop];
+		}
+	} while (emptyNodes.length);
+
+	return result;
 }
 
 /*function FixSettingPrimitiveValueDirectly(fieldPathInDoc: string, value) {
