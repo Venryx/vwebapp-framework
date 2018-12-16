@@ -5,8 +5,6 @@ import { OnAccessPath } from "../Database/FirebaseConnect";
 import { Action, IsACTSetFor } from "../General/Action";
 //import {reducer as formReducer} from "redux-form";
 
-// State() actually also returns the root-state (if no data-getter is supplied), but we don't reveal that in type-info (as its only to be used in console)
-G({State});
 /*declare global {
 	function State<T>(pathSegment: ((state: RootState)=>T) | string | number, state?: RootState, countAsAccess?: boolean): T;
 	function State<T>(pathSegments: (((state: RootState)=>T) | string | number)[], state?: RootState, countAsAccess?: boolean): any;
@@ -51,11 +49,12 @@ function State<T>(pathOrPathSegments, state?: RootState, countAsAccess?: boolean
 	function State<T>(...pathSegments: (string | number)[]);
 	function State<T>(options: State_Options, ...pathSegments: (string | number)[]);
 }*/
-export function State<T>(): RootState;
-export function State<T>(pathGetterFunc: (state: RootState)=>T): T;
-export function State<T>(...pathSegments: (string | number)[]);
-export function State<T>(options: State_Options, ...pathSegments: (string | number)[]);
-export function State<T>(...args) {
+
+export function State_Base<T>(): RootState;
+export function State_Base<T>(pathGetterFunc: (state: RootState)=>T): T;
+export function State_Base<T>(...pathSegments: (string | number)[]);
+export function State_Base<T>(options: State_Options, ...pathSegments: (string | number)[]);
+export function State_Base<T>(...args) {
 	let pathSegments: (string | number)[], options = new State_Options();
 	if (args.length == 0) return State_overrides.state || manager.store.getState();
 	else if (typeof args[0] == "function") pathSegments = ConvertPathGetterFuncToPropChain(args[0]);
@@ -80,6 +79,7 @@ export function State<T>(...args) {
 	}
 	return selectedData;
 }
+
 function ConvertPathGetterFuncToPropChain(pathGetterFunc: Function) {
 	let pathStr = pathGetterFunc.toString().match(/return a\.(.+?);/)[1] as string;
 	Assert(!pathStr.includes("["), `State-getter-func cannot contain bracket-based property-access.\n${nl

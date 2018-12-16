@@ -7,6 +7,8 @@ export class CommandUserInfo {
 	id: string;
 }
 
+export let commandsWaitingToComplete = 0;
+
 let currentCommandRun_listeners = null;
 async function WaitTillCurrentCommandFinishes() {
 	return new Promise((resolve, reject)=> {
@@ -21,13 +23,12 @@ function OnCurrentCommandFinished() {
 	}
 }
 
-export abstract class Command<Payload> {
+export abstract class Command<Payload, ReturnData = void> {
+	static defaultPayload = {};
 	constructor(payload: Payload) {
-		this.userInfo = {id: manager.GetUserID()}; // temp
+		this.userInfo = { id: manager.GetUserID() }; // temp		
 		this.type = this.constructor.name;
-		this.payload = payload;
-		//this.Extend(payload);
-		//Object.setPrototypeOf(this, Object.getPrototypeOf({}));
+		this.payload = E(this.constructor['defaultPayload'], payload);
 	}
 	userInfo: CommandUserInfo;
 	type: string;
@@ -37,40 +38,57 @@ export abstract class Command<Payload> {
 	// these methods are executed on the server (well, will be later)
 	// ==========
 
+	// parent commands should call MarkAsSubcommand() immediately after setting a subcommand's payload
+	asSubcommand = false;
+	MarkAsSubcommand() {
+		this.asSubcommand = true;
+		this.Validate_Early();
+		return this;
+	}
+
 	/** [sync] Validates the payload data. (ie. the validation that doesn't require accessing the database) */
-	Validate_Early() {};
+	Validate_Early() {}
 	/** [async] Transforms the payload data, combines it with database data, and so on, in preparation for the database-updates-map construction. */
-	abstract Prepare(): Promise<void>;
+	abstract Prepare(): Promise<void>
 	/** [async] Validates the prepared data, mostly using ajv shape-validation. */
-	abstract Validate(): Promise<void>;
+	abstract Validate(): Promise<void>
 	/** [sync] Retrieves the actual database updates that are to be made. (so we can do it in one atomic call) */
-	abstract GetDBUpdates(): {};
+	abstract GetDBUpdates(): {}
+
+	async PreRun() {
+		RemoveHelpers(this.payload); // have this run locally, before sending, to save on bandwidth
+		this.Validate_Early();
+		await this.Prepare();
+		await this.Validate();
+	}
 
 	/** [async] Validates the data, prepares it, and executes it -- thus applying it into the database. */
-	async Run() {
+	async Run(): Promise<ReturnData> {
+		if (commandsWaitingToComplete > 0) {
+			MaybeLog(a => a.commands, l => l(`Queing command, since ${commandsWaitingToComplete} ${commandsWaitingToComplete == 1 ? "is" : "are"} already waiting for completion.${""
+				}@type:`, this.constructor.name, ' @payload(', this.payload, ')'));
+		}
+		commandsWaitingToComplete++;
 		while (currentCommandRun_listeners) {
 			await WaitTillCurrentCommandFinishes();
 		}
 		currentCommandRun_listeners = [];
 
-		MaybeLog(a=>a.commands, ()=>`Running command. @type:${this.constructor.name} @payload(${ToJSON(this.payload, (k, v)=>v === undefined ? null : v)})`);
+		MaybeLog(a => a.commands, l => l('Running command. @type:', this.constructor.name, ' @payload(', this.payload, ')'));
 
 		try {
-			RemoveHelpers(this.payload); // have this run locally, before sending, to save on bandwidth
+			await this.PreRun();
 
-			this.Validate_Early();
-			await this.Prepare();
-			await this.Validate();
-
-			let dbUpdates = this.GetDBUpdates();
-			//FixDBUpdates(dbUpdates);
-			//await store.firebase.helpers.DBRef().update(dbUpdates);
-			//await (store as any).firestore.update(dbUpdates);
-
+			const dbUpdates = this.GetDBUpdates();
+			//await this.Validate_LateHeavy(dbUpdates);
+			// FixDBUpdates(dbUpdates);
+			// await store.firebase.helpers.DBRef().update(dbUpdates);
 			await ApplyDBUpdates(DBPath(), dbUpdates);
 
-			MaybeLog(a=>a.commands, ()=>`Finishing command. @type:${this.constructor.name} @payload(${ToJSON(this.payload, (k, v)=>v === undefined ? null : v)})`);
+			// MaybeLog(a=>a.commands, ()=>`Finishing command. @type:${this.constructor.name} @payload(${ToJSON(this.payload)}) @dbUpdates(${ToJSON(dbUpdates)})`);
+			MaybeLog(a => a.commands, l => l('Finishing command. @type:', this.constructor.name, ' @command(', this, ') @dbUpdates(', dbUpdates, ')'));
 		} finally {
+			commandsWaitingToComplete--;
 			OnCurrentCommandFinished();
 		}
 

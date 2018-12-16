@@ -8,7 +8,7 @@ import {VURL} from "js-vextensions";
 import { SplitStringBySlash_Cached } from "../Database/StringSplitCache";
 import { RootState, manager } from "../../Manager";
 import ReactGA from "react-ga";
-import { State } from "./StoreHelpers";
+import { State_Base } from "./StoreHelpers";
 import { MaybeLog } from "../General/Logging";
 
 // use this to intercept dispatches (for debugging)
@@ -111,7 +111,7 @@ export async function PostDispatchAction(action: Action<any>) {
 			LoadURL(manager.startURL.toString());
 		}
 		//UpdateURL(false);
-		if (manager.prodEnv && State("main", "analyticsEnabled")) {
+		if (manager.prodEnv && State_Base("main", "analyticsEnabled")) {
 			Log("Initialized Google Analytics.");
 			//ReactGA.initialize("UA-21256330-34", {debug: true});
 			ReactGA.initialize("UA-21256330-34");

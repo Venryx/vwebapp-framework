@@ -1,10 +1,10 @@
 import { GetCurrentURLString, VURL } from "js-vextensions";
 import { manager } from "../../Manager";
-import { State } from "../Store/StoreHelpers";
 import { MaybeLog } from "../General/Logging";
+import { State_Base } from "../Store/StoreHelpers";
 
 export function GetCurrentURL(fromAddressBar = false) {
-	return fromAddressBar ? VURL.Parse(GetCurrentURLString()) : VURL.FromState(State("router"));
+	return fromAddressBar ? VURL.Parse(GetCurrentURLString()) : VURL.FromState(State_Base("router"));
 }
 export function NormalizeURL(url: VURL) {
 	let result = url.Clone();

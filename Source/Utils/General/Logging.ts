@@ -43,25 +43,35 @@ console.error = function(exception) {
 // fix for that console.table doesn't seem to be working (as used by react-addons-perf)
 //console.table = function() { console.log.apply(this, arguments); };
 
-export var onLogFuncs = [];
-//declare global { function Log(...args); } G({Log});
-export function Log(message, appendStackTrace = false, logLater = false) {
+// export type LogFunc = LogFunc_Full | LogFunc_Min;
+export type LogFunc_Full = (options: LogOptions, ...messageSegments: any[])=>any;
+export type LogFunc_Min = (...messageSegments: any[])=>any;
+export var onLogFuncs = [] as LogFunc_Full[];
+
+type LogOptions = {appendStackTrace?: boolean, logLater?: boolean};
+export function Log(options: LogOptions, ...messageSegments: any[]);
+export function Log(...messageSegments: any[]);
+export function Log(...args) {
+	let options: LogOptions = {};
+	let messageSegments: any[];
+	if (typeof args[0] === 'object') [options, ...messageSegments] = args;
+	else messageSegments = args;
 	// #mms: add-stack-trace-and-current-call-info-to-logs setting exists
 
-	var finalMessage = message;
-	if (appendStackTrace) {
-		/*if (inUnity)
-			finalMessage += "\n\nStackTrace) " + new Error().Stack;
-		else*/
-		finalMessage += "\n@" + GetStackTraceStr();
+	if (options.appendStackTrace) {
+		/* if (inUnity)
+			finalMessage += "\n\nStackTrace) " + new Error().stack;
+		else */
+		messageSegments.push(`\n@${GetStackTraceStr()}`);
 	}
 
-	console.log(finalMessage);
+	console.log(...messageSegments);
 
-	for (let onLogFunc of onLogFuncs)
-		onLogFunc(message, appendStackTrace, logLater);
+	for (const onLogFunc of onLogFuncs) {
+		onLogFunc(options, messageSegments);
+	}
 
-	return message;
+	return messageSegments.length == 1 ? messageSegments[0] : messageSegments;
 }
 
 declare global { function LogLater(message, appendStackTrace?); } G({LogLater});
@@ -90,7 +100,10 @@ class LogTypes {
 export function ShouldLog(shouldLogFunc: (logTypes: LogTypes)=>boolean) {
 	return shouldLogFunc(window["logTypes"] || {});
 }
-export function MaybeLog(shouldLogFunc: (logTypes: LogTypes)=>boolean, logMessageGetter: ()=>string) {
+export function MaybeLog(shouldLogFunc: (logTypes: LogTypes)=>boolean, loggerFunc: any) {
 	if (!ShouldLog(shouldLogFunc)) return;
-	Log(logMessageGetter());
+	// let loggerFuncReturnsString = loggerFunc.arguments.length == 0;
+	const loggerFuncIsSimpleGetter = loggerFunc.toString().replace(/ /g, '').includes('function()');
+	if (loggerFuncIsSimpleGetter) Log(loggerFunc());
+	else loggerFunc(Log);
 }

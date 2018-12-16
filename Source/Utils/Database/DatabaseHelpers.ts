@@ -3,7 +3,7 @@ import firebase from "firebase";
 import { SplitStringBySlash_Cached } from "./StringSplitCache";
 import { GetTreeNodesInObjTree, DeepSet, DeepGet } from "js-vextensions";
 import { RequestPath, inConnectFunc, ClearRequestedPaths, GetRequestedPaths, UnsetListeners, SetListeners } from "./FirebaseConnect";
-import { State } from "../Store/StoreHelpers";
+import { State_Base } from "../Store/StoreHelpers";
 import { ShallowChanged } from "react-vextensions";
 
 OnPopulated(()=> {
@@ -246,10 +246,10 @@ export function GetData(...args) {
 	}
 
 	//let result = State("firebase", "data", ...SplitStringByForwardSlash_Cached(path)) as any;
-	let result = State("firestore", "data", ...pathSegments.map(a=>typeof a == "string" && a[0] == "." ? a.substr(1) : a)) as any;
+	let result = State_Base("firestore", "data", ...pathSegments.map(a=>typeof a == "string" && a[0] == "." ? a.substr(1) : a)) as any;
 	//let result = State("firebase", "data", ...pathSegments) as any;
 	if (result == null && options.useUndefinedForInProgress) {
-		let requestCompleted = State().firestore.status.requested[path];
+		let requestCompleted = State_Base().firestore.status.requested[path];
 		if (!requestCompleted) return undefined; // undefined means, current-data for path is null/non-existent, but we haven't completed the current request yet
 		else return null; // null means, we've completed the request, and there is no data at that path
 	}
@@ -375,7 +375,7 @@ export async function GetAsync_Raw<T>(dbGetterFunc: ()=>T, statsLogger?: ({reque
 
 export function WaitTillPathDataIsReceived(path: string): Promise<any> {
 	return new Promise((resolve, reject)=> {
-		let pathDataReceived = State().firestore.status.requested[path];
+		let pathDataReceived = State_Base().firestore.status.requested[path];
 		// if data already received, return right away
 		if (pathDataReceived) {
 			resolve();
@@ -384,7 +384,7 @@ export function WaitTillPathDataIsReceived(path: string): Promise<any> {
 		// else, add listener, and wait till store received the data (then return it)
 		let listener = ()=> {
 			//pathDataReceived = State(a=>a.firebase.requested[path]);
-			pathDataReceived = State().firestore.status.requested[path];
+			pathDataReceived = State_Base().firestore.status.requested[path];
 			if (pathDataReceived) {
 				unsubscribe();
 				resolve();

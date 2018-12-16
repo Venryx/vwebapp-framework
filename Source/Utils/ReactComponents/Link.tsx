@@ -4,7 +4,7 @@ import { BaseComponent } from "react-vextensions";
 import { push, replace } from "redux-little-router";
 import { Connect } from "../Database/FirebaseConnect";
 import { GetCurrentURL, GetNewURL } from "../URL/URLs";
-import { State } from "../Store/StoreHelpers";
+import { State_Base } from "../Store/StoreHelpers";
 import { manager } from "../../Manager";
 import { State_overrides } from "../Store/StateOverrides";
 import { StandardCompProps } from "../UI/General";
@@ -35,7 +35,7 @@ type Props = {
 		}
 		actions(dispatch);
 
-		let newState = State();
+		let newState = State_Base();
 		//let rootReducer = MakeRootReducer();
 		let rootReducer = manager.store.reducer;
 		for (let action of actionsToDispatch) {
