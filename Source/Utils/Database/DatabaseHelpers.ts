@@ -552,7 +552,9 @@ export async function ApplyDBUpdates_InChunks(rootPath: string, dbUpdates: Objec
 
 	for (const [index, dbUpdates_pairs_chunk] of dbUpdates_pairs_chunks.entries()) {
 		const dbUpdates_chunk = dbUpdates_pairs_chunk.ToMap(a => a.key, a => a.value);
-		MaybeLog(a => a.commands, l => l`Applying db-updates chunk #${index + 1} of ${dbUpdates_pairs_chunks.length}...`);
+		if (dbUpdates_pairs_chunks.length > 1) {
+			MaybeLog(a => a.commands, l => l(`Applying db-updates chunk #${index + 1} of ${dbUpdates_pairs_chunks.length}...`));
+		}
 		await ApplyDBUpdates(rootPath, dbUpdates_chunk);
 	}
 }

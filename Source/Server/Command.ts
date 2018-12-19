@@ -9,13 +9,13 @@ export class CommandUserInfo {
 
 export let commandsWaitingToComplete = [];
 
-let currentCommandRun_listeners = null;
-async function WaitTillCurrentCommandFinishes() {
+export let currentCommandRun_listeners = null;
+export async function WaitTillCurrentCommandFinishes() {
 	return new Promise((resolve, reject)=> {
 		currentCommandRun_listeners.push({resolve, reject});
 	});
 }
-function OnCurrentCommandFinished() {
+export function OnCurrentCommandFinished() {
 	let currentCommandRun_listeners_copy = currentCommandRun_listeners;
 	currentCommandRun_listeners = null;
 	for (let listener of currentCommandRun_listeners_copy) {
