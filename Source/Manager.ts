@@ -1,13 +1,16 @@
 import { VURL } from "js-vextensions";
+import { connectRouter } from "connected-react-router";
+import { browserHistory } from "./Utils/URL/History";
 
 export type RootState = any; // temp
 
 export type Omit<T, K extends keyof T> = Pick<T, ({ [P in keyof T]: P } & { [P in K]: never })[keyof T]>;
 export class Manager {
 	GetExtraReducers() {
-		let { routerReducer } = require("./Utils/Store/CreateStore");
+		//let { routerReducer } = require("./Utils/Store/CreateStore");
 		return {
-			router: routerReducer,
+			//router: routerReducer,
+			router: connectRouter(browserHistory),
 		};
 	}
 

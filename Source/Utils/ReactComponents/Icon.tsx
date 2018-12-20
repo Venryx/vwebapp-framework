@@ -42,7 +42,7 @@ export class Icon extends BaseComponent<{icon: string, size: number, color?: str
 				<path d={data} fill={color}></path>
 			</svg>
 		);*/
-		let info = null; //require(`../../../Resources/SVGs/${icon}.svg`).default;
+		let info = {} as any; //require(`../../../Resources/SVGs/${icon}.svg`).default;
 		return (
 			<svg {...rest as any} viewBox={info.viewBox} width={size} height={size}>
 				<use xlinkHref={`#${info.id}`} style={{fill: color}}/>

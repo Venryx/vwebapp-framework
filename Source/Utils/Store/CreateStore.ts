@@ -4,54 +4,35 @@ import { unstable_batchedUpdates } from "react-dom";
 import { reactReduxFirebase } from "react-redux-firebase";
 import { applyMiddleware, compose, createStore, StoreEnhancer } from "redux";
 import { reduxFirestore } from "redux-firestore";
-import { routerForBrowser } from "redux-little-router";
+import { connectRouter } from 'connected-react-router'
 import { MidDispatchAction, PostDispatchAction, PreDispatchAction } from "./ActionProcessor";
 import { manager } from "../../Manager";
 import {persistStore} from "redux-persist";
-
+import { routerMiddleware } from 'connected-react-router'
+import { browserHistory } from "../URL/History";
 let firebase = firebase_ as any;
 
-//export const browserHistory = createBrowserHistory();
-//import {browserHistory} from "react-router";
-
-let routes = {
-	"/": {},
-	"/:seg": {},
-	"/:seg/:seg": {},
-	"/:seg/:seg/:seg": {},
-	"/:seg/:seg/:seg/:seg": {},
-	"/:seg/:seg/:seg/:seg/:seg": {},
-};
-export const {reducer: routerReducer, middleware: routerMiddleware, enhancer: routerEnhancer} = routerForBrowser({
-  routes,
-});
-
-export function CreateStore(initialState = {}, history) {
-	// Middleware Configuration
+export function CreateStore(initialState = {}) {
+	// middleware configuration
 	// ==========
-	const middleware = [
-		//thunk.withExtraArgument(getFirebase),
-		// for some reason, this breaks stuff if we have it the last one
-		/*store=>next=>action=> {
-			Log("What!" + action.type);
-			PreDispatchAction(action);
-			const returnValue = next(action);
-			MidDispatchAction(action, returnValue);
-			WaitXThenRun(0, ()=>PostDispatchAction(action));
-			return returnValue;
-		},*/
+	const outerMiddleware = [
 		//routerMiddleware(browserHistory),
-		routerMiddleware,
+		store=>next=>action=> {
+			//PreDispatchAction(action); if (action.type == "ApplyActionSet") for (let sub of action.actions) PreDispatchAction(sub);
+			const returnValue = next(action);
+			//MidDispatchAction(action, returnValue); if (action.type == "ApplyActionSet") for (let sub of action.actions) MidDispatchAction(sub, returnValue);
+			setTimeout(()=> {
+				PostDispatchAction(action); if (action.type == "ApplyActionSet") for (let sub of action.actions) PostDispatchAction(sub);
+			});
+			return returnValue;
+		},
+		routerMiddleware(browserHistory),
 	];
-	let lateMiddleware = [
-		// for some reason, this breaks stuff if we have it the last one
+	let innerMiddleware = [
 		store=>next=>action=> {
 			PreDispatchAction(action); if (action.type == "ApplyActionSet") for (let sub of action.actions) PreDispatchAction(sub);
 			const returnValue = next(action);
 			MidDispatchAction(action, returnValue); if (action.type == "ApplyActionSet") for (let sub of action.actions) MidDispatchAction(sub, returnValue);
-			setTimeout(()=> {
-				PostDispatchAction(action); if (action.type == "ApplyActionSet") for (let sub of action.actions) PostDispatchAction(sub);
-			});
 			return returnValue;
 		},
 	];
@@ -63,7 +44,7 @@ export function CreateStore(initialState = {}, history) {
 		maxAge: 70,
 	};
 
-	// Store Instantiation and HMR Setup
+	// store instantiation and HMR setup
 	// ==========
 
 	//reduxConfig["userProfile"] = DBPath("users"); // root that user profiles are written to
@@ -81,29 +62,27 @@ export function CreateStore(initialState = {}, history) {
 	let firestoreDB = firebase.firestore();
 	firestoreDB.settings({timestampsInSnapshots: true});
 
-	let extraReducers = {
-		router: routerReducer,
-	};
 	let rootReducer = manager.MakeRootReducer();
 	const store = createStore(
 		rootReducer,
 		initialState,
 		// Note: Compose applies functions from right to left: compose(f, g, h) = (...args)=>f(g(h(...args))).
-		// You can think of the earlier ones as "wrapping" and being able to "monitor" the ones after it, but (usually) telling them "you apply first, then I will".
+		// You can think of the earlier ones as "wrapping" and being able to "monitor the results of" the ones after it, but (usually) telling them "you apply first, then I will".
+		// So put your middleware earlier in this list if you want it to monitor another middleware's *results*. And put it after if you want it to be able to *intercept* its actions and such.
 		(compose as any)(...[
 			//autoRehydrate({log: true}),
-			routerEnhancer,
-			applyMiddleware(...middleware),
+			//routerEnhancer,
+			applyMiddleware(...outerMiddleware),
 			reactReduxFirebase(firebase, reduxFirebaseConfig),
 			reduxFirestore(firebase, {}),
 			//batchedSubscribe(unstable_batchedUpdates),
-			applyMiddleware(...lateMiddleware), // place late-middleware after reduxFirebase, so it can intercept all its dispatched events
+			applyMiddleware(...innerMiddleware), // place inner-middleware after reduxFirebase (deeper to func that *actually dispatches*), so it can intercept all its dispatched events
 			window["devToolsExtension"] && window["devToolsExtension"](reduxDevToolsConfig),
 		].filter(a=>a)) as StoreEnhancer<any>
 	); // as ProjectStore;
 	store["reducer"] = rootReducer;
 
-	function Dispatch_WithStack(action) {
+	/*function Dispatch_WithStack(action) {
 		if (window["actionStacks"] || (manager.devEnv && !actionStacks_actionTypeIgnorePatterns.Any(a=>action.type.startsWith(a)))) {
 			action["stack"] = new Error().stack.split("\n").slice(1); // add stack, so we can inspect in redux-devtools
 		}
@@ -115,7 +94,7 @@ export function CreateStore(initialState = {}, history) {
 	}
 	const actionStacks_actionTypeIgnorePatterns = [
 		"@@reactReduxFirebase/", // ignore redux actions
-	];
+	];*/
 
 	/*let w = watch(()=>State());
 	store.subscribe(w((newVal, oldVal) => {

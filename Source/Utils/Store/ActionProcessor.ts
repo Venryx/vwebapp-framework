@@ -3,13 +3,13 @@ import { LoadURL, GetSyncLoadActionsForURL, GetCurrentURL_SimplifiedForPageViewT
 import {DBPath, GetData, GetDataAsync, ProcessDBData, ListenerPathToPath} from "../Database/DatabaseHelpers";
 import {GetCurrentURL} from "../URL/URLs";
 import Raven from "raven-js";
-import {LOCATION_CHANGED} from "redux-little-router";
-import {VURL} from "js-vextensions";
+import {VURL, DeepGet} from "js-vextensions";
 import { SplitStringBySlash_Cached } from "../Database/StringSplitCache";
 import { RootState, manager } from "../../Manager";
 import ReactGA from "react-ga";
 import { State_Base } from "./StoreHelpers";
 import { MaybeLog } from "../General/Logging";
+import { LOCATION_CHANGE } from "connected-react-router";
 
 // use this to intercept dispatches (for debugging)
 /*let oldDispatch = store.dispatch;
@@ -19,10 +19,18 @@ store.dispatch = function(...args) {
 	oldDispatch.apply(this, args);
 };*/
 
+const actionStacks_actionTypeIgnorePatterns = [
+	"@@reactReduxFirebase/", // ignore redux actions
+];
+
 let lastPath = "";
 //export function ProcessAction(action: Action<any>, newState: RootState, oldState: RootState) {
 // only use this if you actually need to change the action-data before it gets dispatched/applied (otherwise use [Mid/Post]DispatchAction)
 export function PreDispatchAction(action: Action<any>) {
+	if (window["actionStacks"] || (manager.devEnv && !actionStacks_actionTypeIgnorePatterns.Any(a=>action.type.startsWith(a)))) {
+		action["stack"] = new Error().stack.split("\n").slice(1); // add stack, so we can inspect in redux-devtools
+	}
+	
 	if (action.type == "@@reactReduxFirebase/SET") {
 		if (action["data"]) {
 			action["data"] = ProcessDBData(action["data"], true, true, SplitStringBySlash_Cached(action["path"]).Last());
@@ -123,11 +131,12 @@ export async function PostDispatchAction(action: Action<any>) {
 		}
 	}
 	// is triggered by back/forward navigation, as well things that call store.dispatch([push/replace]()) -- such as UpdateURL()
-	if (action.type == LOCATION_CHANGED) {
+	if (action.type == LOCATION_CHANGE) {
 		/*if (g.justChangedURLFromCode) {
 			g.justChangedURLFromCode = false;
 		} else {*/
-		if (!(action as any).payload.byCode) {
+		//if (!(action as any).payload.byCode) {
+		if (DeepGet(action, "payload/location/state/byCode") != true) {
 			//setTimeout(()=>UpdateURL());
 			await LoadURL(url.toString());
 			//UpdateURL(false);

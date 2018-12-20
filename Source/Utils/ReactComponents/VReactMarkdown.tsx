@@ -25,7 +25,7 @@ export class VReactMarkdown extends BaseComponent
 			if (target == null && toURL.domain != GetCurrentURL().domain) {
 				target = "_blank";
 			}
-			return <Link {...rest} to={href} target={target}/>;
+			return <Link {...rest.Including("onClick", "style", "text", "replace", "actions")} to={href} target={target}/>;
 		});
 
 		if (replacements) {

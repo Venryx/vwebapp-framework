@@ -1,13 +1,13 @@
 import { VURL } from "js-vextensions";
 import React from 'react';
 import { BaseComponent } from "react-vextensions";
-import { push, replace } from "redux-little-router";
 import { Connect } from "../Database/FirebaseConnect";
 import { GetCurrentURL, GetNewURL } from "../URL/URLs";
 import { State_Base } from "../Store/StoreHelpers";
 import { manager } from "../../Manager";
 import { State_overrides } from "../Store/StateOverrides";
 import { StandardCompProps } from "../UI/General";
+import { replace, push } from "connected-react-router";
 
 /*@Radium
 export class Link extends BaseComponent<{to, target?: string, replace?: boolean, style?, onClick?}, {}> {
@@ -21,13 +21,13 @@ function isModifiedEvent(event) {
 	return !!(event.metaKey || event.altKey || event.ctrlKey || event.shiftKey);
 }
 
-type Props = {
+export type Link_Props = {
 	onClick?, style?,
 	text?: string, to?: string, target?: string, replace?: boolean, // url-based
 	actions?: (dispatch: Function)=>void, //updateURLOnActions?: boolean, // action-based
 } & React.HTMLProps<HTMLAnchorElement>;
 //@Connect((state, {to, actions, updateURLOnActions}: Props)=> {
-@Connect((state, {to, actions}: Props)=> {
+@Connect((state, {to, actions}: Link_Props)=> {
 	if (actions) {
 		let actionsToDispatch = [];
 		function dispatch(action) {
@@ -54,7 +54,7 @@ type Props = {
 		to,
 	};
 })
-export class Link extends BaseComponent<Props, {}> {
+export class Link extends BaseComponent<Link_Props, {}> {
 	handleClick(event) {
 		let {onClick, to, target, replace: replaceURL, actions} = this.props;
 		if (onClick) onClick(event);
