@@ -42,6 +42,7 @@ export function CreateStore(initialState = {}) {
 
 	let reduxDevToolsConfig = {
 		maxAge: 70,
+		trace: true,
 	};
 
 	// store instantiation and HMR setup
@@ -77,7 +78,7 @@ export function CreateStore(initialState = {}) {
 			reduxFirestore(firebase, {}),
 			//batchedSubscribe(unstable_batchedUpdates),
 			applyMiddleware(...innerMiddleware), // place inner-middleware after reduxFirebase (deeper to func that *actually dispatches*), so it can intercept all its dispatched events
-			window["devToolsExtension"] && window["devToolsExtension"](reduxDevToolsConfig),
+			window["__REDUX_DEVTOOLS_EXTENSION__"] && window["__REDUX_DEVTOOLS_EXTENSION__"](reduxDevToolsConfig),
 		].filter(a=>a)) as StoreEnhancer<any>
 	); // as ProjectStore;
 	store["reducer"] = rootReducer;
