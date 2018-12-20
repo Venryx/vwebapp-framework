@@ -21,13 +21,15 @@ Icon packs:
 | "arrow-up" | "arrow-down"
 ;*/
 
+// todo: get this working, despite our now being in the vwebapp-framework module
+
 // SVG's not used during the initial icon-rendering batch were never getting rendered.
 // For now, we'll fix this by importing all SVG's from the get-go.
-var context = (require as any).context("../../../Resources/SVGs/", true /* include subfolders */, /\.svg$/);
+/*var context = (require as any).context("../../../Resources/SVGs/", true /* include subfolders *#/, /\.svg$/);
 var files = {};
 context.keys().forEach((filename)=>{
 	files[filename] = context(filename);
-});
+});*/
 
 //export class Icon extends BaseComponent<{icon: IconType, color?: string}, {}> {
 export class Icon extends BaseComponent<{icon: string, size: number, color?: string} & React.HTMLProps<SVGElement>, {}> {
@@ -40,7 +42,7 @@ export class Icon extends BaseComponent<{icon: string, size: number, color?: str
 				<path d={data} fill={color}></path>
 			</svg>
 		);*/
-		let info = require(`../../../Resources/SVGs/${icon}.svg`).default;
+		let info = null; //require(`../../../Resources/SVGs/${icon}.svg`).default;
 		return (
 			<svg {...rest as any} viewBox={info.viewBox} width={size} height={size}>
 				<use xlinkHref={`#${info.id}`} style={{fill: color}}/>

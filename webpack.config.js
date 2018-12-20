@@ -30,7 +30,7 @@ module.exports = {
 	},
     /*module: {
         noParse: ["react"]
-    },*#/
+    },*/
     module: {
 		rules: [
 			{

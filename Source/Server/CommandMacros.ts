@@ -6,7 +6,7 @@ export function MapEdit(target: Function) {
 	target.prototype.Prepare = async function() {
 		await oldPrepare.apply(this);
 		if (this.payload.mapID) {
-			this.map_oldEditCount = await GetDataAsync({addHelpers: false}, "maps", this.payload.mapID, ".edits") as number || 0;
+			this.map_oldEditCount = ToInt(await GetDataAsync({addHelpers: false}, "maps", this.payload.mapID, ".edits"), 0);
 		}
 	};
 
@@ -27,7 +27,7 @@ export function UserEdit(target: Function) {
 	let oldPrepare = target.prototype.Prepare;
 	target.prototype.Prepare = async function() {
 		await oldPrepare.apply(this);
-		this.user_oldEditCount = await GetDataAsync({addHelpers: false}, "userExtras", this.userInfo.id, ".edits") as number || 0;
+		this.user_oldEditCount = ToInt(await GetDataAsync({addHelpers: false}, "userExtras", this.userInfo.id, ".edits"), 0);
 	};
 
 	let oldGetDBUpdates = target.prototype.GetDBUpdates;

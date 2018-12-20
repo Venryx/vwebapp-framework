@@ -1,5 +1,4 @@
 import { OnPopulated, manager } from "../../Manager";
-import firebase from "firebase";
 import { SplitStringBySlash_Cached } from "./StringSplitCache";
 import { GetTreeNodesInObjTree, DeepSet, DeepGet } from "js-vextensions";
 import { RequestPath, inConnectFunc, ClearRequestedPaths, GetRequestedPaths, UnsetListeners, SetListeners } from "./FirebaseConnect";
@@ -7,6 +6,7 @@ import { State_Base } from "../Store/StoreHelpers";
 import { ShallowChanged } from "react-vextensions";
 import u from "updeep";
 import { MaybeLog } from "../General/Logging";
+import firebase from "firebase";
 
 OnPopulated(()=> {
 	G({firebase_: firebase}); // doesn't show as R.firebase, fsr
@@ -264,8 +264,8 @@ export class GetDataAsync_Options {
 }
 
 G({GetDataAsync});
-export async function GetDataAsync(...pathSegments: (string | number)[]);
-export async function GetDataAsync(options: GetDataAsync_Options, ...pathSegments: (string | number)[]);
+export async function GetDataAsync(...pathSegments: (string | number)[]): Promise<any>;
+export async function GetDataAsync(options: GetDataAsync_Options, ...pathSegments: (string | number)[]): Promise<any>;
 export async function GetDataAsync(...args) {
 	let pathSegments: (string | number)[], options: GetDataAsync_Options;
 	if (typeof args[0] == "string") pathSegments = args;
@@ -614,6 +614,7 @@ function isPlainObject(input) {
 		Object.getPrototypeOf(input) === Object.prototype
 	);
 }*/
+
 //export interface FirebaseApp extends firebase.app.App {
 export type FirebaseApp = firebase.app.App & {
 	// added by react-redux-firebase

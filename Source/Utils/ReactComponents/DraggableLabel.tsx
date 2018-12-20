@@ -1,6 +1,6 @@
 import { BaseComponent } from "react-vextensions";
 import { Vector2i } from "js-vextensions";
-import { Omit } from "./General";
+import { Omit } from "../UI/General";
 import React from "react";
 
 export class DraggableLabel extends BaseComponent<{
