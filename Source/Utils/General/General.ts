@@ -56,46 +56,10 @@ export var inFirefox = navigator.userAgent.toLowerCase().includes("firefox");
 // others
 // ==================
 
-/*export var inTestMode = true; //GetUrlVars(CurrentUrl()).inTestMode == "true";
-export function InTestMode() { return inTestMode; }*/
-
-export var blockCSCalls = false;
-
 export var loadTime = Date.now();
-/*setTimeout(()=> {
-	$(()=> {
-		loadTime = Date.now();
-	});
-});*/
 export function GetTimeSinceLoad() {
 	return (Date.now() - loadTime) / 1000;
 }
-
-//window.evalOld = window.eval;
-//window.eval = function() { try { evalOld.apply(this, arguments); } catch(error) { Log("JS error: " + error); }};
-
-/*window.evalOld = eval;
-window.eval = function(code) {
-    if (true) { //new Error().stack.Contains("Packages/VDF")) //!code.Contains(";") && code != "CallCS_Callback")
-        window.lastSpecialEvalExpression = code;
-        window.lastSpecialEvalStack = new Error().stack;
-        //window.evalStacks = window.evalStacks || [];
-        //window.evalStacks.push(new Error().stack);
-        window.evalExpressionsStr += code + "\n";
-        window.evalStacksStr += new Error().stack + "\n";
-    }
-    return evalOld.apply(this, arguments);
-};*/
-
-/*export function EStrToInt(eStr: string) {
-	return parseInt(eStr.substr(1));
-}
-export function IntToEStr(int: number) {
-	return "e" + int;
-}*/
-
-// another way to require at runtime -- with full paths
-//g.RequireTest = (require as any).context("../../", true, /\.tsx?$/);
 
 export function $Simple(queryStr): HTMLElement[] {
 	return [].slice.call(document.querySelectorAll(queryStr));

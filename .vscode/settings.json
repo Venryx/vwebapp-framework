@@ -1,0 +1,4 @@
+{
+	// always use relative imports, because our Source files get imported directly from apps
+	"typescript.preferences.importModuleSpecifier": "relative",
+}

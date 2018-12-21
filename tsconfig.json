@@ -1,38 +1,39 @@
 {
 	"compilerOptions": {
-	  //"rootDir": ".", // technically, there's an "index.ts" file in root; we ignore because it's only needed for typescript type-resolving
-	  "rootDir": "Source",
-	  //"baseUrl": "Source", // keep commented; this way, we remember to always use relative paths (needed for in-node-modules typescript type-resolving)
-	  //"outDir": "Dist",
-	  /*"module": "system", // needed only for outFile prop, which is needed only for dist.d.ts file
-	  "outFile": "Dist/dist.js",*/
-	  //"module": "esnext",
+		"rootDir": "Source",
+		"baseUrl": "Source", // keep commented; this way, we remember to always use relative paths (needed for in-node-modules typescript type-resolving)
+		"paths": { // ("paths" is relative to "baseUrl")
+			"*": [
+				"../node_modules/@types/*", // prefer "/node_modules/@types" over "/node_modules/[something]/node_modules/@types" (eg, when using npm link)
+				"*",
+			],
+		},
 
-	  // general
-	  "sourceMap": true,
-	  "watch": true,
-	  "moduleResolution": "node",
-	  //"maxNodeModulesJsDepth": 1,
+		// general
+		"sourceMap": true,
+		"watch": true,
+		"moduleResolution": "node",
+		//"maxNodeModulesJsDepth": 1,
 
-	  // compiler options
-	  "target": "es2015",
-	  //"allowJs": true,
-	  "jsx": "react",
-	  "noImplicitAny": false,
-	  "experimentalDecorators": true,
-	  "allowSyntheticDefaultImports": true,
-	  "declaration": true,
-	  "declarationDir": "."
-  },
-  //"files": ["Source/index.ts"],
-  "include": [
-	  "Typings/**/*.d.ts",
-	  "Source/**/*.ts",
-	  "Source/**/*.tsx"
-  ],
-  "exclude": [
-	  "Dist",
-	  "node_modules"
-  ],
-  "compileOnSave": true
+		// compiler options
+		"target": "es2015",
+		//"allowJs": true,
+		"jsx": "react",
+		"noImplicitAny": false,
+		"experimentalDecorators": true,
+		"allowSyntheticDefaultImports": true,
+		//"declaration": true,
+		//"declarationDir": "Dist",
+	},
+	//"files": ["Source/index.ts"],
+	"include": [
+		"Typings/**/*.d.ts",
+		"Source/**/*.ts",
+		"Source/**/*.tsx",
+	],
+	"exclude": [
+		"Dist",
+		"node_modules",
+	],
+	"compileOnSave": true,
 }
