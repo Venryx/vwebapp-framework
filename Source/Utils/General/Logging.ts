@@ -1,4 +1,3 @@
-import {Global} from "./Globals_Free";
 import { GetStackTraceStr } from "js-vextensions";
 
 /*var Debug = true;

@@ -1,64 +1,23 @@
+import Moment from "moment";
+G({Moment});
+
+G({Debugger}); declare global { function Debugger(); }
+export function Debugger(ifCondition = true, returnVal = null) {
+	if (ifCondition) {
+		debugger;
+	}
+	return returnVal;
+}
+
 // class/function tags
 // ==========
-
-/*export function Global(...args) {
-	if (!(args[0] instanceof Function)) { // if decorator's being early-called, to provide args
-		var [receiveClassFunc] = args;
-		return (...args2)=> {
-			var [target] = args2;
-			receiveClassFunc(target);
-			Global(...args2);
-		};
-	}
-
-	var [target] = args as [Function];
-
-	var name = target.GetName();
-	//console.log("Globalizing: " + name);
-	g[name] = target;
-}*/
-export function Global(target: Function) {
-	var name = target.GetName();
-	//console.log("Globalizing: " + name);
-	window[name] = target;
-}
 
 export function Grab(grabFunc) {
 	return target=>grabFunc(target);
 }
 
-/*export function SimpleShouldUpdate(target) {
-	target.prototype.shouldComponentUpdate = function(newProps, newState) {
-	    return ShallowCompare(this, newProps, newState);
-		/*var result = ShallowCompare(this, newProps, newState);
-		Log(result + ";" + g.ToJSON(this.props) + ";" + g.ToJSON(newProps));
-		return result;*#/
-	}
-}*/
-
 // polyfills for constants
 // ==========
-
-if (Number.MIN_SAFE_INTEGER == null)
-	(Number as any).MIN_SAFE_INTEGER = -9007199254740991;
-if (Number.MAX_SAFE_INTEGER == null)
-	(Number as any).MAX_SAFE_INTEGER = 9007199254740991;
-
-//function Break() { debugger; };
-export function Debugger(...args) { debugger; }
-export function Debugger_Wrap(arg1, ...args) { debugger; return arg1; }
-export function Debugger_True(...args) { debugger; return true; }
-export function Debugger_If(condition, ...args) {
-    if (condition)
-        debugger;
-}
-export function WrapWithDebugger(func, ...args) {
-	return function() {
-		debugger;
-		func.apply(this, arguments);
-	};
-}
-G({Debugger, Debugger_Wrap, Debugger_True, Debugger_If, WrapWithDebugger});
 
 //var quickIncrementValues = {};
 //export function QuickIncrement(name = new Error().stack.split("\n")[2]) { // this doesn't always work, fsr
@@ -88,9 +47,6 @@ export							function E<E1,E2,E3,E4,E5,E6,E7,E8>(e1?:E1,e2?:E2,e3?:E3,e4?:E4,e5?
 	return result;
 	//return StyleSheet.create(result);
 }
-
-var eo = {};
-G({eo}); declare global { const eo: any; }
 
 // methods: url writing/parsing
 // ==================
@@ -178,7 +134,8 @@ export function GetRandomNumber(options: {min: number, max: number, mustBeIntege
 	/*Assert(IsNumber(min), `Min must be a number. (not: ${min})`);
 	Assert(IsNumber(max), `Max must be a number. (not: ${max})`);*/
 	var range = max - min;
-	if (options.mustBeInteger)
+	if (mustBeInteger) {
 		return min + Math.floor(Math.random() * (range + 1));
+	}
 	return min + (Math.random() * range);
 }
