@@ -4,7 +4,7 @@ import { MaybeLog } from "../General/Logging";
 import { State_Base } from "../Store/StoreHelpers";
 
 export function GetCurrentURL(fromAddressBar = false) {
-	return fromAddressBar ? VURL.Parse(GetCurrentURLString()) : VURL.FromState(State_Base("router"));
+	return fromAddressBar ? VURL.Parse(GetCurrentURLString()) : VURL.FromLocationObject(State_Base("router", "location"));
 }
 export function NormalizeURL(url: VURL) {
 	let result = url.Clone();

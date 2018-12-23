@@ -3,7 +3,7 @@ import { connect } from "react-redux";
 import { ShallowChanged } from "react-vextensions";
 import { setListeners, unsetListeners } from "redux-firestore/es/actions/firestore";
 import { GetPathParts, PathToListenerPath } from "./DatabaseHelpers";
-import { State_Base } from "../Store/StoreHelpers";
+import { State_Base, ActionSet } from "../Store/StoreHelpers";
 import { SplitStringBySlash_Cached } from "./StringSplitCache";
 import { manager, RootState } from "../../Manager";
 
@@ -169,8 +169,7 @@ function DispatchDBAction(action) {
 		if (actionTypeBufferedActions[action.type] == null) {
 			setTimeout(()=> {
 				// now that wait is over, apply any buffered event-triggers
-				let combinedAction = {type: "ApplyActionSet", actions: actionTypeBufferedActions[action.type]} as any;
-				manager.store.dispatch(combinedAction);
+				manager.store.dispatch(new ActionSet(actionTypeBufferedActions[action.type]));
 
 				actionTypeLastDispatchTimes[action.type] = Date.now();
 				actionTypeBufferedActions[action.type] = null;

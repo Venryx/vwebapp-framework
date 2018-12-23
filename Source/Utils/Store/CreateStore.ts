@@ -19,11 +19,11 @@ export function CreateStore(initialState = {}) {
 	const outerMiddleware = [
 		//routerMiddleware(browserHistory),
 		store=>next=>action=> {
-			//PreDispatchAction(action); if (action.type == "ApplyActionSet") for (let sub of action.actions) PreDispatchAction(sub);
+			//PreDispatchAction(action); if (action.type == "ActionSet") for (let sub of action.payload.actions) PreDispatchAction(sub);
 			const returnValue = next(action);
-			//MidDispatchAction(action, returnValue); if (action.type == "ApplyActionSet") for (let sub of action.actions) MidDispatchAction(sub, returnValue);
+			//MidDispatchAction(action, returnValue); if (action.type == "ActionSet") for (let sub of action.payload.actions) MidDispatchAction(sub, returnValue);
 			setTimeout(()=> {
-				PostDispatchAction(action); if (action.type == "ApplyActionSet") for (let sub of action.actions) PostDispatchAction(sub);
+				PostDispatchAction(action); if (action.type == "ActionSet") for (let sub of action.payload.actions) PostDispatchAction(sub);
 			});
 			return returnValue;
 		},
@@ -31,9 +31,9 @@ export function CreateStore(initialState = {}) {
 	];
 	let innerMiddleware = [
 		store=>next=>action=> {
-			PreDispatchAction(action); if (action.type == "ApplyActionSet") for (let sub of action.actions) PreDispatchAction(sub);
+			PreDispatchAction(action); if (action.type == "ActionSet") for (let sub of action.payload.actions) PreDispatchAction(sub);
 			const returnValue = next(action);
-			MidDispatchAction(action, returnValue); if (action.type == "ApplyActionSet") for (let sub of action.actions) MidDispatchAction(sub, returnValue);
+			MidDispatchAction(action, returnValue); if (action.type == "ActionSet") for (let sub of action.payload.actions) MidDispatchAction(sub, returnValue);
 			return returnValue;
 		},
 	];
