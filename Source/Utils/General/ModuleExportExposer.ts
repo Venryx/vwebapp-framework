@@ -39,4 +39,5 @@ export function ExposeModuleExports(addFromVendorDLL = false) {
 		}
 	}
 	G({RR});
+	return RR;
 }

@@ -115,7 +115,7 @@ export function SimpleReducer(path: string | ((store: RootState)=>any), defaultV
 }
 
 export class ActionSet extends Action<{actions: Action<any>[]}> {
-	constructor(actions: Action<any>[]) {
+	constructor(...actions: Action<any>[]) {
 		super({actions});
 	}
 	actions: Action<any>[];
