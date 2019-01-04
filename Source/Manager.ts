@@ -30,6 +30,8 @@ export class Manager {
 	get store() { return this.GetStore(); }
 	get firestoreDB() { return this.store.firebase.firestore(); }
 
+	iconInfo: {[key: string]: any};
+
 	env_short: string;
 	devEnv: boolean;
 	prodEnv: boolean;
