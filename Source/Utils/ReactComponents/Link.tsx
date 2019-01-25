@@ -29,6 +29,9 @@ export type Link_Props = {
 //@Connect((state, {to, actions, updateURLOnActions}: Props)=> {
 @Connect((state, {to, actions}: Link_Props)=> {
 	if (actions) {
+		// if state-data-override is active from something else, just return our last result
+		if (State_overrides.state) return this.lastResult;
+
 		let actionsToDispatch = [];
 		function dispatch(action) {
 			actionsToDispatch.push(action);

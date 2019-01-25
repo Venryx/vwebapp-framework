@@ -3,6 +3,7 @@ import { RootState, manager } from "../../Manager";
 import { State_Options, State_overrides } from "./StateOverrides";
 import { OnAccessPath } from "../Database/FirebaseConnect";
 import { Action, IsACTSetFor } from "../General/Action";
+import { SplitStringBySlash_Cached } from "../Database/StringSplitCache";
 //import {reducer as formReducer} from "redux-form";
 
 /*declare global {
@@ -58,8 +59,13 @@ export function State_Base<T>(...args) {
 	let pathSegments: (string | number)[], options = new State_Options();
 	if (args.length == 0) return State_overrides.state || manager.store.getState();
 	else if (typeof args[0] == "function") pathSegments = ConvertPathGetterFuncToPropChain(args[0]);
-	else if (typeof args[0] == "string") pathSegments = args.length == 1 ? args[0].split("/") : args; // if only one string provided, assume it's the full path
+	else if (typeof args[0] == "string") pathSegments = args;
 	else [options, ...pathSegments] = args;
+
+	// if only one string provided, assume it's the full path
+	if (pathSegments.length === 1) {
+		pathSegments = SplitStringBySlash_Cached(pathSegments[0] as string);
+	}
 
 	if (manager.devEnv) {
 		Assert(pathSegments.All(segment=>segment != null), `Path-segment cannot be null. @segments(${pathSegments})`);
@@ -73,7 +79,7 @@ export function State_Base<T>(...args) {
 	let selectedData = DeepGet(options.state, pathSegments);
 	//if (options.countAsAccess && pathSegments.length) {
 	if (options.countAsAccess) {
-		let path = pathSegments.join("/");
+		const path = typeof args[0] === 'string' && args.length === 1 ? args[0] : pathSegments.join('/');
 		//Assert(g.inConnectFunc, "State(), with countAsAccess:true, must be called from within a Connect() func.");
 		OnAccessPath(path);
 	}
@@ -116,7 +122,19 @@ export function SimpleReducer(path: string | ((store: RootState)=>any), defaultV
 
 export class ActionSet extends Action<{actions: Action<any>[]}> {
 	constructor(...actions: Action<any>[]) {
+		Assert(actions.find(action => action instanceof Array) == null, 'Your code should be "new ActionSet(action1, action2, ...)", not "new ActionSet(actions)".');
+		Assert(actions.find(action => action.type == "ActionSet") == null, 'An ActionSet cannot contain an ActionSet as a subaction. (unfold the subactions manually)');
 		super({actions});
 	}
 	actions: Action<any>[];
 }
+
+/*export let bufferedActions: Action<any>[];
+export function StartBufferingActions() {
+	bufferedActions = [];
+}
+export function StopBufferingActions() {
+	const oldBufferedActions = bufferedActions;
+	bufferedActions = null;
+	manager.store.dispatch(new ActionSet(...oldBufferedActions));
+}*/

@@ -16,6 +16,7 @@ let firebase = firebase_ as any;
 export function CreateStore(initialState = {}) {
 	// middleware configuration
 	// ==========
+	
 	const outerMiddleware = [
 		//routerMiddleware(browserHistory),
 		store=>next=>action=> {
