@@ -5,7 +5,7 @@ import {GetCurrentURL} from "../URL/URLs";
 import Raven from "raven-js";
 import {VURL, DeepGet} from "js-vextensions";
 import { SplitStringBySlash_Cached } from "../Database/StringSplitCache";
-import { RootState, manager } from "../../Manager";
+import { RootState_Base, manager } from "../../Manager";
 import ReactGA from "react-ga";
 import { State_Base } from "./StoreHelpers";
 import { MaybeLog } from "../General/Logging";
@@ -60,7 +60,7 @@ export function PreDispatchAction(action: Action<any>) {
 	"@@reactReduxFirebase/", // ignore redux actions
 ];*/
 
-export function MidDispatchAction(action: Action<any>, newState: RootState) {
+export function MidDispatchAction(action: Action<any>, newState: RootState_Base) {
 }
 
 export function DoesURLChangeCountAsPageChange(oldURL: VURL, newURL: VURL, directURLChange: boolean) {

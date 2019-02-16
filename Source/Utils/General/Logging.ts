@@ -47,7 +47,7 @@ export type LogFunc_Full = (options: LogOptions, ...messageSegments: any[])=>any
 export type LogFunc_Min = (...messageSegments: any[])=>any;
 export var onLogFuncs = [] as LogFunc_Full[];
 
-type LogOptions = {appendStackTrace?: boolean, logLater?: boolean};
+export type LogOptions = {appendStackTrace?: boolean, logLater?: boolean};
 export function Log(options: LogOptions, ...messageSegments: any[]);
 export function Log(...messageSegments: any[]);
 export function Log(...args) {

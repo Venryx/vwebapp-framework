@@ -5,7 +5,7 @@ import { setListeners, unsetListeners } from "redux-firestore/es/actions/firesto
 import { GetPathParts, PathToListenerPath } from "./DatabaseHelpers";
 import { State_Base, ActionSet } from "../Store/StoreHelpers";
 import { SplitStringBySlash_Cached } from "./StringSplitCache";
-import { manager, RootState } from "../../Manager";
+import { manager, RootState_Base } from "../../Manager";
 
 let firebase = firebase_ as any;
 
@@ -20,15 +20,15 @@ export let inConnectFunc = false;
 
 G({FirebaseConnect: Connect}); // make global, for firebase-forum
 // if you're sending in a connect-func rather than a connect-func-wrapper, then you need to make it have at least one argument (to mark it as such)
-export function Connect<T, P>(innerMapStateToPropsFunc: (state: RootState, props: P)=>any);
-export function Connect<T, P>(mapStateToProps_inner_getter: ()=>(state: RootState, props: P)=>any);
+export function Connect<T, P>(innerMapStateToPropsFunc: (state: RootState_Base, props: P)=>any);
+export function Connect<T, P>(mapStateToProps_inner_getter: ()=>(state: RootState_Base, props: P)=>any);
 export function Connect<T, P>(funcOrFuncGetter) {
-	let mapStateToProps_inner: (state: RootState, props: P)=>any, mapStateToProps_inner_getter: ()=>(state: RootState, props: P)=>any;
+	let mapStateToProps_inner: (state: RootState_Base, props: P)=>any, mapStateToProps_inner_getter: ()=>(state: RootState_Base, props: P)=>any;
 	let isFuncGetter = funcOrFuncGetter.length == 0; //&& typeof TryCall(funcOrFuncGetter) == "function";
 	if (!isFuncGetter) mapStateToProps_inner = funcOrFuncGetter;
 	else mapStateToProps_inner_getter = funcOrFuncGetter;
 
-	let mapStateToProps_wrapper = function(state: RootState, props: P) {
+	let mapStateToProps_wrapper = function(state: RootState_Base, props: P) {
 		let s = this;
 		inConnectFunc = true;
 		

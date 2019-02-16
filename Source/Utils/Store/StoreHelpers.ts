@@ -1,5 +1,5 @@
 import { DeepGet } from "js-vextensions";
-import { RootState, manager } from "../../Manager";
+import { manager, RootState_Base } from "../../Manager";
 import { State_Options, State_overrides } from "./StateOverrides";
 import { OnAccessPath } from "../Database/FirebaseConnect";
 import { Action, IsACTSetFor } from "../General/Action";
@@ -51,8 +51,8 @@ function State<T>(pathOrPathSegments, state?: RootState, countAsAccess?: boolean
 	function State<T>(options: State_Options, ...pathSegments: (string | number)[]);
 }*/
 
-export function State_Base<T>(): RootState;
-export function State_Base<T>(pathGetterFunc: (state: RootState)=>T): T;
+export function State_Base<T>(): RootState_Base;
+export function State_Base<T>(pathGetterFunc: (state: RootState_Base)=>T): T;
 export function State_Base<T>(...pathSegments: (string | number)[]);
 export function State_Base<T>(options: State_Options, ...pathSegments: (string | number)[]);
 export function State_Base<T>(...args) {
@@ -94,7 +94,7 @@ function ConvertPathGetterFuncToPropChain(pathGetterFunc: Function) {
 	let result = pathStr.split(".");
 	return result;
 }
-export function StorePath(pathGetterFunc: (state: RootState)=>any) {
+export function StorePath(pathGetterFunc: (state: RootState_Base)=>any) {
 	return ConvertPathGetterFuncToPropChain(pathGetterFunc).join("/");
 }
 
@@ -103,20 +103,24 @@ export function StorePath(pathGetterFunc: (state: RootState)=>any) {
 	store.replaceReducer(MakeRootReducer(store.asyncReducers));
 }*/
 
-type ACTSet_Payload = {path: string | ((state: RootState)=>any), value};
-export class ACTSet extends Action<ACTSet_Payload> {
-	constructor(path: string | ((state: RootState)=>any), value) {
-		if (typeof path == "function") path = StorePath(path);
-		super({path, value});
-		this.type = "ACTSet_" + path; //.replace(/[^a-zA-Z0-9]/g, "_"); // add path to action-type, for easier debugging in dev-tools
+export function CreateACTSet<RootState>() {
+	type ACTSet_Payload = {path: string | ((state: RootState)=>any), value};
+	return class ACTSet extends Action<ACTSet_Payload> {
+		constructor(path: string | ((state: RootState)=>any), value) {
+			if (typeof path == "function") path = StorePath(path);
+			super({path, value});
+			this.type = "ACTSet_" + path; //.replace(/[^a-zA-Z0-9]/g, "_"); // add path to action-type, for easier debugging in dev-tools
+		}
+		type: string;
 	}
-	type: string;
 }
-export function SimpleReducer(path: string | ((store: RootState)=>any), defaultValue = null) {
-	if (IsFunction(path)) path = StorePath(path);
-	return (state = defaultValue, action: Action<any>)=> {
-		if (IsACTSetFor(action, path as string)) return action.payload.value;
-		return state;
+export function CreateSimpleReducer<RootState>() {
+	return function SimpleReducer(path: string | ((store: RootState)=>any), defaultValue = null) {
+		if (IsFunction(path)) path = StorePath(path);
+		return (state = defaultValue, action: Action<any>)=> {
+			if (IsACTSetFor(action, path as string)) return action.payload.value;
+			return state;
+		};
 	};
 }
 

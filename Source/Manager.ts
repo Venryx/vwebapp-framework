@@ -1,8 +1,9 @@
 import { VURL } from "js-vextensions";
 import { connectRouter } from "connected-react-router";
 import { browserHistory } from "./Utils/URL/History";
+import {LogOptions} from "./Utils/General/Logging";
 
-export type RootState = any; // temp
+export type RootState_Base = any; // temp
 
 export type Omit<T, K extends keyof T> = Pick<T, ({ [P in keyof T]: P } & { [P in K]: never })[keyof T]>;
 export class Manager {
@@ -65,5 +66,7 @@ export function OnPopulated(listener: ()=>any) { OnPopulated_listeners.push(list
 
 // globals
 declare global {
-	function Log(message, appendStackTrace?: boolean, logLater?: boolean);
+	//function Log(message, appendStackTrace?: boolean, logLater?: boolean);
+	function Log(options: LogOptions, ...messageSegments: any[]);
+	function Log(...messageSegments: any[]);
 }
