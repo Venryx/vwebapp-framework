@@ -123,7 +123,10 @@ export function ProcessDBData(data, standardizeForm: boolean, addHelpers: boolea
 		if (treeNode.Value == null) continue;
 
 		// turn the should-not-have-been-array arrays (the ones without a "0" property) into objects
-		if (standardizeForm && treeNode.Value instanceof Array && treeNode.Value[0] === undefined) {
+		//if (standardizeForm && treeNode.Value instanceof Array && treeNode.Value[0] === undefined) {
+
+		// turn the should-not-have-been-array arrays (the ones with non-number property) into objects
+		if (standardizeForm && treeNode.Value instanceof Array && treeNode.Value.VKeys(true).Any(a=>!IsNumberString(a))) {
 			// if changing root, we have to actually modify the prototype of the passed-in "data" object
 			/*if (treeNode.Value == data) {
 				Object.setPrototypeOf(data, Object.getPrototypeOf({}));
