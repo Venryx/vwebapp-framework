@@ -1,0 +1,3 @@
+Enter notes into this file for errors you hit in one project, which you'll likely hit in the others as well. (especially if they both use vwebapp-framework)
+==========
+* "Passing redux store in props has been removed and does not do anything.": 

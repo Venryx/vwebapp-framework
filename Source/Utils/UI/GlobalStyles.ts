@@ -19,3 +19,19 @@ export var colors = {
 AddGlobalStyle(`
 .VMenu > div:first-child { border-top: initial !important; }
 `);
+
+//export function ES<E1,E2,E3,E4,E5,E6,E7,E8>(e1?:E1,e2?:E2,e3?:E3,e4?:E4,e5?:E5,e6?:E6,e7?:E7,e8?:E8): E1&E2&E3&E4&E5&E6&E7&E8 {*/
+/**
+ * Same as E(...), except applies extra things for style-objects
+ */
+export function ES(...styles) {
+	let result = E(...styles);
+
+	// for firefox; prevents {flex: 1} from setting {minWidth: "auto"}
+	if (result.flex) {
+		if (result.minWidth == null) result.minWidth = 0;
+		if (result.minHeight == null) result.minHeight = 0;
+	}
+
+	return result;
+}

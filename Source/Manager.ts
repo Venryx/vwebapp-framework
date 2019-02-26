@@ -1,6 +1,6 @@
-import { VURL } from "js-vextensions";
-import { connectRouter } from "connected-react-router";
-import { browserHistory } from "./Utils/URL/History";
+import {VURL} from "js-vextensions";
+import {connectRouter} from "connected-react-router";
+import {browserHistory} from "./Utils/URL/History";
 import {LogOptions} from "./Utils/General/Logging";
 
 export type RootState_Base = any; // temp
@@ -54,7 +54,7 @@ export class Manager {
 	globalConnectorPropGetters: {[key: string]: (state: any, props: any)=>any};
 
 	PostHandleError: (error: Error, errorStr: string)=>any;
-	
+
 	GetAuth: ()=>any;
 	IsAuthValid: (auth)=>boolean;
 	GetUserID: ()=>string;

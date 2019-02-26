@@ -10,7 +10,6 @@ import { manager } from "../../Manager";
 import {persistStore} from "redux-persist";
 import { routerMiddleware } from 'connected-react-router'
 import { browserHistory } from "../URL/History";
-import { MaybeLog } from "../General/Logging";
 let firebase = firebase_ as any;
 
 export function CreateStore(initialState = {}) {

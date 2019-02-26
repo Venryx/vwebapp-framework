@@ -89,20 +89,31 @@ export function LogError(message, appendStackTrace = false, logLater = false) {
 	return message;
 }
 
-class LogTypes {
+export class LogTypes_Base {
 	// from vwebapp-framework
 	pageViews = false;
 	urlLoads = false;
 	cacheUpdates = false;
 	commands = false;
 }
-export function ShouldLog(shouldLogFunc: (logTypes: LogTypes)=>boolean) {
+export function ShouldLog_Base<LogTypes extends LogTypes_Base>(shouldLogFunc: (logTypes: LogTypes)=>boolean) {
 	return shouldLogFunc(window["logTypes"] || {});
 }
-export function MaybeLog(shouldLogFunc: (logTypes: LogTypes)=>boolean, loggerFunc: any) {
-	if (!ShouldLog(shouldLogFunc)) return;
+export function MaybeLog_Base<LogTypes extends LogTypes_Base>(shouldLogFunc: (logTypes: LogTypes)=>boolean, loggerFunc: any) {
+	if (!ShouldLog_Base(shouldLogFunc)) return;
 	// let loggerFuncReturnsString = loggerFunc.arguments.length == 0;
 	const loggerFuncIsSimpleGetter = loggerFunc.toString().replace(/ /g, '').includes('function()');
 	if (loggerFuncIsSimpleGetter) Log(loggerFunc());
 	else loggerFunc(Log);
+};
+
+export function CreateShouldLog<LogTypes extends LogTypes_Base>() {
+	return function ShouldLog(shouldLogFunc: (logTypes: LogTypes)=>boolean) {
+		return ShouldLog_Base(shouldLogFunc);
+	};
 }
+export function CreateMaybeLog<LogTypes extends LogTypes_Base>() {
+	return function MaybeLog(shouldLogFunc: (logTypes: LogTypes)=>boolean, loggerFunc: any) {
+		return MaybeLog_Base(shouldLogFunc, loggerFunc);
+	};
+};

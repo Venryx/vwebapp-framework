@@ -5,8 +5,8 @@ import { RequestPath, inConnectFunc, ClearRequestedPaths, GetRequestedPaths, Uns
 import { State_Base } from "../Store/StoreHelpers";
 import { ShallowChanged } from "react-vextensions";
 import u from "updeep";
-import { MaybeLog } from "../General/Logging";
 import firebase from "firebase";
+import {MaybeLog_Base} from "../General/Logging";
 
 OnPopulated(()=> {
 	G({firebase_: firebase}); // doesn't show as R.firebase, fsr
@@ -556,7 +556,7 @@ export async function ApplyDBUpdates_InChunks(rootPath: string, dbUpdates: Objec
 	for (const [index, dbUpdates_pairs_chunk] of dbUpdates_pairs_chunks.entries()) {
 		const dbUpdates_chunk = dbUpdates_pairs_chunk.ToMap(a => a.key, a => a.value);
 		if (dbUpdates_pairs_chunks.length > 1) {
-			MaybeLog(a => a.commands, l => l(`Applying db-updates chunk #${index + 1} of ${dbUpdates_pairs_chunks.length}...`));
+			MaybeLog_Base(a => a.commands, l => l(`Applying db-updates chunk #${index + 1} of ${dbUpdates_pairs_chunks.length}...`));
 		}
 		await ApplyDBUpdates(rootPath, dbUpdates_chunk);
 	}

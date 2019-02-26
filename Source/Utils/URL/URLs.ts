@@ -1,13 +1,13 @@
-import { GetCurrentURLString, VURL } from "js-vextensions";
-import { manager } from "../../Manager";
-import { MaybeLog } from "../General/Logging";
-import { State_Base } from "../Store/StoreHelpers";
+import {GetCurrentURLString, VURL} from "js-vextensions";
+import {manager} from "../../Manager";
+import {State_Base} from "../Store/StoreHelpers";
+import {MaybeLog_Base} from "../General/Logging";
 
 export function GetCurrentURL(fromAddressBar = false) {
 	return fromAddressBar ? VURL.Parse(GetCurrentURLString()) : VURL.FromLocationObject(State_Base("router", "location"));
 }
 export function NormalizeURL(url: VURL) {
-	let result = url.Clone();
+	const result = url.Clone();
 	if (!manager.rootPages.Contains(result.pathNodes[0])) {
 		result.pathNodes.Insert(0, "home");
 	}
@@ -41,7 +41,7 @@ export function GetCrawlerURLStrForNode(node: MapNode) {
 }*/
 export function GetCurrentURL_SimplifiedForPageViewTracking() {
 	//let result = URL.Current();
-	let result = GetNewURL();
+	const result = GetNewURL();
 
 	/*let mapID = GetOpenMapID();
 	let onMapPage = result.Normalized().toString({domain: false}).startsWith("/global/map");
@@ -71,14 +71,14 @@ export function GetSyncLoadActionsForURL(url: VURL, directURLChange: boolean) {
 // maybe temp; easier than using the "fromURL" prop, since AddressBarWrapper class currently doesn't have access to the triggering action itself
 export var loadingURL = false;
 export async function LoadURL(urlStr: string) {
-	MaybeLog(a=>a.urlLoads, ()=>"Loading url: " + urlStr);
+	MaybeLog_Base(a=>a.urlLoads, ()=>`Loading url: ${urlStr}`);
 	loadingURL = true;
 
 	//if (!GetPath(GetUrlPath(url)).startsWith("global/map")) return;
-	let url = NormalizeURL(VURL.Parse(urlStr));
+	const url = NormalizeURL(VURL.Parse(urlStr));
 
-	let syncActions = GetSyncLoadActionsForURL(url, true);
-	for (let action of syncActions) {
+	const syncActions = GetSyncLoadActionsForURL(url, true);
+	for (const action of syncActions) {
 		manager.store.dispatch(action);
 	}
 
