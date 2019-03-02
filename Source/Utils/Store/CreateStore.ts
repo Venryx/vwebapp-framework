@@ -1,39 +1,61 @@
 import firebase_ from "firebase";
 import "firebase/firestore";
-import { unstable_batchedUpdates } from "react-dom";
-import { reactReduxFirebase } from "react-redux-firebase";
-import { applyMiddleware, compose, createStore, StoreEnhancer } from "redux";
-import { reduxFirestore } from "redux-firestore";
-import { connectRouter } from 'connected-react-router'
-import { MidDispatchAction, PostDispatchAction, PreDispatchAction } from "./ActionProcessor";
-import { manager } from "../../Manager";
+import {unstable_batchedUpdates} from "react-dom";
+import {reactReduxFirebase} from "react-redux-firebase";
+import {applyMiddleware, compose, createStore, StoreEnhancer} from "redux";
+import {reduxFirestore} from "redux-firestore";
+import {connectRouter} from "connected-react-router";
 import {persistStore} from "redux-persist";
-import { routerMiddleware } from 'connected-react-router'
-import { browserHistory } from "../URL/History";
-let firebase = firebase_ as any;
+import {routerMiddleware} from "connected-react-router";
+import {MidDispatchAction, PostDispatchAction, PreDispatchAction} from "./ActionProcessor";
+import {manager} from "../../Manager";
+import {browserHistory} from "../URL/History";
+import {g} from "../../PrivateExports";
+
+const firebase = firebase_ as any;
+
+const dispatchInterceptors = [];
+export function AddDispatchInterceptor(interceptor: Function) {
+	dispatchInterceptors.push(interceptor);
+}
 
 export function CreateStore(initialState = {}) {
 	// middleware configuration
 	// ==========
-	
+
 	const outerMiddleware = [
 		//routerMiddleware(browserHistory),
-		store=>next=>action=> {
+		store=>next=>action=>{
 			//PreDispatchAction(action); if (action.type == "ActionSet") for (let sub of action.payload.actions) PreDispatchAction(sub);
 			const returnValue = next(action);
 			//MidDispatchAction(action, returnValue); if (action.type == "ActionSet") for (let sub of action.payload.actions) MidDispatchAction(sub, returnValue);
-			setTimeout(()=> {
-				PostDispatchAction(action); if (action.type == "ActionSet") for (let sub of action.payload.actions) PostDispatchAction(sub);
+			setTimeout(()=>{
+				PostDispatchAction(action); if (action.type == "ActionSet") for (const sub of action.payload.actions) PostDispatchAction(sub);
 			});
 			return returnValue;
 		},
 		routerMiddleware(browserHistory),
 	];
-	let innerMiddleware = [
-		store=>next=>action=> {
-			PreDispatchAction(action); if (action.type == "ActionSet") for (let sub of action.payload.actions) PreDispatchAction(sub);
+	const innerMiddleware = [
+		store=>next=>action=>{
+			PreDispatchAction(action); if (action.type == "ActionSet") for (const sub of action.payload.actions) PreDispatchAction(sub);
 			const returnValue = next(action);
-			MidDispatchAction(action, returnValue); if (action.type == "ActionSet") for (let sub of action.payload.actions) MidDispatchAction(sub, returnValue);
+			MidDispatchAction(action, returnValue); if (action.type == "ActionSet") for (const sub of action.payload.actions) MidDispatchAction(sub, returnValue);
+			return returnValue;
+		},
+		store=>next=>action=>{
+			const actionStacks_actionTypeIgnorePatterns = [
+				"@@reactReduxFirebase/", // ignore redux actions
+			];
+			if (g.actionStacks || (manager.devEnv && !actionStacks_actionTypeIgnorePatterns.Any(a=>action.type.startsWith(a)))) {
+				action["stack"] = new Error().stack.split("\n").slice(1); // add stack, so we can inspect in redux-devtools
+			}
+			for (const interceptor of dispatchInterceptors) {
+				const result = interceptor(action);
+				if (result == false) return;
+			}
+
+			const returnValue = next(action);
 			return returnValue;
 		},
 	];
@@ -41,7 +63,7 @@ export function CreateStore(initialState = {}) {
 	// redux dev-tools config
 	// ==========
 
-	let reduxDevToolsConfig = {
+	const reduxDevToolsConfig = {
 		maxAge: 70,
 		trace: true,
 	};
@@ -50,7 +72,7 @@ export function CreateStore(initialState = {}) {
 	// ==========
 
 	//reduxConfig["userProfile"] = DBPath("users"); // root that user profiles are written to
-	let reduxFirebaseConfig = {
+	const reduxFirebaseConfig = {
 		//userProfile: DBPath("users"), // root that user profiles are written to
 		userProfile: `versions/v${manager.dbVersion}-${manager.env_short}/users`, // root that user profiles are written to
 		enableLogging: true, // enable/disable Firebase Database Logging
@@ -61,10 +83,10 @@ export function CreateStore(initialState = {}) {
 	if (firebase.apps.length == 0) {
 		firebase.initializeApp(manager.firebaseConfig);
 	}
-	let firestoreDB = firebase.firestore();
+	const firestoreDB = firebase.firestore();
 	firestoreDB.settings({timestampsInSnapshots: true});
 
-	let rootReducer = manager.MakeRootReducer();
+	const rootReducer = manager.MakeRootReducer();
 	const store = createStore(
 		rootReducer,
 		initialState,
@@ -80,7 +102,7 @@ export function CreateStore(initialState = {}) {
 			//batchedSubscribe(unstable_batchedUpdates),
 			applyMiddleware(...innerMiddleware), // place inner-middleware after reduxFirebase (deeper to func that *actually dispatches*), so it can intercept all its dispatched events
 			window["__REDUX_DEVTOOLS_EXTENSION__"] && window["__REDUX_DEVTOOLS_EXTENSION__"](reduxDevToolsConfig),
-		].filter(a=>a)) as StoreEnhancer<any>
+		].filter(a=>a)) as StoreEnhancer<any>,
 	); // as ProjectStore;
 	store["reducer"] = rootReducer;
 
@@ -107,7 +129,7 @@ export function CreateStore(initialState = {}) {
 	//let persister = persistStore(store, {whitelist: ["main"]});
 	// you want to remove some keys before you save
 	//let persister = persistStore(store, null, ()=>g.storeRehydrated = true);
-	let persister = persistStore(store);
+	const persister = persistStore(store);
 	if (manager.startURL.GetQueryVar("clearState")) {
 		Log("Clearing redux-store's state and local-storage...");
 		ClearLocalData(persister);
@@ -119,7 +141,7 @@ export function CreateStore(initialState = {}) {
 export function ClearLocalData(persister) {
 	persister.purge();
 	//localStorage.clear();
-	for (let key in localStorage) {
+	for (const key in localStorage) {
 		if (key.startsWith("firebase:")) continue; // keep auth-info
 		delete localStorage[key];
 	}

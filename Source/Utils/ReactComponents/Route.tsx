@@ -1,6 +1,4 @@
 import {BaseComponent} from "react-vextensions";
-import {VURL} from "js-vextensions";
-import {NormalizeURL} from "../URL/URLs";
 import React from "react";
 import {Route as Route_Base, Switch} from "react-router";
 let aa = {Route_Base, Switch} as any;

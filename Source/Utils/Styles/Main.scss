@@ -2,9 +2,9 @@
 	@import "Markdown";
 	//@import "~katex/dist/katex.min.css"; // has issues with fonts atm (trying to load from server from "/node_modules...")
 	//@import "~normalize.css/normalize";
-	@import "~react-datetime/css/react-datetime.css";
 	@import "~rc-tooltip/assets/bootstrap.css";
 	@import "~rc-slider/assets/index.css";
+	@import "~react-datetime/css/react-datetime.css";
 
 	.sliderHandleAbove .rc-slider > [role=slider] {
 		z-index: 1;
@@ -202,17 +202,6 @@
 		will-change: transform;
 	}
 
-	.background {
-		background-image: url(/Images/Backgrounds/Planet_x1920.jpg);
-		background-position: center center;
-		background-size: cover;
-	}
-	@media (min-width: 1921px) {
-		.background {
-			background-image: url(/Images/Backgrounds/Planet_x3840.jpg);
-		}
-	}
-
 	.triangle {
 		position: relative;
 		background-color: orange;
@@ -238,10 +227,4 @@
 	.triangle.down { transform: rotate(-120deg) skewX(-30deg) scale(1,.866); }
 	.triangle.left { transform: rotate(-30deg) skewX(-30deg) scale(1,.866); }
 	.triangle.right { transform: rotate(-90deg) skewX(-30deg) scale(1,.866); }
-
-	// quick fix for color-picker-box going off-screen in object-panel
-	.ObjectPanel .sketch-picker {
-		position: absolute;
-		right: -47px;
-	}
 }

@@ -41,9 +41,7 @@ export class Manager {
 	logTypes: any;
 
 	startURL: VURL;
-	rootPages: string[];
-	rootPageDefaultChilds: any;
-
+	routerLocationPathInStore: string[];
 	GetSyncLoadActionsForURL: (url: VURL, directURLChange: boolean)=>any[];
 	GetNewURL: ()=>VURL;
 
@@ -56,7 +54,6 @@ export class Manager {
 	PostHandleError: (error: Error, errorStr: string)=>any;
 
 	GetAuth: ()=>any;
-	IsAuthValid: (auth)=>boolean;
 	GetUserID: ()=>string;
 }
 export const manager = new Manager();
@@ -70,3 +67,5 @@ declare global {
 	function Log(options: LogOptions, ...messageSegments: any[]);
 	function Log(...messageSegments: any[]);
 }
+
+// breakpoint: implement deep-function-replacement system

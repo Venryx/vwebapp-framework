@@ -1,9 +1,8 @@
 import { DeepGet } from "js-vextensions";
 import { manager, RootState_Base } from "../../Manager";
 import { State_Options, State_overrides } from "./StateOverrides";
-import { OnAccessPath } from "../Database/FirebaseConnect";
 import { Action, IsACTSetFor } from "../General/Action";
-import { SplitStringBySlash_Cached } from "../Database/StringSplitCache";
+import {e} from "../../PrivateExports";
 //import {reducer as formReducer} from "redux-form";
 
 /*declare global {
@@ -64,7 +63,7 @@ export function State_Base<T>(...args) {
 
 	// if only one string provided, assume it's the full path
 	if (pathSegments.length === 1) {
-		pathSegments = SplitStringBySlash_Cached(pathSegments[0] as string);
+		pathSegments = e.SplitStringBySlash_Cached(pathSegments[0] as string);
 	}
 
 	if (manager.devEnv) {
@@ -81,9 +80,20 @@ export function State_Base<T>(...args) {
 	if (options.countAsAccess) {
 		const path = typeof args[0] === 'string' && args.length === 1 ? args[0] : pathSegments.join('/');
 		//Assert(g.inConnectFunc, "State(), with countAsAccess:true, must be called from within a Connect() func.");
-		OnAccessPath(path);
+		e.OnAccessPath(path);
 	}
 	return selectedData;
+}
+
+export function CreateState<RootState>() {
+	function State<T>(): RootState;
+	function State<T>(pathGetterFunc: (state: RootState)=>T): T;
+	function State<T>(...pathSegments: (string | number)[]);
+	function State<T>(options: State_Options, ...pathSegments: (string | number)[]);
+	function State<T>(...args) {
+		return State_Base(...args);
+	}
+	return State;
 }
 
 function ConvertPathGetterFuncToPropChain(pathGetterFunc: Function) {
@@ -133,7 +143,7 @@ export class ActionSet extends Action<{actions: Action<any>[]}> {
 	actions: Action<any>[];
 }
 
-/*export let bufferedActions: Action<any>[];
+export let bufferedActions: Action<any>[];
 export function StartBufferingActions() {
 	bufferedActions = [];
 }
@@ -141,4 +151,16 @@ export function StopBufferingActions() {
 	const oldBufferedActions = bufferedActions;
 	bufferedActions = null;
 	manager.store.dispatch(new ActionSet(...oldBufferedActions));
-}*/
+}
+
+/* export let uiConnectRefreshCalls: ((targetThis, rootState, props)=>any)[];
+export function StartBufferingUIConnectRefreshes() {
+	uiConnectRefreshCalls = [];
+}
+export function StopBufferingUIConnectRefreshes() {
+	const oldUIConnectRefreshCalls = uiConnectRefreshCalls;
+	uiConnectRefreshCalls = null;
+	for (let refreshCall of oldUIConnectRefreshCalls) {
+		// todo
+	}
+} */

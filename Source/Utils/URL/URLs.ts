@@ -1,20 +1,10 @@
 import {GetCurrentURLString, VURL} from "js-vextensions";
 import {manager} from "../../Manager";
-import {State_Base} from "../Store/StoreHelpers";
 import {MaybeLog_Base} from "../General/Logging";
+import {e} from "../../PrivateExports";
 
 export function GetCurrentURL(fromAddressBar = false) {
-	return fromAddressBar ? VURL.Parse(GetCurrentURLString()) : VURL.FromLocationObject(State_Base("router", "location"));
-}
-export function NormalizeURL(url: VURL) {
-	const result = url.Clone();
-	if (!manager.rootPages.Contains(result.pathNodes[0])) {
-		result.pathNodes.Insert(0, "home");
-	}
-	if (result.pathNodes[1] == null && manager.rootPageDefaultChilds[result.pathNodes[0]]) {
-		result.pathNodes.Insert(1, manager.rootPageDefaultChilds[result.pathNodes[0]]);
-	}
-	return result;
+	return fromAddressBar ? VURL.Parse(GetCurrentURLString()) : VURL.FromLocationObject(e.State_Base(...manager.routerLocationPathInStore));
 }
 
 /*export function GetCrawlerURLStrForMap(mapID: number) {
@@ -41,7 +31,7 @@ export function GetCrawlerURLStrForNode(node: MapNode) {
 }*/
 export function GetCurrentURL_SimplifiedForPageViewTracking() {
 	//let result = URL.Current();
-	const result = GetNewURL();
+	const result = manager.GetNewURL();
 
 	/*let mapID = GetOpenMapID();
 	let onMapPage = result.Normalized().toString({domain: false}).startsWith("/global/map");
@@ -63,11 +53,6 @@ export function GetCurrentURL_SimplifiedForPageViewTracking() {
 // loading
 // ==========
 
-const pagesWithSimpleSubpages = ["home", "more", "write"].ToMap(page=>page, ()=>null);
-export function GetSyncLoadActionsForURL(url: VURL, directURLChange: boolean) {
-	return manager.GetSyncLoadActionsForURL(url, directURLChange);
-}
-
 // maybe temp; easier than using the "fromURL" prop, since AddressBarWrapper class currently doesn't have access to the triggering action itself
 export var loadingURL = false;
 export async function LoadURL(urlStr: string) {
@@ -75,20 +60,12 @@ export async function LoadURL(urlStr: string) {
 	loadingURL = true;
 
 	//if (!GetPath(GetUrlPath(url)).startsWith("global/map")) return;
-	const url = NormalizeURL(VURL.Parse(urlStr));
+	const url = VURL.Parse(urlStr);
 
-	const syncActions = GetSyncLoadActionsForURL(url, true);
+	const syncActions = manager.GetSyncLoadActionsForURL(url, true);
 	for (const action of syncActions) {
 		manager.store.dispatch(action);
 	}
 
 	loadingURL = false;
-}
-
-// saving
-// ==========
-
-//g.justChangedURLFromCode = false;
-export function GetNewURL() {
-	return manager.GetNewURL();
 }

@@ -2,7 +2,7 @@ import { VURL } from "js-vextensions";
 import React from 'react';
 import { BaseComponent } from "react-vextensions";
 import { Connect } from "../Database/FirebaseConnect";
-import { GetCurrentURL, GetNewURL } from "../URL/URLs";
+import { GetCurrentURL } from "../URL/URLs";
 import { State_Base } from "../Store/StoreHelpers";
 import { manager } from "../../Manager";
 import { State_overrides } from "../Store/StateOverrides";
@@ -46,7 +46,7 @@ export type Link_Props = {
 		}
 		State_overrides.state = newState;
 		State_overrides.countAsAccess = false;
-		let newURL = GetNewURL();
+		let newURL = manager.GetNewURL();
 		State_overrides.countAsAccess = null;
 		State_overrides.state = null;
 

@@ -1,15 +1,16 @@
-import {Action} from "../General/Action";
-import { LoadURL, GetSyncLoadActionsForURL, GetCurrentURL_SimplifiedForPageViewTracking } from "../URL/URLs";
-import {DBPath, GetData, GetDataAsync, ProcessDBData, ListenerPathToPath} from "../Database/DatabaseHelpers";
-import {GetCurrentURL} from "../URL/URLs";
 import Raven from "raven-js";
 import {VURL, DeepGet} from "js-vextensions";
-import { SplitStringBySlash_Cached } from "../Database/StringSplitCache";
-import { RootState_Base, manager } from "../../Manager";
 import ReactGA from "react-ga";
-import { State_Base } from "./StoreHelpers";
-import { LOCATION_CHANGE } from "connected-react-router";
+import {Action} from "../General/Action";
+import { LoadURL, GetCurrentURL_SimplifiedForPageViewTracking } from "../URL/URLs";
+import {DBPath, GetData, GetDataAsync, ProcessDBData, ListenerPathToPath} from "../Database/DatabaseHelpers";
+import {GetCurrentURL} from "../URL/URLs";
+import {SplitStringBySlash_Cached} from "../Database/StringSplitCache";
+import {RootState_Base, manager} from "../../Manager";
+import {State_Base} from "./StoreHelpers";
+import {LOCATION_CHANGE} from "connected-react-router";
 import {MaybeLog_Base} from "../General/Logging";
+import {e} from "../../PrivateExports";
 
 // use this to intercept dispatches (for debugging)
 /*let oldDispatch = store.dispatch;
@@ -23,14 +24,14 @@ const actionStacks_actionTypeIgnorePatterns = [
 	"@@reactReduxFirebase/", // ignore redux actions
 ];
 
-let lastPath = "";
+const lastPath = "";
 //export function ProcessAction(action: Action<any>, newState: RootState, oldState: RootState) {
 // only use this if you actually need to change the action-data before it gets dispatched/applied (otherwise use [Mid/Post]DispatchAction)
 export function PreDispatchAction(action: Action<any>) {
 	if (window["actionStacks"] || (manager.devEnv && !actionStacks_actionTypeIgnorePatterns.Any(a=>action.type.startsWith(a)))) {
 		action["stack"] = new Error().stack.split("\n").slice(1); // add stack, so we can inspect in redux-devtools
 	}
-	
+
 	if (action.type == "@@reactReduxFirebase/SET") {
 		if (action["data"]) {
 			action["data"] = ProcessDBData(action["data"], true, true, SplitStringBySlash_Cached(action["path"]).Last());
@@ -43,8 +44,8 @@ export function PreDispatchAction(action: Action<any>) {
 	if (action.type == "@@reduxFirestore/LISTENER_RESPONSE" || action.type == "@@reduxFirestore/DOCUMENT_ADDED" || action.type == "@@reduxFirestore/DOCUMENT_MODIFIED") {
 		if (action.payload.data) {
 			// "subcollections" prop currently bugged in some cases, so just use new "path" prop when available
-			let path = action["meta"].path || ListenerPathToPath(action["meta"]);
-			
+			const path = action["meta"].path || ListenerPathToPath(action["meta"]);
+
 			action.payload.data = ProcessDBData(action.payload.data, true, true, SplitStringBySlash_Cached(path).Last());
 		} /*else {
 			// don't add the property to the store, if it is just null anyway (this makes it consistent with how firebase returns the whole db-state)
@@ -69,7 +70,7 @@ export function DoesURLChangeCountAsPageChange(oldURL: VURL, newURL: VURL, direc
 
 	/*let oldSyncLoadActions = GetSyncLoadActionsForURL(oldURL, directURLChange);
 	let oldMapViewMergeAction = oldSyncLoadActions.find(a=>a.Is(ACTMapViewMerge));
-	
+
 	let newSyncLoadActions = GetSyncLoadActionsForURL(newURL, directURLChange);
 	let newMapViewMergeAction = newSyncLoadActions.find(a=>a.Is(ACTMapViewMerge));
 
@@ -89,7 +90,7 @@ export function RecordPageView(url: VURL) {
 		ReactGA.set({page: url.toString({domain: false})});
 		ReactGA.pageview(url.toString({domain: false}) || "/");
 	}
-	MaybeLog_Base(a=>a.pageViews, ()=>"Page-view: " + url);
+	MaybeLog_Base(a=>a.pageViews, ()=>`Page-view: ${url}`);
 }
 
 let postInitCalled = false;
@@ -100,10 +101,10 @@ export async function PostDispatchAction(action: Action<any>) {
 		postInitCalled = true;
 	}
 
-	let url = GetCurrentURL();
+	const url = GetCurrentURL();
 	//let oldURL = URL.Current();
 	//let url = VURL.FromState(action.payload);
-	let simpleURL = GetCurrentURL_SimplifiedForPageViewTracking();
+	const simpleURL = GetCurrentURL_SimplifiedForPageViewTracking();
 	if (DoesURLChangeCountAsPageChange(pageViewTracker_lastURL, simpleURL, true)) {
 		pageViewTracker_lastURL = simpleURL;
 		RecordPageView(simpleURL);
@@ -168,8 +169,8 @@ export async function PostDispatchAction(action: Action<any>) {
 	}*/
 
 	if (action.type == "@@reactReduxFirebase/LOGIN") {
-		let userID = action["auth"].uid;
-		let joinDate = await GetDataAsync("userExtras", userID, ".joinDate");
+		const userID = action["auth"].uid;
+		const joinDate = await GetDataAsync("userExtras", userID, ".joinDate");
 		if (joinDate == null) {
 			/*let firebase = store.firebase.helpers;
 			firebase.DBRef(`userExtras/${userID}`).update({
@@ -199,9 +200,9 @@ export async function PostDispatchAction(action: Action<any>) {
 function PostInit() {
 	let lastAuth;
 	//Log("Subscribed");
-	manager.store.subscribe(()=> {
-		let auth = manager.GetAuth();
-		if (manager.IsAuthValid(auth) && auth != lastAuth) {
+	manager.store.subscribe(()=>{
+		const auth = manager.GetAuth();
+		if (e.IsAuthValid(auth) && auth != lastAuth) {
 			//Log("Setting user-context: " + auth);
 			//Raven.setUserContext(auth);
 			Raven.setUserContext(auth.Including("uid", "displayName", "email", "photoURL"));

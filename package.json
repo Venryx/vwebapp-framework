@@ -39,14 +39,11 @@
 		"raven-js": "^3.27.0",
 		"connected-react-router": "^6.0.0",
 		"react-router": "^4.3.1",
-		"rc-slider": "^8.6.4",
-		"react-datetime": "^2.16.3",
 		"remarkable": "^1.7.1",
 		"remarkable-react": "^1.4.1",
 		"react-ga": "^2.5.6",
 		"redux-persist": "^5.10.0",
-		"updeep": "^1.1.0",
-		"rc-tooltip": "^3.7.3"
+		"updeep": "^1.1.0"
 	},
 	"devDependencies": {
 		"@types/react": "^16.7.13",
@@ -74,10 +71,7 @@
 		"firebase-forum": "0.0.4",
 		"js-vextensions": "0.0.8",
 		"raven-js": "^3.27.0",
-		"rc-slider": "^8.6.4",
-		"rc-tooltip": "^3.7.3",
 		"react": "^16.7.0",
-		"react-datetime": "^2.16.3",
 		"react-dom": "^16.7.0",
 		"react-ga": "^2.5.6",
 		"react-markdown": "^4.0.4",
@@ -98,5 +92,9 @@
 		"webpack-cli": "^3.1.2",
 		"webpack-runtime-require": "^0.3.1"
 	},
-	"dependencies": {}
+	"dependencies": {
+		"rc-tooltip": "^3.7.3",
+		"rc-slider": "^8.6.4",
+		"react-datetime": "^2.16.3"
+	}
 }

@@ -2,10 +2,11 @@ import firebase_ from "firebase";
 import { connect } from "react-redux";
 import { ShallowChanged } from "react-vextensions";
 import { setListeners, unsetListeners } from "redux-firestore/es/actions/firestore";
-import { GetPathParts, PathToListenerPath } from "./DatabaseHelpers";
+import { GetPathParts, PathToListenerPath, activeStoreAccessCollectors } from "./DatabaseHelpers";
 import { State_Base, ActionSet } from "../Store/StoreHelpers";
 import { SplitStringBySlash_Cached } from "./StringSplitCache";
 import { manager, RootState_Base } from "../../Manager";
+import {g} from "../../PrivateExports";
 
 let firebase = firebase_ as any;
 
@@ -16,7 +17,19 @@ let firebase = firebase_ as any;
 // 2) is not already used by an existing selector in Connect()
 // This way, it'll correctly trigger a re-render when the underlying data changes.
 
-export let inConnectFunc = false;
+// This is used, for now, when you want to use a number of GetAsync() calls in a row, but don't want this slowing down the UI by having all UI components run their selectors every time.
+// Calling freeze before the set of calls will delay the connect/ui updates until unfreeze is called. (used primarily for the more-efficient running of Command instances locally)
+export let connectCompsFrozen = false;
+export function FreezeConnectComps() {
+	connectCompsFrozen = true;
+}
+export function UnfreezeConnectComps(triggerStoreChange = true) {
+	connectCompsFrozen = false;
+	// trigger store-change, so that frozen-comps that would have updated based on changes while frozen, can now do so
+	if (triggerStoreChange) {
+		manager.store.dispatch({ type: 'UnfreezeConnectComps' });
+	}
+}
 
 G({FirebaseConnect: Connect}); // make global, for firebase-forum
 // if you're sending in a connect-func rather than a connect-func-wrapper, then you need to make it have at least one argument (to mark it as such)
@@ -30,7 +43,10 @@ export function Connect<T, P>(funcOrFuncGetter) {
 
 	let mapStateToProps_wrapper = function(state: RootState_Base, props: P) {
 		let s = this;
-		inConnectFunc = true;
+		if (connectCompsFrozen && s.lastResult) {
+			return s.lastResult;
+		}
+		g.inConnectFuncFor = s.WrappedComponent;
 		
 		ClearRequestedPaths();
 		ClearAccessedPaths();
@@ -56,7 +72,7 @@ export function Connect<T, P>(funcOrFuncGetter) {
 
 		//let result = storeDataChanged ? mapStateToProps_inner(state, props) : s.lastResult;
 		if (!storeDataChanged && !propsChanged) {
-			inConnectFunc = false;
+			g.inConnectFuncFor = null;
 			return s.lastResult;
 		}
 		//let result = mapStateToProps_inner.call(s, state, props);
@@ -107,7 +123,7 @@ export function Connect<T, P>(funcOrFuncGetter) {
 		s.lastProps = props;
 		s.lastResult = result;
 
-		inConnectFunc = false;
+		g.inConnectFuncFor = null;
 
 		return result;
 	};
@@ -184,13 +200,16 @@ function DispatchDBAction(action) {
 let requestedPaths = {} as {[key: string]: boolean};
 /** This only adds paths to a "request list". Connect() is in charge of making the actual db requests. */
 export function RequestPath(path: string) {
-	//Log("Requesting Stage1: " + path);
-	requestedPaths[path] = true;
+	//MaybeLog(a => a.dbRequests, () => `${_.padEnd(`Requesting db-path (stage 1): ${path}`, 150)}Component:${g.inConnectFuncFor ? g.inConnectFuncFor.name : ''}`);
+	// firestore path-requests are always by-doc, so cut off any field-paths
+	const path_toDoc = GetPathParts(path)[0];
+	requestedPaths[path_toDoc] = true;
 }
 /** This only adds paths to a "request list". Connect() is in charge of making the actual db requests. */
 export function RequestPaths(paths: string[]) {
-	for (let path of paths)
+	for (const path of paths) {
 		RequestPath(path);
+	}
 }
 export function ClearRequestedPaths() {
 	requestedPaths = {};
@@ -199,11 +218,16 @@ export function GetRequestedPaths() {
 	return requestedPaths.VKeys();
 }
 
-let accessedStorePaths = {} as {[key: string]: boolean};
+export let accessedStorePaths = {} as {[key: string]: boolean};
 export function OnAccessPath(path: string) {
-	//Log("Accessing-path Stage1: " + path);
-	//let path = pathSegments.join("/");
+	// Log("Accessing-path Stage1: " + path);
+	// let path = pathSegments.join("/");
 	accessedStorePaths[path] = true;
+	if (activeStoreAccessCollectors) {
+		for (const collector of activeStoreAccessCollectors) {
+			collector.storePathsRequested.push(path);
+		}
+	}
 }
 /*export function OnAccessPaths(paths: string[]) {
 	for (let path of paths)

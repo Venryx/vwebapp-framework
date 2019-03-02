@@ -1,12 +1,13 @@
 import { OnPopulated, manager } from "../../Manager";
 import { SplitStringBySlash_Cached } from "./StringSplitCache";
-import { GetTreeNodesInObjTree, DeepSet, DeepGet } from "js-vextensions";
-import { RequestPath, inConnectFunc, ClearRequestedPaths, GetRequestedPaths, UnsetListeners, SetListeners } from "./FirebaseConnect";
+import { GetTreeNodesInObjTree, DeepSet, DeepGet, CachedTransform, GetStorageForCachedTransform } from "js-vextensions";
+import { RequestPath, ClearRequestedPaths, GetRequestedPaths, UnsetListeners, SetListeners } from "./FirebaseConnect";
 import { State_Base } from "../Store/StoreHelpers";
 import { ShallowChanged } from "react-vextensions";
 import u from "updeep";
 import firebase from "firebase";
 import {MaybeLog_Base} from "../General/Logging";
+import {g} from "../../PrivateExports";
 
 OnPopulated(()=> {
 	G({firebase_: firebase}); // doesn't show as R.firebase, fsr
@@ -200,6 +201,8 @@ let pathInfos = {} as {[path: string]: DBPathInfo};
 export class GetData_Options {
 	inVersionRoot? = true;
 	makeRequest? = true;
+	collection? = false;
+	excludeCollections?: string[];
 	useUndefinedForInProgress? = false;
 	queries?: any;
 }
@@ -226,8 +229,17 @@ export function GetData(...args) {
 	if (manager.devEnv) {
 		//Assert((manager.dbVersion && manager.env_short) || !options.inVersionRoot, "Cannot call GetData in-version-root until the dbVersion and env_short variables are supplied.");
 		Assert(!pathSegments.Contains("vundefined-undefined"), `The path contains "vundefined-undefined"! This suggests that a module, like firebase-forum, is calling GetData before InitLibs() has executed.`);
-		Assert(pathSegments.All(segment=>typeof segment == "number" || !segment.Contains("/")),
-			`Each string path-segment must be a plain prop-name. (ie. contain no "/" separators) @segments(${pathSegments})`);
+		Assert(pathSegments.every(segment => typeof segment === 'number' || !segment.Contains('/')), `Each string path-segment must be a plain prop-name. (ie. contain no "/" separators) @segments(${pathSegments})`);
+
+		const colOrDocPathSegments = pathSegments.filter(segment => IsNumber(segment) || !segment.startsWith('.'));
+		if (options.collection) {
+			Assert(colOrDocPathSegments.length % 2 !== 0,
+				`Calling GetData() to retrieve a document or doc-field (${pathSegments.join('/')}) is prohibited if you pass {collection:true} as an option.`);
+		} else {
+			Assert(colOrDocPathSegments.length % 2 === 0, () => `
+				Calling GetData() to retrieve a collection (${pathSegments.join('/')}) is only allowed if you pass {collection:true} as an option.
+				Did you forget to add "." in front of field-path segments? (eg: "collection/doc/.field1/.field2")`.AsMultiline(0));
+		}
 	}
 
 	let path = pathSegments.join("/");
@@ -253,6 +265,17 @@ export function GetData(...args) {
 	//let result = State("firebase", "data", ...SplitStringByForwardSlash_Cached(path)) as any;
 	let result = State_Base("firestore", "data", ...pathSegments.map(a=>typeof a == "string" && a[0] == "." ? a.substr(1) : a)) as any;
 	//let result = State("firebase", "data", ...pathSegments) as any;
+
+	// if at this path there's both an object-doc, and subcollections, exclude those subcollections (and if in doing so we find object-doc doesn't exist, set result to null)
+	if (result != null && options.excludeCollections) {
+		for (const key of options.excludeCollections) {
+			delete result[key];
+		}
+		if (result.VKeys(true).length == 0) {
+			result = null;
+		}
+	}
+
 	if (result == null && options.useUndefinedForInProgress) {
 		let requestCompleted = State_Base().firestore.status.requested[path];
 		if (!requestCompleted) return undefined; // undefined means, current-data for path is null/non-existent, but we haven't completed the current request yet
@@ -323,7 +346,7 @@ export async function GetDataAsync(...args) {
  */
 G({GetAsync});
 export async function GetAsync<T>(dbGetterFunc: ()=>T, statsLogger?: ({requestedPaths: string})=>void): Promise<T> {
-	Assert(!inConnectFunc, "Cannot run GetAsync() from within a Connect() function.");
+	Assert(g.inConnectFuncFor == null, 'Cannot run GetAsync() from within a Connect() function.');
 	//Assert(!g.inGetAsyncFunc, "Cannot run GetAsync() from within a GetAsync() function.");
 	let firebase = manager.store.firebase;
 
@@ -399,81 +422,80 @@ export function WaitTillPathDataIsReceived(path: string): Promise<any> {
 	});
 }
 
-/*;(function() {
-	var Firebase = require("firebase");
-	var FirebaseRef = Firebase.database.Reference;
+export const activeStoreAccessCollectors = [];
+class DBRequestCollector {
+	storePathsRequested = [] as string[];
+	Start() {
+		activeStoreAccessCollectors.push(this);
+		return this;
+	}
+	Stop() {
+		activeStoreAccessCollectors.Remove(this);
+	}
+}
 
-	Firebase.ABORT_TRANSACTION_NOW = {};
-
-	var originalTransaction = FirebaseRef.prototype.transaction;
-	FirebaseRef.prototype.transaction = function transaction(updateFunction, onComplete, applyLocally) {
-		var aborted, tries = 0, ref = this, updateError;
-
-		var promise = new Promise(function(resolve, reject) {
-			var wrappedUpdate = function(data) {
-				// Clone data in case updateFunction modifies it before aborting.
-				var originalData = JSON.parse(JSON.stringify(data));
-				aborted = false;
-				try {
-					if (++tries > 100) throw new Error('maxretry');
-					var result = updateFunction.call(this, data);
-					if (result === undefined) {
-						aborted = true;
-						result = originalData;
-					} else if (result === Firebase.ABORT_TRANSACTION_NOW) {
-						aborted = true;
-						result = undefined;
-					}
-					return result;
-				} catch (e) {
-					// Firebase propagates exceptions thrown by the update function to the top level.	So
-					// catch them here instead, reject the promise, and abort the transaction by returning
-					// undefined.
-					updateError = e;
-				}
-			};
-
-			function txn() {
-				try {
-					originalTransaction.call(ref, wrappedUpdate, function(error, committed, snapshot) {
-						error = error || updateError;
-						var result;
-						if (error && (error.message === 'set' || error.message === 'disconnect')) {
-							txn();
-						} else if (error) {
-							result = onComplete ? onComplete(error, false, snapshot) : undefined;
-							reject(error);
-						} else {
-							result = onComplete ? onComplete(error, committed && !aborted, snapshot) : undefined;
-							resolve({committed: committed && !aborted, snapshot: snapshot});
-						}
-						return result;
-					}, applyLocally);
-				} catch (e) {
-					if (onComplete) onComplete(e, false);
-					reject(e);
-				}
+/** Same as CachedTransform(), except it also includes all accessed store-data as dynamic-props.
+* This means that you can now "early return cache" for lots of cases, where dynamic-props is *only* the store-data, thus requiring *no recalculation*.
+* So basically, by wrapping code in this function, you're saying:
+*		"Do not re-evaluate the code below unless dynamic-props have changed, or one of the store-paths it accessed last time has changed."
+* 		(with the transformType and staticProps defining what "here" means)
+*/
+export function CachedTransform_WithStore<T, T2, T3>(
+	transformType: string, staticProps: any[], dynamicProps: T2,
+	transformFunc: (debugInfo: any, staticProps: any[], dynamicProps: T2)=>T3,
+): T3 {
+	const storage = GetStorageForCachedTransform(transformType, staticProps);
+	const dynamicProps_withStoreData = { ...dynamicProps as any };
+	if (storage.lastDynamicProps) {
+		for (const key in storage.lastDynamicProps) {
+			if (key.startsWith('store_')) {
+				const path = key.substr('store_'.length);
+				// let oldVal = storage.lastDynamicProps[key];
+				// let newVal = State({countAsAccess: false}, ...path.split("/"));
+				const newVal = State_Base(...path.split('/')); // count as access, so that Connect() retriggers for changes to these inside-transformer accessed-paths
+				dynamicProps_withStoreData[key] = newVal;
 			}
+		}
+	}
 
-			txn();
-		});
+	const collector = new DBRequestCollector().Start();
+	try {
+		var result = CachedTransform(transformType, staticProps, dynamicProps_withStoreData, transformFunc);
+	} finally {
+		collector.Stop();
+	}
 
-		return promise;
-	};
-})();*/
+	// for each accessed store entry, add it to VCache's "last dynamic props" for this transform
+	for (const path of collector.storePathsRequested) {
+		const val = State_Base({ countAsAccess: false }, path);
+		storage.lastDynamicProps[`store_${path}`] = val;
+	}
 
-//export function FirebaseConnect<T>(paths: string[]); // just disallow this atm, since you might as well just use a connect/getter func
-/*export function FirebaseConnect<T>(pathsOrGetterFunc?: string[] | ((props: T)=>string[]));
-export function FirebaseConnect<T>(pathsOrGetterFunc?) {
-	return firebaseConnect(props=> {
-		let paths =
-			pathsOrGetterFunc instanceof Array ? pathsOrGetterFunc :
-			pathsOrGetterFunc instanceof Function ? pathsOrGetterFunc(props) :
-			[];
-		paths = paths.map(a=>DBPath(a)); // add version prefix to paths
-		return paths;
-	});
-}*/
+	return result;
+}
+
+export function AssertValidatePath(path: string) {
+	Assert(!path.endsWith('/'), 'Path cannot end with a slash. (This may mean a path parameter is missing)');
+	Assert(!path.Contains('//'), 'Path cannot contain a double-slash. (This may mean a path parameter is missing)');
+}
+
+export function ConvertDataToValidDBUpdates(rootPath: string, rootData: any, dbUpdatesRelativeToRootPath = true) {
+	const result = {};
+	for (const { key: pathFromRoot, value: data } of rootData.Pairs()) {
+		const fullPath = `${rootPath}/${pathFromRoot}`;
+		const pathForDBUpdates = dbUpdatesRelativeToRootPath ? pathFromRoot : fullPath;
+
+		// if entry`s "path" has odd number of segments (ie. points to collection), extract the children data into separate set-doc updates
+		if (SplitStringBySlash_Cached(fullPath).length % 2 !== 0) {
+			for (const { key, value } of data.Pairs()) {
+				result[`${pathForDBUpdates}/${key}`] = value;
+			}
+		} else {
+			result[pathForDBUpdates] = data;
+		}
+	}
+	return result;
+}
 
 export async function ApplyDBUpdates(rootPath: string, dbUpdates: Object) {
 	dbUpdates = Clone(dbUpdates);
