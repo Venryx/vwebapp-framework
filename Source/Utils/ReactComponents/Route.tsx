@@ -1,6 +1,7 @@
 import {BaseComponent} from "react-vextensions";
 import React from "react";
 import {Route as Route_Base, Switch} from "react-router";
+//import {GetCurrentURL} from 'Utils/URL/URLs';
 let aa = {Route_Base, Switch} as any;
 
 export class Route extends BaseComponent<{path?: string, exact?: boolean, withConditions?: (location: Location)=>boolean}, {}> {
@@ -20,8 +21,12 @@ export class Route extends BaseComponent<{path?: string, exact?: boolean, withCo
 		return (
 			<aa.Switch>
 				<aa.Route_Base path={path} exact={exact}>
-					{match=>match ?
-						children as any : null}
+					{match=> {
+						let {GetCurrentURL} = require('Utils/URL/URLs'); // late-require, due to require-cycle issue
+						if (!match) return null;
+						if (withConditions && withConditions(GetCurrentURL().ToLocationObject()) == false) return false;
+						return children;
+					}}
 				</aa.Route_Base>
 			</aa.Switch>
 		);
