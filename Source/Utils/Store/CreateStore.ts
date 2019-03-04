@@ -1,16 +1,14 @@
+import {routerMiddleware} from "connected-react-router";
 import firebase_ from "firebase";
 import "firebase/firestore";
-import {unstable_batchedUpdates} from "react-dom";
 import {reactReduxFirebase} from "react-redux-firebase";
 import {applyMiddleware, compose, createStore, StoreEnhancer} from "redux";
 import {reduxFirestore} from "redux-firestore";
-import {connectRouter} from "connected-react-router";
 import {persistStore} from "redux-persist";
-import {routerMiddleware} from "connected-react-router";
-import {MidDispatchAction, PostDispatchAction, PreDispatchAction} from "./ActionProcessor";
 import {manager} from "../../Manager";
-import {browserHistory} from "../URL/History";
 import {g} from "../../PrivateExports";
+import {browserHistory} from "../URL/History";
+import {MidDispatchAction, PostDispatchAction, PreDispatchAction} from "./ActionProcessor";
 import {ActionSet} from "./StoreHelpers";
 
 const firebase = firebase_ as any;

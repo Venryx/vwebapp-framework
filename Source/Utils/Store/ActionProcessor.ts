@@ -20,6 +20,7 @@ export function DoesActionSetFirebaseData(action: Action<any>) {
 	return action.type == "@@reactReduxFirebase/SET";
 }
 export function DoesActionSetFirestoreData(action: Action<any>) {
+	// the LISTENER_RESPONSE action doesn't always actually change the store data (sometimes it stores the same data, meaning it only causes a meaningless status-update: {receiving:false, received:true})
 	return action.type == "@@reduxFirestore/LISTENER_RESPONSE" || action.type == "@@reduxFirestore/DOCUMENT_ADDED" || action.type == "@@reduxFirestore/DOCUMENT_MODIFIED";
 }
 export function GetFirestoreDataSetterActionPath(action: Action<any>) {

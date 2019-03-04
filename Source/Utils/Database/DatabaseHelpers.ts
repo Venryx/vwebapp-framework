@@ -5,7 +5,7 @@ import firebase from "firebase";
 import {OnPopulated, manager} from "../../Manager";
 import {SplitStringBySlash_Cached} from "./StringSplitCache";
 import {RequestPath, ClearRequestedPaths, GetRequestedPaths, UnsetListeners, SetListeners} from "./FirebaseConnect";
-import {State_Base} from "../Store/StoreHelpers";
+import {State_Base, StartBufferingActions, StopBufferingActions} from "../Store/StoreHelpers";
 import {MaybeLog_Base} from "../General/Logging";
 import {g} from "../../PrivateExports";
 
@@ -35,23 +35,22 @@ export function FBFieldPathToVFieldPath(vFieldPath: string) {
 	return vFieldPath != null ? vFieldPath.replace(/\./g, "/") : null;
 }
 
-/*export function CombinePathSegments(...pathSegments: (string | number)[]) {
-	let result = "";
-	for (let segment of pathSegments) {
-		if (segment[0] != ".") {
-			result += "/";
-		}
-		result += segment;
+/**
+ * @param asFBPath If true, returned paths are separated with "."; if false, by "/". Default: false
+ * @returns [colOrDocPath, fieldPathInDoc]
+ * */
+export function GetPathParts(path: string, asFBPath = false): [string, string] {
+	let colOrDocPath = path.substr(0, path.indexOf("/.").IfN1Then(path.length));
+	const isDocPath = colOrDocPath.length != path.length; // if length differs, it means field-path is supplied, which means it's a doc-path
+	if (isDocPath) {
+		Assert(SplitStringBySlash_Cached(colOrDocPath).length % 2 == 0, `Segment count in docPath (${colOrDocPath}) must be multiple of 2.`);
 	}
-	return result;
-}*/
-export function GetPathParts(path: string, asFBPath = false) {
-	let docPath = path.substr(0, path.indexOf("/.").IfN1Then(path.length));
-	let fieldPathInDoc = docPath.length < path.length ? path.substr(docPath.length + 2).replace(/\./g, "") : null;
+
+	let fieldPathInDoc = colOrDocPath.length < path.length ? path.substr(colOrDocPath.length + 2).replace(/\./g, "") : null;
 	if (asFBPath) {
-		[docPath, fieldPathInDoc] = [VPathToFBPath(docPath), VFieldPathToFBFieldPath(fieldPathInDoc)];
+		[colOrDocPath, fieldPathInDoc] = [VPathToFBPath(colOrDocPath), VFieldPathToFBFieldPath(fieldPathInDoc)];
 	}
-	return [docPath, fieldPathInDoc];
+	return [colOrDocPath, fieldPathInDoc];
 }
 
 export function DBPath(path = "", inVersionRoot = true) {
@@ -289,6 +288,10 @@ export class GetDataAsync_Options {
 }
 
 G({GetDataAsync});
+/**
+ * Usually you'll want to use GetAsync() instead. (example: "await GetAsync(()=>GetNode(id))")
+ * Also beware: GetDataAsync() seems to sometimes trigger a LISTENER_RESPONSE action with {data: null}, even if the DB has already sent the actual data for a new path.
+ */
 export async function GetDataAsync(...pathSegments: (string | number)[]): Promise<any>;
 export async function GetDataAsync(options: GetDataAsync_Options, ...pathSegments: (string | number)[]): Promise<any>;
 export async function GetDataAsync(...args) {
@@ -315,7 +318,6 @@ options: GetDataAsync_Options;
 	});*/
 
 	const path = DBPath(pathSegments.join("/"), options.inVersionRoot);
-	//let path = CombinePathSegments(...pathSegments);
 	const [colOrDocPath, fieldPathInDoc] = GetPathParts(path);
 	const isDoc = colOrDocPath.split("/").length % 2 == 0;
 
@@ -361,6 +363,8 @@ export async function GetAsync<T>(dbGetterFunc: ()=>T, statsLogger?: ({requested
 		result = dbGetterFunc();
 		const newRequestedPaths = GetRequestedPaths().Except(requestedPathsSoFar.VKeys());
 
+		StartBufferingActions();
+
 		/*unWatchEvents(firebase, store.dispatch, getEventsFromInput(newRequestedPaths)); // do this just to trigger re-get
 		// start watching paths (causes paths to be requested)
 		watchEvents(firebase, store.dispatch, getEventsFromInput(newRequestedPaths));*/
@@ -368,6 +372,8 @@ export async function GetAsync<T>(dbGetterFunc: ()=>T, statsLogger?: ({requested
 		UnsetListeners(newRequestedPaths); // do this just to trigger re-get
 		// start watching paths (causes paths to be requested)
 		SetListeners(newRequestedPaths);
+
+		StopBufferingActions();
 
 		for (const path of newRequestedPaths) {
 			requestedPathsSoFar[path] = true;
@@ -401,24 +407,63 @@ export async function GetAsync_Raw<T>(dbGetterFunc: ()=>T, statsLogger?: ({reque
 	return RemoveHelpers(Clone(value));
 }
 
-export function WaitTillPathDataIsReceived(path: string): Promise<any> {
-	return new Promise((resolve, reject)=>{
-		let pathDataReceived = State_Base().firestore.status.requested[path];
-		// if data already received, return right away
-		if (pathDataReceived) {
-			resolve();
+type ReceiveStatus = "not started" | "receiving" | "received";
+export const pathReceiveStatuses = {} as {[key: string]: ReceiveStatus};
+export const pathReceivingListeners = {} as {[key: string]: Function[]};
+export const pathReceivedListeners = {} as {[key: string]: Function[]};
+export function NotifyPathsReceiving(paths: string[]) {
+	for (const path of paths) {
+		pathReceiveStatuses[path] = "receiving";
+		if (pathReceivingListeners[path]) {
+			// pathReceivingListeners[path].forEach(listener => listener());
+			for (const listener of pathReceivingListeners[path]) listener();
 		}
+	}
+}
+export function NotifyPathsReceived(paths: string[]) {
+	for (const path of paths) {
+		pathReceiveStatuses[path] = "received";
+		if (pathReceivedListeners[path]) {
+			for (const listener of pathReceivedListeners[path]) listener();
+		}
+	}
+}
+export function WaitTillPathDataIsReceiving(path: string): Promise<any> {
+	Assert(!path.Contains("/."), "This function can only be supplied with collection/document paths. (not field paths)");
+	return new Promise((resolve, reject)=>{
+		let pathDataReceiving = pathReceiveStatuses[path] === "receiving";
+		// if data already receiving, resolve right away
+		if (pathDataReceiving) resolve();
 
-		// else, add listener, and wait till store received the data (then return it)
+		// else, add listener, and wait till store is receiving the data (then resolve it)
 		const listener = ()=>{
-			//pathDataReceived = State(a=>a.firebase.requested[path]);
-			pathDataReceived = State_Base().firestore.status.requested[path];
-			if (pathDataReceived) {
-				unsubscribe();
+			pathDataReceiving = pathReceiveStatuses[path] === "receiving";
+			if (pathDataReceiving) {
+				pathReceivingListeners[path].Remove(listener);
 				resolve();
 			}
 		};
-		let unsubscribe = manager.store.subscribe(listener);
+		pathReceivingListeners[path] = pathReceivingListeners[path] || [];
+		pathReceivingListeners[path].push(listener);
+	});
+}
+export function WaitTillPathDataIsReceived(path: string): Promise<any> {
+	Assert(!path.Contains("/."), "This function can only be supplied with collection/document paths. (not field paths)");
+	return new Promise((resolve, reject)=>{
+		let pathDataReceived = pathReceiveStatuses[path] === "received";
+		// if data already received, resolve right away
+		if (pathDataReceived) resolve();
+
+		// else, add listener, and wait till store has received the data (then resolve it)
+		const listener = ()=>{
+			pathDataReceived = pathReceiveStatuses[path] === "received";
+			if (pathDataReceived) {
+				pathReceivedListeners[path].Remove(listener);
+				resolve();
+			}
+		};
+		pathReceivedListeners[path] = pathReceivedListeners[path] || [];
+		pathReceivedListeners[path].push(listener);
 	});
 }
 

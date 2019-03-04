@@ -2,11 +2,14 @@ import firebase_ from "firebase";
 import {connect} from "react-redux";
 import {ShallowChanged} from "react-vextensions";
 import {setListeners, unsetListeners} from "redux-firestore/es/actions/firestore";
-import {GetPathParts, PathToListenerPath, activeStoreAccessCollectors} from "./DatabaseHelpers";
+import {firestoreReducer} from "redux-firestore";
+import {DeepGet} from "js-vextensions";
+import {GetPathParts, PathToListenerPath, activeStoreAccessCollectors, NotifyPathsReceiving, NotifyPathsReceived} from "./DatabaseHelpers";
 import {State_Base, ActionSet} from "../Store/StoreHelpers";
 import {SplitStringBySlash_Cached} from "./StringSplitCache";
-import {manager, RootState_Base} from "../../Manager";
-import {g} from "../../PrivateExports";
+import {manager, RootState_Base, OnPopulated} from "../../Manager";
+import {g, e} from "../../PrivateExports";
+import {GetFirestoreDataSetterActionPath} from "../..";
 
 const firebase = firebase_ as any;
 
@@ -76,41 +79,47 @@ mapStateToProps_inner_getter: ()=>(state: RootState_Base, props: P)=>any;
 			g.inConnectFuncFor = null;
 			return s.lastResult;
 		}
-		//let result = mapStateToProps_inner.call(s, state, props);
+
 		// for debugging in profiler
-		//let debugText = ToJSON(props).replace(/[^a-zA-Z0-9]/g, "_");
-		const debugText = `${props["node"] ? ` @ID:${props["node"]._id}` : ""} @changedPath: ${changedPath}`;
-		const wrapperFunc = eval(`(function ${debugText.replace(/[^a-zA-Z0-9]/g, "_")}() { return mapStateToProps_inner.apply(s, arguments); })`);
-		const result = wrapperFunc.call(s, state, props);
+		let result;
+		if (manager.devEnv) {
+			//let debugText = ToJSON(props).replace(/[^a-zA-Z0-9]/g, "_");
+			const debugText = `${props["node"] ? ` @ID:${props["node"]._id}` : ""} @changedPath: ${changedPath}`;
+			const wrapperFunc = eval(`(function ${debugText.replace(/[^a-zA-Z0-9]/g, "_")}() { return mapStateToProps_inner.apply(s, arguments); })`);
+			result = wrapperFunc.call(s, state, props);
+		} else {
+			result = mapStateToProps_inner.call(s, state, props);
+		}
 
 		manager.globalConnectorPropGetters.Pairs().forEach(({key, value: getter})=>{
 			result[key] = getter.call(s, state, props);
 		});
 
 		const oldRequestedPaths: string[] = s.lastRequestedPaths || [];
-		const requestedPaths = GetRequestedPaths();
-		//if (firebase._ && ShallowChanged(requestedPaths, oldRequestedPaths)) {
+		const requestedPaths: string[] = GetRequestedPaths();
+		// if (firebase._ && ShallowChanged(requestedPaths, oldRequestedPaths)) {
 		if (ShallowChanged(requestedPaths, oldRequestedPaths)) {
-			window["setImmediate"](()=>{
-				//s.lastEvents = getEventsFromInput(requestedPaths.map(path=>GetPathParts(path)[0]));
+			g.setImmediate(()=>{
+				// s.lastEvents = getEventsFromInput(requestedPaths.map(path=>GetPathParts(path)[0]));
 				const removedPaths = oldRequestedPaths.Except(...requestedPaths);
 				// todo: find correct way of unwatching events; the way below seems to sometimes unwatch while still needed watched
 				// for now, we just never unwatch
-				//unWatchEvents(store.firebase, DispatchDBAction, getEventsFromInput(removedPaths));
-				//store.firestore.unsetListeners(removedPaths.map(path=>GetPathParts(path)[0]));
-				const removedPaths_toDocs = removedPaths.map(path=>GetPathParts(path)[0]);
-				const removedPaths_toDocs_asListenerPaths = removedPaths_toDocs.map(path=>PathToListenerPath(path));
-				//store.firestore.unsetListeners(removedPaths_toDocs_asListenerPaths);
-				unsetListeners(firebase.firebase_ || firebase, DispatchDBAction, removedPaths_toDocs_asListenerPaths);
+				// unWatchEvents(store.firebase, DispatchDBAction, getEventsFromInput(removedPaths));
+				// store.firestore.unsetListeners(removedPaths.map(path=>GetPathParts(path)[0]));
+				/* const removedPaths_toDocs = removedPaths.map(path => GetPathParts(path)[0]);
+				const removedPaths_toDocs_asListenerPaths = removedPaths_toDocs.map(path => PathToListenerPath(path));
+				// store.firestore.unsetListeners(removedPaths_toDocs_asListenerPaths);
+				unsetListeners(firebase['firebase_'] || firebase, DispatchDBAction, removedPaths_toDocs_asListenerPaths); */
+				// UnsetListeners(removedPaths);
 
 				const addedPaths = requestedPaths.Except(...oldRequestedPaths);
-				const addedPaths_toDocs = addedPaths.map(path=>GetPathParts(path)[0]);
-				const addedPaths_toDocs_asListenerPaths = addedPaths_toDocs.map(path=>PathToListenerPath(path));
-				//watchEvents(store.firebase, DispatchDBAction, getEventsFromInput(addedPaths.map(path=>GetPathParts(path)[0])));
+				/* const addedPaths_toDocs = addedPaths.map(path => GetPathParts(path)[0]);
+				const addedPaths_toDocs_asListenerPaths = addedPaths_toDocs.map(path => PathToListenerPath(path));
+				// watchEvents(store.firebase, DispatchDBAction, getEventsFromInput(addedPaths.map(path=>GetPathParts(path)[0])));
 				// for debugging, you can check currently-watched-paths using: store.firestore._.listeners
-				//store.firestore.setListeners(addedPaths_toDocs_asListenerPaths);
-				setListeners(firebase.firebase_ || firebase, DispatchDBAction, addedPaths_toDocs_asListenerPaths);
-				Log(`Requesting paths: ${addedPaths.join(",")}`);
+				// store.firestore.setListeners(addedPaths_toDocs_asListenerPaths);
+				setListeners(firebase['firebase_'] || firebase, DispatchDBAction, addedPaths_toDocs_asListenerPaths); */
+				SetListeners(addedPaths);
 			});
 			s.lastRequestedPaths = requestedPaths;
 		}
@@ -142,7 +151,8 @@ mapStateToProps_inner_getter: ()=>(state: RootState_Base, props: P)=>any;
 
 export const pathListenerCounts = {};
 export function SetListeners(paths: string[]) {
-	for (const path of paths) {
+	const paths_toDocs = paths.map(path=>GetPathParts(path)[0]);
+	for (const path of paths_toDocs) {
 		const oldListenerCount = pathListenerCounts[path] || 0;
 		pathListenerCounts[path] = oldListenerCount + 1;
 		if (oldListenerCount > 0) continue;
@@ -152,19 +162,23 @@ export function SetListeners(paths: string[]) {
 		manager.store.firestore.setListener(listenerPath);
 	}
 }
-export function UnsetListeners(paths: string[]) {
-	for (const path of paths) {
+export function UnsetListeners(paths: string[], forceUnsetActualListener = false) {
+	const paths_toDocs = paths.map(path=>GetPathParts(path)[0]);
+	for (const path of paths_toDocs) {
 		const listenerPath = PathToListenerPath(path);
 		pathListenerCounts[path]--;
-		if (pathListenerCounts[path] == 0) {
+		if (pathListenerCounts[path] == 0 || forceUnsetActualListener) {
 			manager.store.firestore.unsetListener(listenerPath);
 		}
 	}
 }
 
+// in dev-mode, don't buffer actions as this makes it harder to debug using Redux dev-tools panel
+//const actionTypeBufferInfos = DEV ? {} : {
 const actionTypeBufferInfos = {
 	"@@reactReduxFirebase/START": {time: 300},
 	"@@reactReduxFirebase/SET": {time: 300},
+	// buffer these less, since is we buffer too much it can slow down the progressive-response of the Connect() functions to new data
 	/*"@@reduxFirestore/SET_LISTENER": {time: 300},
 	"@@reduxFirestore/LISTENER_RESPONSE": {time: 300},
 	"@@reduxFirestore/UNSET_LISTENER": {time: 300},*/
@@ -172,23 +186,55 @@ const actionTypeBufferInfos = {
 const actionTypeLastDispatchTimes = {};
 const actionTypeBufferedActions = {};
 
-function DispatchDBAction(action) {
-	const timeSinceLastDispatch = Date.now() - (actionTypeLastDispatchTimes[action.type] || 0);
-	const bufferInfo = actionTypeBufferInfos[action.type];
+OnPopulated(()=>{
+	// Set up action-type buffering, as well as "dispatch blocking" for some actions that are useless and just slow the UI/connect-funcs down.
+	// (The dispatch-blocking only works fully with the optimization in the CDL webpack-config, which modifies redux to not notify subscribers, if an action caused absolutely no change to the store data)
+	e.AddDispatchInterceptor(action=>{
+		// These are merely informational entries into the redux store. We don't use them, so block these actions from being dispatched.
+		// if (action.type === '@@reduxFirestore/SET_LISTENER' || action.type === '@@reduxFirestore/UNSET_LISTENER') return;
+		if (action.type === "@@reduxFirestore/SET_LISTENER" || action.type === "@@reduxFirestore/UNSET_LISTENER" || e.DoesActionSetFirestoreData(action)) {
+			const state = State_Base();
+			// const newFirebaseState = firebaseStateReducer(state.firebase, action);
+			const newFirestoreState = firestoreReducer(state.firestore, action);
 
-	// if we're not supposed to buffer this action type, or it's been long enough since last dispatch of this type
-	if (bufferInfo == null || timeSinceLastDispatch >= bufferInfo.time) {
-		// dispatch action right away
-		manager.store.dispatch(action);
-		actionTypeLastDispatchTimes[action.type] = Date.now();
-	}
-	// else, buffer action to be dispatched later
-	else {
+			// Watch for changes to requesting and requested, and channel those statuses into a custom pathReceiveStatuses map.
+			// This way, when an action only changes these statuses, we can cancel the action dispatch, greatly reducing performance impact.
+			NotifyPathsReceiving(newFirestoreState.status.requesting.Pairs().filter(a=>a.value).map(a=>a.key));
+			NotifyPathsReceived(newFirestoreState.status.requested.Pairs().filter(a=>a.value).map(a=>a.key));
+
+			// these ones never store actual data, so always block them
+			if (action.type === "@@reduxFirestore/SET_LISTENER" || action.type === "@@reduxFirestore/UNSET_LISTENER") {
+				return false; // block dispatch
+			}
+			// LISTENER_RESPONSE actions sometimes store (new) data, so conditionally block them
+			if (action.type == "@@reduxFirestore/LISTENER_RESPONSE") {
+				// Here we check if the action changed more than just the statuses. If it didn't, block the action dispatch.
+				const path = GetFirestoreDataSetterActionPath(action);
+				const oldData = DeepGet(state.firestore.data, path);
+				const newData = DeepGet(newFirestoreState.data, path);
+				// if (newData === oldData) {
+				if (newData === oldData || ToJSON(newData) === ToJSON(oldData)) {
+					return false;
+				}
+			}
+		}
+
+		const timeSinceLastDispatch = Date.now() - (actionTypeLastDispatchTimes[action.type] || 0);
+		const bufferInfo = actionTypeBufferInfos[action.type];
+
+		// if we're not supposed to buffer this action type, or it's been long enough since last dispatch of this type
+		if (bufferInfo == null || timeSinceLastDispatch >= bufferInfo.time) {
+			actionTypeLastDispatchTimes[action.type] = Date.now();
+			// dispatch action right away
+			return true;
+		}
+
+		// else, buffer action to be dispatched later
 		// if timer not started, start it now
 		if (actionTypeBufferedActions[action.type] == null) {
 			setTimeout(()=>{
 				// now that wait is over, apply any buffered event-triggers
-				manager.store.dispatch(new ActionSet(actionTypeBufferedActions[action.type]));
+				manager.store.dispatch(new ActionSet(...actionTypeBufferedActions[action.type]));
 
 				actionTypeLastDispatchTimes[action.type] = Date.now();
 				actionTypeBufferedActions[action.type] = null;
@@ -197,8 +243,8 @@ function DispatchDBAction(action) {
 
 		// add action to buffer, to be run when timer ends
 		actionTypeBufferedActions[action.type] = (actionTypeBufferedActions[action.type] || []).concat(action);
-	}
-}
+	});
+});
 
 let requestedPaths = {} as {[key: string]: boolean};
 /** This only adds paths to a "request list". Connect() is in charge of making the actual db requests. */

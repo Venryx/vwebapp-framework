@@ -1,7 +1,7 @@
-import { DeepGet } from "js-vextensions";
-import { manager, RootState_Base } from "../../Manager";
-import { State_Options, State_overrides } from "./StateOverrides";
-import { Action, IsACTSetFor } from "../General/Action";
+import {DeepGet} from "js-vextensions";
+import {manager, RootState_Base} from "../../Manager";
+import {State_Options, State_overrides} from "./StateOverrides";
+import {Action, IsACTSetFor} from "../General/Action";
 import {e} from "../../PrivateExports";
 //import {reducer as formReducer} from "redux-form";
 
@@ -57,7 +57,7 @@ export function State_Base<T>(options: State_Options, ...pathSegments: (string |
 export function State_Base<T>(...args) {
 	let pathSegments: (string | number)[], options = new State_Options();
 	if (args.length == 0) return State_overrides.state || manager.store.getState();
-	else if (typeof args[0] == "function") pathSegments = ConvertPathGetterFuncToPropChain(args[0]);
+	if (typeof args[0] == "function") pathSegments = ConvertPathGetterFuncToPropChain(args[0]);
 	else if (typeof args[0] == "string") pathSegments = args;
 	else [options, ...pathSegments] = args;
 
@@ -75,10 +75,10 @@ export function State_Base<T>(...args) {
 	options.state = options.state || State_overrides.state || manager.store.getState();
 	options.countAsAccess = options.countAsAccess != null ? options.countAsAccess : (State_overrides.countAsAccess != null ? State_overrides.countAsAccess : true);
 
-	let selectedData = DeepGet(options.state, pathSegments);
+	const selectedData = DeepGet(options.state, pathSegments);
 	//if (options.countAsAccess && pathSegments.length) {
 	if (options.countAsAccess) {
-		const path = typeof args[0] === 'string' && args.length === 1 ? args[0] : pathSegments.join('/');
+		const path = typeof args[0] === "string" && args.length === 1 ? args[0] : pathSegments.join("/");
 		//Assert(g.inConnectFunc, "State(), with countAsAccess:true, must be called from within a Connect() func.");
 		e.OnAccessPath(path);
 	}
@@ -97,11 +97,11 @@ export function CreateState<RootState>() {
 }
 
 function ConvertPathGetterFuncToPropChain(pathGetterFunc: Function) {
-	let pathStr = pathGetterFunc.toString().match(/return a\.(.+?);/)[1] as string;
+	const pathStr = pathGetterFunc.toString().match(/return a\.(.+?);/)[1] as string;
 	Assert(!pathStr.includes("["), `State-getter-func cannot contain bracket-based property-access.\n${nl
 		}For variable inclusion, use multiple segments as in "State("main", "mapViews", mapID)".`);
 	//let result = pathStr.replace(/\./g, "/");
-	let result = pathStr.split(".");
+	const result = pathStr.split(".");
 	return result;
 }
 export function StorePath(pathGetterFunc: (state: RootState_Base)=>any) {
@@ -119,15 +119,15 @@ export function CreateACTSet<RootState>() {
 		constructor(path: string | ((state: RootState)=>any), value) {
 			if (typeof path == "function") path = StorePath(path);
 			super({path, value});
-			this.type = "ACTSet_" + path; //.replace(/[^a-zA-Z0-9]/g, "_"); // add path to action-type, for easier debugging in dev-tools
+			this.type = `ACTSet_${path}`; //.replace(/[^a-zA-Z0-9]/g, "_"); // add path to action-type, for easier debugging in dev-tools
 		}
 		type: string;
-	}
+	};
 }
 export function CreateSimpleReducer<RootState>() {
 	return function SimpleReducer(path: string | ((store: RootState)=>any), defaultValue = null) {
 		if (IsFunction(path)) path = StorePath(path);
-		return (state = defaultValue, action: Action<any>)=> {
+		return (state = defaultValue, action: Action<any>)=>{
 			if (IsACTSetFor(action, path as string)) return action.payload.value;
 			return state;
 		};
@@ -141,10 +141,10 @@ export class ActionSet extends Action<{actions: Action<any>[]}> {
 		}
 		return [action];
 	}
-	
+
 	constructor(...actions: Action<any>[]) {
-		Assert(actions.find(action => action instanceof Array) == null, 'Your code should be "new ActionSet(action1, action2, ...)", not "new ActionSet(actions)".');
-		Assert(actions.find(action => action.type == "ActionSet") == null, 'An ActionSet cannot contain an ActionSet as a subaction. (unfold the subactions manually)');
+		Assert(actions.find(action=>action instanceof Array) == null, "Your code should be \"new ActionSet(action1, action2, ...)\", not \"new ActionSet(actions)\".");
+		Assert(actions.find(action=>action.type == "ActionSet") == null, "An ActionSet cannot contain an ActionSet as a subaction. (unfold the subactions manually)");
 		super({actions});
 	}
 }
