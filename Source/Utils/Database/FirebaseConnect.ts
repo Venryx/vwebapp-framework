@@ -1,14 +1,14 @@
 import firebase_ from "firebase";
-import { connect } from "react-redux";
-import { ShallowChanged } from "react-vextensions";
-import { setListeners, unsetListeners } from "redux-firestore/es/actions/firestore";
-import { GetPathParts, PathToListenerPath, activeStoreAccessCollectors } from "./DatabaseHelpers";
-import { State_Base, ActionSet } from "../Store/StoreHelpers";
-import { SplitStringBySlash_Cached } from "./StringSplitCache";
-import { manager, RootState_Base } from "../../Manager";
+import {connect} from "react-redux";
+import {ShallowChanged} from "react-vextensions";
+import {setListeners, unsetListeners} from "redux-firestore/es/actions/firestore";
+import {GetPathParts, PathToListenerPath, activeStoreAccessCollectors} from "./DatabaseHelpers";
+import {State_Base, ActionSet} from "../Store/StoreHelpers";
+import {SplitStringBySlash_Cached} from "./StringSplitCache";
+import {manager, RootState_Base} from "../../Manager";
 import {g} from "../../PrivateExports";
 
-let firebase = firebase_ as any;
+const firebase = firebase_ as any;
 
 // todo: rename to FirestoreConnect
 
@@ -27,7 +27,7 @@ export function UnfreezeConnectComps(triggerStoreChange = true) {
 	connectCompsFrozen = false;
 	// trigger store-change, so that frozen-comps that would have updated based on changes while frozen, can now do so
 	if (triggerStoreChange) {
-		manager.store.dispatch({ type: 'UnfreezeConnectComps' });
+		manager.store.dispatch({type: "UnfreezeConnectComps"});
 	}
 }
 
@@ -36,18 +36,19 @@ G({FirebaseConnect: Connect}); // make global, for firebase-forum
 export function Connect<T, P>(innerMapStateToPropsFunc: (state: RootState_Base, props: P)=>any);
 export function Connect<T, P>(mapStateToProps_inner_getter: ()=>(state: RootState_Base, props: P)=>any);
 export function Connect<T, P>(funcOrFuncGetter) {
-	let mapStateToProps_inner: (state: RootState_Base, props: P)=>any, mapStateToProps_inner_getter: ()=>(state: RootState_Base, props: P)=>any;
-	let isFuncGetter = funcOrFuncGetter.length == 0; //&& typeof TryCall(funcOrFuncGetter) == "function";
+	let mapStateToProps_inner: (state: RootState_Base, props: P)=>any; let
+mapStateToProps_inner_getter: ()=>(state: RootState_Base, props: P)=>any;
+	const isFuncGetter = funcOrFuncGetter.length == 0; //&& typeof TryCall(funcOrFuncGetter) == "function";
 	if (!isFuncGetter) mapStateToProps_inner = funcOrFuncGetter;
 	else mapStateToProps_inner_getter = funcOrFuncGetter;
 
-	let mapStateToProps_wrapper = function(state: RootState_Base, props: P) {
-		let s = this;
+	const mapStateToProps_wrapper = function(state: RootState_Base, props: P) {
+		const s = this;
 		if (connectCompsFrozen && s.lastResult) {
 			return s.lastResult;
 		}
 		g.inConnectFuncFor = s.WrappedComponent;
-		
+
 		ClearRequestedPaths();
 		ClearAccessedPaths();
 		//Assert(GetAccessedPaths().length == 0, "Accessed-path must be empty at start of mapStateToProps call (ie. the code in Connect()).");
@@ -58,7 +59,7 @@ export function Connect<T, P>(funcOrFuncGetter) {
 		if (s.lastAccessedStorePaths_withData == null) {
 			storeDataChanged = true;
 		} else {
-			for (let path in s.lastAccessedStorePaths_withData) {
+			for (const path in s.lastAccessedStorePaths_withData) {
 				if (State_Base({countAsAccess: false}, ...SplitStringBySlash_Cached(path)) !== s.lastAccessedStorePaths_withData[path]) {
 					//store.dispatch({type: "Data changed!" + path});
 					storeDataChanged = true;
@@ -68,7 +69,7 @@ export function Connect<T, P>(funcOrFuncGetter) {
 			}
 		}
 		//let propsChanged = ShallowChanged(props, s.lastProps || {});
-		let propsChanged = ShallowChanged(props, s.lastProps || {}, "children");
+		const propsChanged = ShallowChanged(props, s.lastProps || {}, "children");
 
 		//let result = storeDataChanged ? mapStateToProps_inner(state, props) : s.lastResult;
 		if (!storeDataChanged && !propsChanged) {
@@ -78,46 +79,46 @@ export function Connect<T, P>(funcOrFuncGetter) {
 		//let result = mapStateToProps_inner.call(s, state, props);
 		// for debugging in profiler
 		//let debugText = ToJSON(props).replace(/[^a-zA-Z0-9]/g, "_");
-		let debugText = (props["node"] ? " @ID:" + props["node"]._id : "") + " @changedPath: " + changedPath;
-		let wrapperFunc = eval(`(function ${debugText.replace(/[^a-zA-Z0-9]/g, "_")}() { return mapStateToProps_inner.apply(s, arguments); })`);
-		let result = wrapperFunc.call(s, state, props);
+		const debugText = `${props["node"] ? ` @ID:${props["node"]._id}` : ""} @changedPath: ${changedPath}`;
+		const wrapperFunc = eval(`(function ${debugText.replace(/[^a-zA-Z0-9]/g, "_")}() { return mapStateToProps_inner.apply(s, arguments); })`);
+		const result = wrapperFunc.call(s, state, props);
 
-		manager.globalConnectorPropGetters.Pairs().forEach(({key, value: getter})=> {
+		manager.globalConnectorPropGetters.Pairs().forEach(({key, value: getter})=>{
 			result[key] = getter.call(s, state, props);
 		});
 
-		let oldRequestedPaths: string[] = s.lastRequestedPaths || [];
-		let requestedPaths = GetRequestedPaths();
+		const oldRequestedPaths: string[] = s.lastRequestedPaths || [];
+		const requestedPaths = GetRequestedPaths();
 		//if (firebase._ && ShallowChanged(requestedPaths, oldRequestedPaths)) {
 		if (ShallowChanged(requestedPaths, oldRequestedPaths)) {
-			window["setImmediate"](()=> {
+			window["setImmediate"](()=>{
 				//s.lastEvents = getEventsFromInput(requestedPaths.map(path=>GetPathParts(path)[0]));
-				let removedPaths = oldRequestedPaths.Except(...requestedPaths);
+				const removedPaths = oldRequestedPaths.Except(...requestedPaths);
 				// todo: find correct way of unwatching events; the way below seems to sometimes unwatch while still needed watched
 				// for now, we just never unwatch
 				//unWatchEvents(store.firebase, DispatchDBAction, getEventsFromInput(removedPaths));
 				//store.firestore.unsetListeners(removedPaths.map(path=>GetPathParts(path)[0]));
-				let removedPaths_toDocs = removedPaths.map(path=>GetPathParts(path)[0]);
-				let removedPaths_toDocs_asListenerPaths = removedPaths_toDocs.map(path=>PathToListenerPath(path));
+				const removedPaths_toDocs = removedPaths.map(path=>GetPathParts(path)[0]);
+				const removedPaths_toDocs_asListenerPaths = removedPaths_toDocs.map(path=>PathToListenerPath(path));
 				//store.firestore.unsetListeners(removedPaths_toDocs_asListenerPaths);
 				unsetListeners(firebase.firebase_ || firebase, DispatchDBAction, removedPaths_toDocs_asListenerPaths);
-				
-				let addedPaths = requestedPaths.Except(...oldRequestedPaths);
-				let addedPaths_toDocs = addedPaths.map(path=>GetPathParts(path)[0]);
-				let addedPaths_toDocs_asListenerPaths = addedPaths_toDocs.map(path=>PathToListenerPath(path));
+
+				const addedPaths = requestedPaths.Except(...oldRequestedPaths);
+				const addedPaths_toDocs = addedPaths.map(path=>GetPathParts(path)[0]);
+				const addedPaths_toDocs_asListenerPaths = addedPaths_toDocs.map(path=>PathToListenerPath(path));
 				//watchEvents(store.firebase, DispatchDBAction, getEventsFromInput(addedPaths.map(path=>GetPathParts(path)[0])));
 				// for debugging, you can check currently-watched-paths using: store.firestore._.listeners
 				//store.firestore.setListeners(addedPaths_toDocs_asListenerPaths);
 				setListeners(firebase.firebase_ || firebase, DispatchDBAction, addedPaths_toDocs_asListenerPaths);
-				Log("Requesting paths: " + addedPaths.join(","));
+				Log(`Requesting paths: ${addedPaths.join(",")}`);
 			});
 			s.lastRequestedPaths = requestedPaths;
 		}
 
-		let accessedStorePaths: string[] = GetAccessedPaths();
+		const accessedStorePaths: string[] = GetAccessedPaths();
 		//ClearAccessedPaths();
 		s.lastAccessedStorePaths_withData = {};
-		for (let path of accessedStorePaths) {
+		for (const path of accessedStorePaths) {
 			s.lastAccessedStorePaths_withData[path] = State_Base({countAsAccess: false}, ...SplitStringBySlash_Cached(path));
 		}
 		s.lastProps = props;
@@ -129,29 +130,31 @@ export function Connect<T, P>(funcOrFuncGetter) {
 	};
 
 	if (mapStateToProps_inner) {
-		return connect(mapStateToProps_wrapper); //, null, null, {withRef: true}); // {withRef: true} lets you do wrapperComp.getWrappedInstance() 
+		//return connect(mapStateToProps_wrapper, null, null, {withRef: true}); // {withRef: true} lets you do wrapperComp.getWrappedInstance()
+		return connect(mapStateToProps_wrapper, null, null, {forwardRef: true}); // {fowardRef: true} will make-so the "ref" callback will return the wrapped-comp rather than the Connect wrapper-comp
 	}
-	return connect(()=> {
+	return connect(()=>{
 		mapStateToProps_inner = mapStateToProps_inner_getter();
 		return mapStateToProps_wrapper;
-	}); //, null, null, {withRef: true});
+	//}, null, null, {withRef: true});
+	}, null, null, {forwardRef: true});
 }
 
-export let pathListenerCounts = {};
+export const pathListenerCounts = {};
 export function SetListeners(paths: string[]) {
-	for (let path of paths) {
-		let oldListenerCount = pathListenerCounts[path] || 0;
+	for (const path of paths) {
+		const oldListenerCount = pathListenerCounts[path] || 0;
 		pathListenerCounts[path] = oldListenerCount + 1;
 		if (oldListenerCount > 0) continue;
 
 		// for debugging, you can check currently-watched-paths using: store.firestore._.listeners
-		let listenerPath = PathToListenerPath(path);
+		const listenerPath = PathToListenerPath(path);
 		manager.store.firestore.setListener(listenerPath);
 	}
 }
 export function UnsetListeners(paths: string[]) {
-	for (let path of paths) {
-		let listenerPath = PathToListenerPath(path);
+	for (const path of paths) {
+		const listenerPath = PathToListenerPath(path);
 		pathListenerCounts[path]--;
 		if (pathListenerCounts[path] == 0) {
 			manager.store.firestore.unsetListener(listenerPath);
@@ -159,19 +162,19 @@ export function UnsetListeners(paths: string[]) {
 	}
 }
 
-let actionTypeBufferInfos = {
+const actionTypeBufferInfos = {
 	"@@reactReduxFirebase/START": {time: 300},
 	"@@reactReduxFirebase/SET": {time: 300},
 	/*"@@reduxFirestore/SET_LISTENER": {time: 300},
 	"@@reduxFirestore/LISTENER_RESPONSE": {time: 300},
 	"@@reduxFirestore/UNSET_LISTENER": {time: 300},*/
 };
-let actionTypeLastDispatchTimes = {};
-let actionTypeBufferedActions = {};
+const actionTypeLastDispatchTimes = {};
+const actionTypeBufferedActions = {};
 
 function DispatchDBAction(action) {
-	let timeSinceLastDispatch = Date.now() - (actionTypeLastDispatchTimes[action.type] || 0);
-	let bufferInfo = actionTypeBufferInfos[action.type];
+	const timeSinceLastDispatch = Date.now() - (actionTypeLastDispatchTimes[action.type] || 0);
+	const bufferInfo = actionTypeBufferInfos[action.type];
 
 	// if we're not supposed to buffer this action type, or it's been long enough since last dispatch of this type
 	if (bufferInfo == null || timeSinceLastDispatch >= bufferInfo.time) {
@@ -183,7 +186,7 @@ function DispatchDBAction(action) {
 	else {
 		// if timer not started, start it now
 		if (actionTypeBufferedActions[action.type] == null) {
-			setTimeout(()=> {
+			setTimeout(()=>{
 				// now that wait is over, apply any buffered event-triggers
 				manager.store.dispatch(new ActionSet(actionTypeBufferedActions[action.type]));
 

@@ -1,12 +1,14 @@
 import {BaseComponent} from "react-vextensions";
 import React from "react";
 import {Route as Route_Base, Switch} from "react-router";
+import {e} from "../../PrivateExports";
 //import {GetCurrentURL} from 'Utils/URL/URLs';
-let aa = {Route_Base, Switch} as any;
+
+const aa = {Route_Base, Switch} as any;
 
 export class Route extends BaseComponent<{path?: string, exact?: boolean, withConditions?: (location: Location)=>boolean}, {}> {
 	render() {
-		let {path, exact, withConditions, children} = this.props;
+		const {path, exact, withConditions, children} = this.props;
 		/*return (
 			<Fragment
 					parentRoute="routeWhichNeverMatches" matchWildcardRoute={()=>true} // fixes that "/global/map/philosophy.3" was not considered to match any of the route-patterns
@@ -21,10 +23,10 @@ export class Route extends BaseComponent<{path?: string, exact?: boolean, withCo
 		return (
 			<aa.Switch>
 				<aa.Route_Base path={path} exact={exact}>
-					{match=> {
-						let {GetCurrentURL} = require('Utils/URL/URLs'); // late-require, due to require-cycle issue
+					{match=>{
+						//let {GetCurrentURL} = require('Utils/URL/URLs'); // late-require, due to require-cycle issue
 						if (!match) return null;
-						if (withConditions && withConditions(GetCurrentURL().ToLocationObject()) == false) return false;
+						if (withConditions && withConditions(e.GetCurrentURL().ToLocationObject() as any) == false) return false;
 						return children;
 					}}
 				</aa.Route_Base>

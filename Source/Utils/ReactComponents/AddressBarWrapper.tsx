@@ -2,15 +2,16 @@ import {VURL} from "js-vextensions";
 import {BaseComponent} from "react-vextensions";
 import {push, replace} from "connected-react-router";
 import React from "react";
-import {e} from "../../PrivateExports";
 import {manager} from "../../Manager";
 import {MaybeLog_Base} from "../General/Logging";
 import {loadingURL} from "../URL/URLs";
+import {e} from "../../PrivateExports";
+import {Connect} from "../..";
 
 let lastURL: VURL;
 
 type Props = {} & Partial<{newURL: string, lastURL: string, pushURL: boolean}>;
-@e.Connect((state, {}: Props)=>{
+@Connect((state, {}: Props)=>{
 	const newURL = manager.GetNewURL();
 	const pushURL = !loadingURL && manager.DoesURLChangeCountAsPageChange(lastURL, newURL);
 	// if (pushURL) Log(`Pushing: ${newURL} @oldURL:${lastURL}`);

@@ -1,15 +1,15 @@
-import { OnPopulated, manager } from "../../Manager";
-import { SplitStringBySlash_Cached } from "./StringSplitCache";
-import { GetTreeNodesInObjTree, DeepSet, DeepGet, CachedTransform, GetStorageForCachedTransform } from "js-vextensions";
-import { RequestPath, ClearRequestedPaths, GetRequestedPaths, UnsetListeners, SetListeners } from "./FirebaseConnect";
-import { State_Base } from "../Store/StoreHelpers";
-import { ShallowChanged } from "react-vextensions";
+import {GetTreeNodesInObjTree, DeepSet, DeepGet, CachedTransform, GetStorageForCachedTransform} from "js-vextensions";
+import {ShallowChanged} from "react-vextensions";
 import u from "updeep";
 import firebase from "firebase";
+import {OnPopulated, manager} from "../../Manager";
+import {SplitStringBySlash_Cached} from "./StringSplitCache";
+import {RequestPath, ClearRequestedPaths, GetRequestedPaths, UnsetListeners, SetListeners} from "./FirebaseConnect";
+import {State_Base} from "../Store/StoreHelpers";
 import {MaybeLog_Base} from "../General/Logging";
 import {g} from "../../PrivateExports";
 
-OnPopulated(()=> {
+OnPopulated(()=>{
 	G({firebase_: firebase}); // doesn't show as R.firebase, fsr
 });
 
@@ -60,7 +60,7 @@ export function DBPath(path = "", inVersionRoot = true) {
 	/*let versionPrefix = path.match(/^v[0-9]+/);
 	if (versionPrefix == null) // if no version prefix already, add one (referencing the current version)*/
 	if (inVersionRoot) {
-		path = `versions/v${manager.dbVersion}-${manager.env_short}${path ? `/${path}` : ''}`;
+		path = `versions/v${manager.dbVersion}-${manager.env_short}${path ? `/${path}` : ""}`;
 	}
 	return path;
 }
@@ -73,10 +73,10 @@ export function DBPathSegments(pathSegments: (string | number)[], inVersionRoot 
 }
 
 export function PathToListenerPath(path: string) {
-	let pathNodesLeft = path.split("/");
+	const pathNodesLeft = path.split("/");
 	function ConvertNextTwoPathNodesIntoListenerPathNode(pathNodes: string[]) {
-		let result = {} as any;
-		let collectionNode = pathNodes.splice(0, 1)[0];
+		const result = {} as any;
+		const collectionNode = pathNodes.splice(0, 1)[0];
 		Assert(collectionNode.trim().length, `Path node cannot be empty. Path: ${path}`);
 		result.collection = collectionNode;
 		if (pathNodes.length) {
@@ -84,8 +84,8 @@ export function PathToListenerPath(path: string) {
 		}
 		return result;
 	}
-	
-	let root = ConvertNextTwoPathNodesIntoListenerPathNode(pathNodesLeft);
+
+	const root = ConvertNextTwoPathNodesIntoListenerPathNode(pathNodesLeft);
 	if (pathNodesLeft.length) {
 		root.subcollections = [];
 		while (pathNodesLeft.length) {
@@ -95,9 +95,9 @@ export function PathToListenerPath(path: string) {
 	return root;
 }
 export function ListenerPathToPath(listenerPath: any) {
-	let result = [];
-	let pathNodes = [listenerPath].concat((listenerPath.subcollections || []));
-	for (let pathNode of pathNodes) {
+	const result = [];
+	const pathNodes = [listenerPath].concat((listenerPath.subcollections || []));
+	for (const pathNode of pathNodes) {
 		result.push(pathNode.collection);
 		if (pathNode.doc) {
 			result.push(pathNode.doc);
@@ -108,19 +108,19 @@ export function ListenerPathToPath(listenerPath: any) {
 
 export function SlicePath(path: string, removeFromEndCount: number, ...itemsToAdd: string[]) {
 	//let parts = path.split("/");
-	let parts = SplitStringBySlash_Cached(path).slice();
+	const parts = SplitStringBySlash_Cached(path).slice();
 	parts.splice(parts.length - removeFromEndCount, removeFromEndCount, ...itemsToAdd);
 	return parts.join("/");
 }
 
 Object.prototype._AddFunction_Inline = function DBRef(path = "", inVersionRoot = true) {
-	let finalPath = DBPath(path, inVersionRoot);
+	const finalPath = DBPath(path, inVersionRoot);
 	return this.ref(finalPath);
-}
+};
 
 export function ProcessDBData(data, standardizeForm: boolean, addHelpers: boolean, rootKey: string) {
 	var treeNodes = GetTreeNodesInObjTree(data, true);
-	for (let treeNode of treeNodes) {
+	for (const treeNode of treeNodes) {
 		if (treeNode.Value == null) continue;
 
 		// turn the should-not-have-been-array arrays (the ones without a "0" property) into objects
@@ -138,12 +138,11 @@ export function ProcessDBData(data, standardizeForm: boolean, addHelpers: boolea
 				continue;
 			}*/
 
-			let valueAsObject = {}.Extend(treeNode.Value) as any;
-			for (let key in valueAsObject) {
+			const valueAsObject = {}.Extend(treeNode.Value) as any;
+			for (const key in valueAsObject) {
 				// if fake array-item added by Firebase/js (just so the array would have no holes), remove it
 				//if (valueAsObject[key] == null)
-				if (valueAsObject[key] === undefined)
-					delete valueAsObject[key];
+				if (valueAsObject[key] === undefined) { delete valueAsObject[key]; }
 			}
 
 			if (treeNode.Value == data) treeNode.obj[treeNode.prop] = valueAsObject; // if changing root, we need to modify wrapper.data
@@ -158,8 +157,8 @@ export function ProcessDBData(data, standardizeForm: boolean, addHelpers: boolea
 				data.length = data.VKeys(true).filter(a=>IsNumberString(a));
 				continue;
 			}*/
-			
-			let valueAsArray = [].Extend(treeNode.Value) as any;
+
+			const valueAsArray = [].Extend(treeNode.Value) as any;
 
 			if (treeNode.Value == data) treeNode.obj[treeNode.prop] = valueAsArray; // if changing root, we need to modify wrapper.data
 			else DeepSet(data, treeNode.PathStr, valueAsArray); // else, we need to use deep-set, because ancestors may have already changed during this transform/processing
@@ -167,7 +166,7 @@ export function ProcessDBData(data, standardizeForm: boolean, addHelpers: boolea
 
 		// add special _key or _id prop
 		if (addHelpers && typeof treeNode.Value == "object") {
-			let key = treeNode.prop == "_root" ? rootKey : treeNode.prop;
+			const key = treeNode.prop == "_root" ? rootKey : treeNode.prop;
 			if (parseInt(key).toString() == key) {
 				treeNode.Value._id = parseInt(key);
 				//treeNode.Value._Set("_id", parseInt(key));
@@ -181,13 +180,12 @@ export function ProcessDBData(data, standardizeForm: boolean, addHelpers: boolea
 	}
 	return treeNodes[0].Value; // get possibly-modified wrapper.data
 }
-let helperProps = ["_key", "_id"];
+const helperProps = ["_key", "_id"];
 /** Note: this mutates the original object. */
 export function RemoveHelpers(data) {
 	var treeNodes = GetTreeNodesInObjTree(data, true);
-	for (let treeNode of treeNodes) {
-		if (helperProps.Contains(treeNode.prop))
-			delete treeNode.obj[treeNode.prop];
+	for (const treeNode of treeNodes) {
+		if (helperProps.Contains(treeNode.prop)) { delete treeNode.obj[treeNode.prop]; }
 	}
 	return data;
 }
@@ -196,7 +194,7 @@ class DBPathInfo {
 	lastTimestamp = -1;
 	cachedData;
 }
-let pathInfos = {} as {[path: string]: DBPathInfo};
+const pathInfos = {} as {[path: string]: DBPathInfo};
 
 export class GetData_Options {
 	inVersionRoot? = true;
@@ -209,7 +207,7 @@ export class GetData_Options {
 
 G({GetData});
 /** Begins request to get data at the given path in the Firebase database.
- * 
+ *
  * Returns undefined when the current-data for the path is null/non-existent, but a request is in-progress.
  * Returns null when we've completed the request, and there is no data at that path. */
 //export function GetData(pathSegments: (string | number)[], options?: GetData_Options) {
@@ -218,7 +216,8 @@ export function GetData(options: GetData_Options, pathSegment1: string | number,
 export function GetData(...pathSegments: (string | number)[]);
 export function GetData(options: GetData_Options, ...pathSegments: (string | number)[]);
 export function GetData(...args) {
-	let pathSegments: (string | number)[], options: GetData_Options;
+	let pathSegments: (string | number)[]; let
+options: GetData_Options;
 	//if (typeof args[0] == "string") pathSegments = args;
 	if (typeof args[0] == "string") pathSegments = args;
 	else [options, ...pathSegments] = args;
@@ -228,21 +227,21 @@ export function GetData(...args) {
 
 	if (manager.devEnv) {
 		//Assert((manager.dbVersion && manager.env_short) || !options.inVersionRoot, "Cannot call GetData in-version-root until the dbVersion and env_short variables are supplied.");
-		Assert(!pathSegments.Contains("vundefined-undefined"), `The path contains "vundefined-undefined"! This suggests that a module, like firebase-forum, is calling GetData before InitLibs() has executed.`);
-		Assert(pathSegments.every(segment => typeof segment === 'number' || !segment.Contains('/')), `Each string path-segment must be a plain prop-name. (ie. contain no "/" separators) @segments(${pathSegments})`);
+		Assert(!pathSegments.Contains("vundefined-undefined"), "The path contains \"vundefined-undefined\"! This suggests that a module, like firebase-forum, is calling GetData before InitLibs() has executed.");
+		Assert(pathSegments.every(segment=>typeof segment === "number" || !segment.Contains("/")), `Each string path-segment must be a plain prop-name. (ie. contain no "/" separators) @segments(${pathSegments})`);
 
-		const colOrDocPathSegments = pathSegments.filter(segment => IsNumber(segment) || !segment.startsWith('.'));
+		const colOrDocPathSegments = pathSegments.filter(segment=>IsNumber(segment) || !segment.startsWith("."));
 		if (options.collection) {
 			Assert(colOrDocPathSegments.length % 2 !== 0,
-				`Calling GetData() to retrieve a document or doc-field (${pathSegments.join('/')}) is prohibited if you pass {collection:true} as an option.`);
+				`Calling GetData() to retrieve a document or doc-field (${pathSegments.join("/")}) is prohibited if you pass {collection:true} as an option.`);
 		} else {
-			Assert(colOrDocPathSegments.length % 2 === 0, () => `
-				Calling GetData() to retrieve a collection (${pathSegments.join('/')}) is only allowed if you pass {collection:true} as an option.
+			Assert(colOrDocPathSegments.length % 2 === 0, ()=>`
+				Calling GetData() to retrieve a collection (${pathSegments.join("/")}) is only allowed if you pass {collection:true} as an option.
 				Did you forget to add "." in front of field-path segments? (eg: "collection/doc/.field1/.field2")`.AsMultiline(0));
 		}
 	}
 
-	let path = pathSegments.join("/");
+	const path = pathSegments.join("/");
 	/*if (options.queries && options.queries.VKeys().length) {
 		let queriesStr = "";
 		for (let {name, value, index} of options.queries.Props()) {
@@ -255,15 +254,15 @@ export function GetData(...args) {
 	if (options.makeRequest) {
 		let queriesStr = "";
 		if (options.queries && options.queries.VKeys().length) {
-			for (let {name, value, index} of options.queries.Props()) {
-				queriesStr += (index == 0 ? "#" : "&") + name + "=" + value;
+			for (const {name, value, index} of options.queries.Props()) {
+				queriesStr += `${(index == 0 ? "#" : "&") + name}=${value}`;
 			}
 		}
 		RequestPath(path + queriesStr);
 	}
 
 	//let result = State("firebase", "data", ...SplitStringByForwardSlash_Cached(path)) as any;
-	let result = State_Base("firestore", "data", ...pathSegments.map(a=>typeof a == "string" && a[0] == "." ? a.substr(1) : a)) as any;
+	let result = State_Base("firestore", "data", ...pathSegments.map(a=>(typeof a == "string" && a[0] == "." ? a.substr(1) : a))) as any;
 	//let result = State("firebase", "data", ...pathSegments) as any;
 
 	// if at this path there's both an object-doc, and subcollections, exclude those subcollections (and if in doing so we find object-doc doesn't exist, set result to null)
@@ -277,9 +276,9 @@ export function GetData(...args) {
 	}
 
 	if (result == null && options.useUndefinedForInProgress) {
-		let requestCompleted = State_Base().firestore.status.requested[path];
+		const requestCompleted = State_Base().firestore.status.requested[path];
 		if (!requestCompleted) return undefined; // undefined means, current-data for path is null/non-existent, but we haven't completed the current request yet
-		else return null; // null means, we've completed the request, and there is no data at that path
+		return null; // null means, we've completed the request, and there is no data at that path
 	}
 	return result;
 }
@@ -293,7 +292,8 @@ G({GetDataAsync});
 export async function GetDataAsync(...pathSegments: (string | number)[]): Promise<any>;
 export async function GetDataAsync(options: GetDataAsync_Options, ...pathSegments: (string | number)[]): Promise<any>;
 export async function GetDataAsync(...args) {
-	let pathSegments: (string | number)[], options: GetDataAsync_Options;
+	let pathSegments: (string | number)[]; let
+options: GetDataAsync_Options;
 	if (typeof args[0] == "string") pathSegments = args;
 	else [options, ...pathSegments] = args;
 	options = E(new GetDataAsync_Options(), options);
@@ -314,26 +314,26 @@ export async function GetDataAsync(...args) {
 			});
 	});*/
 
-	let path = DBPath(pathSegments.join("/"), options.inVersionRoot);
+	const path = DBPath(pathSegments.join("/"), options.inVersionRoot);
 	//let path = CombinePathSegments(...pathSegments);
-	let [colOrDocPath, fieldPathInDoc] = GetPathParts(path);
-	let isDoc = colOrDocPath.split("/").length % 2 == 0;
+	const [colOrDocPath, fieldPathInDoc] = GetPathParts(path);
+	const isDoc = colOrDocPath.split("/").length % 2 == 0;
 
 	let result;
 	if (isDoc) {
-		let doc = await manager.firestoreDB.doc(colOrDocPath).get();
-		let docData = doc.exists ? doc.data() : null;
+		const doc = await manager.firestoreDB.doc(colOrDocPath).get();
+		const docData = doc.exists ? doc.data() : null;
 		result = fieldPathInDoc ? DeepGet(docData, fieldPathInDoc) : docData;
 	} else {
-		let docs = (await manager.firestoreDB.collection(colOrDocPath).get()).docs;
+		const {docs} = await manager.firestoreDB.collection(colOrDocPath).get();
 		result = {};
-		for (let doc of docs) {
+		for (const doc of docs) {
 			result[doc.id] = doc.data();
 		}
 	}
 
 	if (result) {
-		result = ProcessDBData(result, true, options.addHelpers, pathSegments.Last()+"");
+		result = ProcessDBData(result, true, options.addHelpers, `${pathSegments.Last()}`);
 	}
 	return result;
 }
@@ -346,30 +346,30 @@ export async function GetDataAsync(...args) {
  */
 G({GetAsync});
 export async function GetAsync<T>(dbGetterFunc: ()=>T, statsLogger?: ({requestedPaths: string})=>void): Promise<T> {
-	Assert(g.inConnectFuncFor == null, 'Cannot run GetAsync() from within a Connect() function.');
+	Assert(g.inConnectFuncFor == null, "Cannot run GetAsync() from within a Connect() function.");
 	//Assert(!g.inGetAsyncFunc, "Cannot run GetAsync() from within a GetAsync() function.");
-	let firebase = manager.store.firebase;
+	const {firebase} = manager.store;
 
 	let result;
 
-	let requestedPathsSoFar = {};
+	const requestedPathsSoFar = {};
 	let requestedPathsSoFar_last;
 	do {
 		requestedPathsSoFar_last = Clone(requestedPathsSoFar);
 
 		ClearRequestedPaths();
 		result = dbGetterFunc();
-		let newRequestedPaths = GetRequestedPaths().Except(requestedPathsSoFar.VKeys());
+		const newRequestedPaths = GetRequestedPaths().Except(requestedPathsSoFar.VKeys());
 
 		/*unWatchEvents(firebase, store.dispatch, getEventsFromInput(newRequestedPaths)); // do this just to trigger re-get
 		// start watching paths (causes paths to be requested)
 		watchEvents(firebase, store.dispatch, getEventsFromInput(newRequestedPaths));*/
-		
+
 		UnsetListeners(newRequestedPaths); // do this just to trigger re-get
 		// start watching paths (causes paths to be requested)
 		SetListeners(newRequestedPaths);
 
-		for (let path of newRequestedPaths) {
+		for (const path of newRequestedPaths) {
 			requestedPathsSoFar[path] = true;
 			// wait till data is received
 			await WaitTillPathDataIsReceived(path);
@@ -379,7 +379,7 @@ export async function GetAsync<T>(dbGetterFunc: ()=>T, statsLogger?: ({requested
 		// todo: find correct way of unwatching events; the way below seems to sometimes unwatch while still needed watched
 		// for now, we just never unwatch
 		//unWatchEvents(firebase, store.dispatch, getEventsFromInput(newRequestedPaths));
-	} while (ShallowChanged(requestedPathsSoFar, requestedPathsSoFar_last))
+	} while (ShallowChanged(requestedPathsSoFar, requestedPathsSoFar_last));
 
 	/*let paths_final = requestedPathsSoFar.VKeys();
 	let paths_data = await Promise.all(paths_final.map(path=>GetDataAsync(path)));
@@ -402,7 +402,7 @@ export async function GetAsync_Raw<T>(dbGetterFunc: ()=>T, statsLogger?: ({reque
 }
 
 export function WaitTillPathDataIsReceived(path: string): Promise<any> {
-	return new Promise((resolve, reject)=> {
+	return new Promise((resolve, reject)=>{
 		let pathDataReceived = State_Base().firestore.status.requested[path];
 		// if data already received, return right away
 		if (pathDataReceived) {
@@ -410,7 +410,7 @@ export function WaitTillPathDataIsReceived(path: string): Promise<any> {
 		}
 
 		// else, add listener, and wait till store received the data (then return it)
-		let listener = ()=> {
+		const listener = ()=>{
 			//pathDataReceived = State(a=>a.firebase.requested[path]);
 			pathDataReceived = State_Base().firestore.status.requested[path];
 			if (pathDataReceived) {
@@ -445,14 +445,14 @@ export function CachedTransform_WithStore<T, T2, T3>(
 	transformFunc: (debugInfo: any, staticProps: any[], dynamicProps: T2)=>T3,
 ): T3 {
 	const storage = GetStorageForCachedTransform(transformType, staticProps);
-	const dynamicProps_withStoreData = { ...dynamicProps as any };
+	const dynamicProps_withStoreData = {...dynamicProps as any};
 	if (storage.lastDynamicProps) {
 		for (const key in storage.lastDynamicProps) {
-			if (key.startsWith('store_')) {
-				const path = key.substr('store_'.length);
+			if (key.startsWith("store_")) {
+				const path = key.substr("store_".length);
 				// let oldVal = storage.lastDynamicProps[key];
 				// let newVal = State({countAsAccess: false}, ...path.split("/"));
-				const newVal = State_Base(...path.split('/')); // count as access, so that Connect() retriggers for changes to these inside-transformer accessed-paths
+				const newVal = State_Base(...path.split("/")); // count as access, so that Connect() retriggers for changes to these inside-transformer accessed-paths
 				dynamicProps_withStoreData[key] = newVal;
 			}
 		}
@@ -467,7 +467,7 @@ export function CachedTransform_WithStore<T, T2, T3>(
 
 	// for each accessed store entry, add it to VCache's "last dynamic props" for this transform
 	for (const path of collector.storePathsRequested) {
-		const val = State_Base({ countAsAccess: false }, path);
+		const val = State_Base({countAsAccess: false}, path);
 		storage.lastDynamicProps[`store_${path}`] = val;
 	}
 
@@ -475,19 +475,19 @@ export function CachedTransform_WithStore<T, T2, T3>(
 }
 
 export function AssertValidatePath(path: string) {
-	Assert(!path.endsWith('/'), 'Path cannot end with a slash. (This may mean a path parameter is missing)');
-	Assert(!path.Contains('//'), 'Path cannot contain a double-slash. (This may mean a path parameter is missing)');
+	Assert(!path.endsWith("/"), "Path cannot end with a slash. (This may mean a path parameter is missing)");
+	Assert(!path.Contains("//"), "Path cannot contain a double-slash. (This may mean a path parameter is missing)");
 }
 
 export function ConvertDataToValidDBUpdates(rootPath: string, rootData: any, dbUpdatesRelativeToRootPath = true) {
 	const result = {};
-	for (const { key: pathFromRoot, value: data } of rootData.Pairs()) {
+	for (const {key: pathFromRoot, value: data} of rootData.Pairs()) {
 		const fullPath = `${rootPath}/${pathFromRoot}`;
 		const pathForDBUpdates = dbUpdatesRelativeToRootPath ? pathFromRoot : fullPath;
 
 		// if entry`s "path" has odd number of segments (ie. points to collection), extract the children data into separate set-doc updates
 		if (SplitStringBySlash_Cached(fullPath).length % 2 !== 0) {
-			for (const { key, value } of data.Pairs()) {
+			for (const {key, value} of data.Pairs()) {
 				result[`${pathForDBUpdates}/${key}`] = value;
 			}
 		} else {
@@ -500,7 +500,7 @@ export function ConvertDataToValidDBUpdates(rootPath: string, rootData: any, dbU
 export async function ApplyDBUpdates(rootPath: string, dbUpdates: Object) {
 	dbUpdates = Clone(dbUpdates);
 	if (rootPath != null) {
-		for (const { name: localPath, value } of dbUpdates.Props()) {
+		for (const {name: localPath, value} of dbUpdates.Props()) {
 			dbUpdates[`${rootPath}/${localPath}`] = value;
 			delete dbUpdates[localPath];
 		}
@@ -522,8 +522,8 @@ export async function ApplyDBUpdates(rootPath: string, dbUpdates: Object) {
 			// await docRef.update({ [fieldPathInDoc]: value });
 			// set works even if the document doesn't exist yet, so use set instead of update
 			const nestedSetHelper = {};
-			DeepSet(nestedSetHelper, fieldPathInDoc, value, '.', true);
-			await docRef.set(nestedSetHelper, { merge: true });
+			DeepSet(nestedSetHelper, fieldPathInDoc, value, ".", true);
+			await docRef.set(nestedSetHelper, {merge: true});
 		} else {
 			if (value) {
 				await docRef.set(value);
@@ -547,8 +547,8 @@ export async function ApplyDBUpdates(rootPath: string, dbUpdates: Object) {
 				// batch.update(docRef, { [fieldPathInDoc]: value });
 				// set works even if the document doesn't exist yet, so use set instead of update
 				const nestedSetHelper = {};
-				DeepSet(nestedSetHelper, fieldPathInDoc, value, '.', true);
-				batch.set(docRef, nestedSetHelper, { merge: true });
+				DeepSet(nestedSetHelper, fieldPathInDoc, value, ".", true);
+				batch.set(docRef, nestedSetHelper, {merge: true});
 			} else {
 				if (value) {
 					batch.set(docRef, value);
@@ -576,9 +576,9 @@ export async function ApplyDBUpdates_InChunks(rootPath: string, dbUpdates: Objec
 	}
 
 	for (const [index, dbUpdates_pairs_chunk] of dbUpdates_pairs_chunks.entries()) {
-		const dbUpdates_chunk = dbUpdates_pairs_chunk.ToMap(a => a.key, a => a.value);
+		const dbUpdates_chunk = dbUpdates_pairs_chunk.ToMap(a=>a.key, a=>a.value);
 		if (dbUpdates_pairs_chunks.length > 1) {
-			MaybeLog_Base(a => a.commands, l => l(`Applying db-updates chunk #${index + 1} of ${dbUpdates_pairs_chunks.length}...`));
+			MaybeLog_Base(a=>a.commands, l=>l(`Applying db-updates chunk #${index + 1} of ${dbUpdates_pairs_chunks.length}...`));
 		}
 		await ApplyDBUpdates(rootPath, dbUpdates_chunk);
 	}
@@ -586,11 +586,11 @@ export async function ApplyDBUpdates_InChunks(rootPath: string, dbUpdates: Objec
 
 export function ApplyDBUpdates_Local(dbData: any, dbUpdates: Object) {
 	let result = dbData;
-	for (const { name: path, value } of Clone(dbUpdates).Props()) {
+	for (const {name: path, value} of Clone(dbUpdates).Props()) {
 		if (value != null) {
-			result = u.updateIn(path.replace(/\//g, '.'), u.constant(value), result);
+			result = u.updateIn(path.replace(/\//g, "."), u.constant(value), result);
 		} else {
-			result = u.updateIn(path.split('/').slice(0, -1).join('.'), u.omit(path.split('/').slice(-1)), result);
+			result = u.updateIn(path.split("/").slice(0, -1).join("."), u.omit(path.split("/").slice(-1)), result);
 		}
 	}
 
@@ -598,7 +598,7 @@ export function ApplyDBUpdates_Local(dbData: any, dbUpdates: Object) {
 	const nodes = GetTreeNodesInObjTree(result, true);
 	let emptyNodes;
 	do {
-		emptyNodes = nodes.filter(a => typeof a.Value === 'object' && (a.Value == null || a.Value.VKeys(true).length === 0));
+		emptyNodes = nodes.filter(a=>typeof a.Value === "object" && (a.Value == null || a.Value.VKeys(true).length === 0));
 		for (const node of emptyNodes) {
 			delete node.obj[node.prop];
 		}
