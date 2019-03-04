@@ -11,6 +11,7 @@ import {MidDispatchAction, PostDispatchAction, PreDispatchAction} from "./Action
 import {manager} from "../../Manager";
 import {browserHistory} from "../URL/History";
 import {g} from "../../PrivateExports";
+import {ActionSet} from "./StoreHelpers";
 
 const firebase = firebase_ as any;
 
@@ -26,21 +27,30 @@ export function CreateStore(initialState = {}) {
 	const outerMiddleware = [
 		//routerMiddleware(browserHistory),
 		store=>next=>action=>{
-			//PreDispatchAction(action); if (action.type == "ActionSet") for (let sub of action.payload.actions) PreDispatchAction(sub);
-			const returnValue = next(action);
-			//MidDispatchAction(action, returnValue); if (action.type == "ActionSet") for (let sub of action.payload.actions) MidDispatchAction(sub, returnValue);
+			const subactions = ActionSet.EnsureActionFlattened(action);
 			setTimeout(()=>{
-				PostDispatchAction(action); if (action.type == "ActionSet") for (const sub of action.payload.actions) PostDispatchAction(sub);
+				for (const subaction of subactions) {
+					PostDispatchAction(subaction);
+					if (manager.PostDispatchAction) manager.PostDispatchAction(subaction);
+				}
 			});
-			return returnValue;
+			return next(action);
 		},
 		routerMiddleware(browserHistory),
 	];
 	const innerMiddleware = [
 		store=>next=>action=>{
-			PreDispatchAction(action); if (action.type == "ActionSet") for (const sub of action.payload.actions) PreDispatchAction(sub);
+			const subactions = ActionSet.EnsureActionFlattened(action);
+			for (const subaction of subactions) {
+				PreDispatchAction(subaction);
+				if (manager.PreDispatchAction) manager.PreDispatchAction(subaction);
+			}
+
 			const returnValue = next(action);
-			MidDispatchAction(action, returnValue); if (action.type == "ActionSet") for (const sub of action.payload.actions) MidDispatchAction(sub, returnValue);
+			for (const subaction of subactions) {
+				MidDispatchAction(subaction, returnValue);
+				if (manager.PreDispatchAction) manager.MidDispatchAction(subaction, returnValue);
+			}
 			return returnValue;
 		},
 		store=>next=>action=>{

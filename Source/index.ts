@@ -28,6 +28,7 @@ export * from "./Utils/General/ModuleExportExposer";
 export * from "./Utils/General/Others";
 export * from "./Utils/General/RegexHelpers";
 
+export * from "./Utils/ReactComponents/AddressBarWrapper";
 export * from "./Utils/ReactComponents/DraggableLabel";
 export * from "./Utils/ReactComponents/Icon";
 export * from "./Utils/ReactComponents/InfoButton";

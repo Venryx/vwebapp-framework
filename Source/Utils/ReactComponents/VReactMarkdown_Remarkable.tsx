@@ -1,5 +1,5 @@
 import { VURL } from "js-vextensions";
-import { BaseComponent, ShallowChanged } from "react-vextensions";
+import { BaseComponent, ShallowChanged, FilterOutUnrecognizedProps } from "react-vextensions";
 import Remarkable from "remarkable";
 import RemarkableReactRenderer from "remarkable-react";
 import { ParseSegmentsForPatterns } from "../General/RegexHelpers";
@@ -75,7 +75,7 @@ export class VReactMarkdown_Remarkable extends BaseComponent<Props, {}> {
 			if (target == null && toURL.domain != GetCurrentURL().domain) {
 				target = "_blank";
 			}
-			return <Link {...rest.Including("onClick", "style", "text", "replace", "actions")} to={href} target={target}/>;
+			return <Link {...FilterOutUnrecognizedProps(rest, "a")} to={href} target={target}/>;
 		});
 		/*if (rendererOptions_final.components.htmlblock == null) rendererOptions_final.components.htmlblock = (props=> {
 			let {content} = props;

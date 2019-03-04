@@ -135,12 +135,18 @@ export function CreateSimpleReducer<RootState>() {
 }
 
 export class ActionSet extends Action<{actions: Action<any>[]}> {
+	static EnsureActionFlattened(action: Action<any>, includeSelfIfActionSet = false) {
+		if (action.Is(ActionSet)) {
+			return action.payload.actions.concat(includeSelfIfActionSet ? [action] : []);
+		}
+		return [action];
+	}
+	
 	constructor(...actions: Action<any>[]) {
 		Assert(actions.find(action => action instanceof Array) == null, 'Your code should be "new ActionSet(action1, action2, ...)", not "new ActionSet(actions)".');
 		Assert(actions.find(action => action.type == "ActionSet") == null, 'An ActionSet cannot contain an ActionSet as a subaction. (unfold the subactions manually)');
 		super({actions});
 	}
-	actions: Action<any>[];
 }
 
 export let bufferedActions: Action<any>[];

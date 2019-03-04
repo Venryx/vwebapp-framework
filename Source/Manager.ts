@@ -2,6 +2,7 @@ import {VURL} from "js-vextensions";
 import {connectRouter} from "connected-react-router";
 import {browserHistory} from "./Utils/URL/History";
 import {LogOptions} from "./Utils/General/Logging";
+import {Action} from "./Utils/General/Action";
 
 export type RootState_Base = any; // temp
 
@@ -42,12 +43,16 @@ export class Manager {
 
 	startURL: VURL;
 	routerLocationPathInStore: string[];
-	GetSyncLoadActionsForURL: (url: VURL, directURLChange: boolean)=>any[];
+	GetLoadActionsForURL: (url: VURL)=>any[];
 	GetNewURL: ()=>VURL;
+	DoesURLChangeCountAsPageChange: (oldURL: VURL, newURL: VURL)=>boolean;
 
 	GetStore: ()=>any;
 	firebaseConfig: any;
 	MakeRootReducer: ()=>((state, action)=>any);
+	PreDispatchAction?: (action: Action<any>)=>void;
+	MidDispatchAction?: (action: Action<any>, newState: RootState_Base)=>void;
+	PostDispatchAction?: (action: Action<any>)=>void;
 
 	globalConnectorPropGetters: {[key: string]: (state: any, props: any)=>any};
 

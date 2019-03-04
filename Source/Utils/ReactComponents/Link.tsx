@@ -1,6 +1,6 @@
 import { VURL } from "js-vextensions";
 import React from 'react';
-import { BaseComponent } from "react-vextensions";
+import { BaseComponent, FilterOutUnrecognizedProps } from "react-vextensions";
 import { Connect } from "../Database/FirebaseConnect";
 import { GetCurrentURL } from "../URL/URLs";
 import { State_Base } from "../Store/StoreHelpers";
@@ -88,7 +88,7 @@ export class Link extends BaseComponent<Link_Props, {}> {
 
 		if (to) {
 			return (
-				<a {...rest.Excluding(...StandardCompProps())} onClick={this.handleClick} href={to} target={target}>
+				<a {...FilterOutUnrecognizedProps(rest, "a")} onClick={this.handleClick} href={to} target={target}>
 					{text}
 					{children}
 				</a>
