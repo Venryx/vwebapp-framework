@@ -1,13 +1,13 @@
-import { VURL } from "js-vextensions";
-import React from 'react';
-import { BaseComponent, FilterOutUnrecognizedProps } from "react-vextensions";
-import { Connect } from "../Database/FirebaseConnect";
-import { GetCurrentURL } from "../URL/URLs";
-import { State_Base } from "../Store/StoreHelpers";
-import { manager } from "../../Manager";
-import { State_overrides } from "../Store/StateOverrides";
-import { StandardCompProps } from "../UI/General";
-import { replace, push } from "connected-react-router";
+import {VURL} from "js-vextensions";
+import React from "react";
+import {BaseComponent, FilterOutUnrecognizedProps} from "react-vextensions";
+import {replace, push} from "connected-react-router";
+import {Connect} from "../Database/FirebaseConnect";
+import {GetCurrentURL} from "../URL/URLs";
+import {State_Base} from "../Store/StoreHelpers";
+import {manager} from "../../Manager";
+import {State_overrides} from "../Store/StateOverrides";
+import {Action} from "../General/Action";
 
 /*@Radium
 export class Link extends BaseComponent<{to, target?: string, replace?: boolean, style?, onClick?}, {}> {
@@ -24,29 +24,25 @@ function isModifiedEvent(event) {
 export type Link_Props = {
 	onClick?, style?,
 	text?: string, to?: string, target?: string, replace?: boolean, // url-based
-	actions?: (dispatch: Function)=>void, //updateURLOnActions?: boolean, // action-based
+	//actions?: (dispatch: Function)=>void,
+	actions?: Action<any>[],
+	//updateURLOnActions?: boolean, // action-based
 } & React.HTMLProps<HTMLAnchorElement>;
 //@Connect((state, {to, actions, updateURLOnActions}: Props)=> {
-@Connect((state, {to, actions}: Link_Props)=> {
+@Connect((state, {to, actions}: Link_Props)=>{
 	if (actions) {
 		// if state-data-override is active from something else, just return our last result
 		if (State_overrides.state) return this.lastResult;
 
-		let actionsToDispatch = [];
-		function dispatch(action) {
-			actionsToDispatch.push(action);
-		}
-		actions(dispatch);
-
 		let newState = State_Base();
 		//let rootReducer = MakeRootReducer();
-		let rootReducer = manager.store.reducer;
-		for (let action of actionsToDispatch) {
+		const rootReducer = manager.store.reducer;
+		for (const action of actions) {
 			newState = rootReducer(newState, action);
 		}
 		State_overrides.state = newState;
 		State_overrides.countAsAccess = false;
-		let newURL = manager.GetNewURL();
+		const newURL = manager.GetNewURL();
 		State_overrides.countAsAccess = null;
 		State_overrides.state = null;
 
@@ -59,7 +55,7 @@ export type Link_Props = {
 })
 export class Link extends BaseComponent<Link_Props, {}> {
 	handleClick(event) {
-		let {onClick, to, target, replace: replaceURL, actions} = this.props;
+		const {onClick, to, target, replace: replaceURL, actions} = this.props;
 		if (onClick) onClick(event);
 
 		if (event.defaultPrevented) return; // onClick prevented default
@@ -68,9 +64,12 @@ export class Link extends BaseComponent<Link_Props, {}> {
 
 		if (actions) {
 			event.preventDefault();
-			actions(manager.store.dispatch); // apply actions
+			// apply actions
+			for (const action of actions) {
+				manager.store.dispatch(action);
+			}
 		} else {
-			let isExternal = VURL.Parse(to, true).domain != GetCurrentURL().domain;
+			const isExternal = VURL.Parse(to, true).domain != GetCurrentURL().domain;
 			if (isExternal || target) return; // let browser handle external links, and "target=_blank"
 
 			event.preventDefault();
@@ -79,16 +78,16 @@ export class Link extends BaseComponent<Link_Props, {}> {
 	}
 
 	render() {
-		let {text, to, target, actions, children, ...rest} = this.props // eslint-disable-line no-unused-vars
+		const {text, to, target, children, ...rest} = this.props;
 		//const href = this.context.router.history.createHref(typeof to === 'string' ? {pathname: to} : to)
-		let isExternal = VURL.Parse(to, true).domain != GetCurrentURL().domain;
-		if (isExternal && target === undefined) {
-			target = "_blank";
-		}
+
+		// if external link (and target not specified), set target to "_blank", causing it to open in new tab
+		const isExternal = VURL.Parse(to, true).domain != GetCurrentURL().domain;
+		const target_final = isExternal && target === undefined ? "_blank" : target;
 
 		if (to) {
 			return (
-				<a {...FilterOutUnrecognizedProps(rest, "a")} onClick={this.handleClick} href={to} target={target}>
+				<a {...FilterOutUnrecognizedProps(rest, "a")} onClick={this.handleClick} href={to} target={target_final}>
 					{text}
 					{children}
 				</a>

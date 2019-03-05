@@ -4,7 +4,7 @@ import {push, replace} from "connected-react-router";
 import React from "react";
 import {manager} from "../../Manager";
 import {MaybeLog_Base} from "../General/Logging";
-import {loadingURL} from "../URL/URLs";
+import {loadingURL, NotifyURLLoaded} from "../URL/URLs";
 import {e} from "../../PrivateExports";
 import {Connect} from "../..";
 
@@ -17,7 +17,9 @@ type Props = {} & Partial<{newURL: string, lastURL: string, pushURL: boolean}>;
 	// if (pushURL) Log(`Pushing: ${newURL} @oldURL:${lastURL}`);
 
 	var result = {newURL: newURL.toString({domain: false}), lastURL: lastURL ? lastURL.toString({domain: false}) : null, pushURL};
+
 	lastURL = newURL;
+	if (loadingURL) NotifyURLLoaded();
 	return result;
 })
 export class AddressBarWrapper extends BaseComponent<Props, {}> {
@@ -37,9 +39,10 @@ export class AddressBarWrapper extends BaseComponent<Props, {}> {
 
 		// action.byUser = false;
 		// g.justChangedURLFromCode = true;
-		// action.payload.byCode = true;
-		// extend the "state" argument for the to-be-created history-entry (used in vwebapp-framework/ActionProcessor.ts)
-		action.payload.args[1] = E(action.payload.args[1], {byCode: true});
+		// action.payload.fromStateChange = true;
+		// extend the "state" argument for the to-be-created history-entry (used in ActionProcessor.ts)
+		//action.payload.args[1] = E(action.payload.args[1], {fromStateChange: true});
+
 		manager.store.dispatch(action);
 	}
 	render() {

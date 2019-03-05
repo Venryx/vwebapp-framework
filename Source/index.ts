@@ -48,7 +48,6 @@ export * from "./Utils/Store/StateOverrides";
 export * from "./Utils/Store/StoreHelpers";
 
 export * from "./Utils/UI/General";
-export * from "./Utils/UI/GlobalStyles";
 
 export * from "./Utils/URL/History";
 export * from "./Utils/URL/URLs";
@@ -61,7 +60,7 @@ export const VWAF_exports_final = frameworkExportsInterface;
 export function VWAF_OverrideExport(newValue_withNameProp: any);
 export function VWAF_OverrideExport(exportName: string, newValue: any);
 export function VWAF_OverrideExport(...args) {
-	let exportName: string, newValue: any; 
+	let exportName: string, newValue: any;
 	if (args.length == 1) [exportName, newValue] = [args[0].name, args[0]];
 	else [exportName, newValue] = args;
 	VWAF_exports_final[exportName] = newValue;
@@ -72,7 +71,7 @@ export const VWAF_exports_final = frameworkExportsObject;
 export function VWAF_OverrideExport(newValue_withNameProp: any);
 export function VWAF_OverrideExport(exportName: string, newValue: any);
 export function VWAF_OverrideExport(...args) {
-	let exportName: string, newValue: any; 
+	let exportName: string, newValue: any;
 	if (args.length == 1) [exportName, newValue] = [args[0].name, args[0]];
 	else [exportName, newValue] = args;
 	delete VWAF_exports_final[exportName]; // delete getter-setter

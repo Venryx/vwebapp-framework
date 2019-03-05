@@ -36,10 +36,10 @@ export function IsACTSetFor(action: Action<any>, path: string) {
 	if (action.payload["path"] == path) return true;
 	// wildcard match
 	if (path.includes("$any")) {
-		let pathParts = path.split("/");
-		let actionPathParts = action.payload["path"].split("/");
-		for (let [index, pathPart] of pathParts.entries()) {
-			let matches = pathPart == actionPathParts[index] || pathPart == "$any";
+		const pathParts = path.split("/");
+		const actionPathParts = action.payload["path"].split("/");
+		for (const [index, pathPart] of pathParts.entries()) {
+			const matches = pathPart == actionPathParts[index] || pathPart == "$any";
 			if (!matches) return false;
 		}
 		return true;

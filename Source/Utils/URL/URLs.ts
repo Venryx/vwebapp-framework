@@ -15,5 +15,8 @@ export function LoadURL(url: VURL) {
 	const syncActions = manager.GetLoadActionsForURL(url);
 	manager.store.dispatch(new e.ActionSet(...syncActions));
 
+	//loadingURL = false;
+}
+export function NotifyURLLoaded() {
 	loadingURL = false;
 }

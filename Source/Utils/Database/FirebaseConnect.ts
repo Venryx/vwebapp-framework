@@ -35,16 +35,18 @@ export function UnfreezeConnectComps(triggerStoreChange = true) {
 }
 
 G({FirebaseConnect: Connect}); // make global, for firebase-forum
+
 // if you're sending in a connect-func rather than a connect-func-wrapper, then you need to make it have at least one argument (to mark it as such)
-export function Connect<T, P>(innerMapStateToPropsFunc: (state: RootState_Base, props: P)=>any);
+/*export function Connect<T, P>(innerMapStateToPropsFunc: (state: RootState_Base, props: P)=>any);
 export function Connect<T, P>(mapStateToProps_inner_getter: ()=>(state: RootState_Base, props: P)=>any);
 export function Connect<T, P>(funcOrFuncGetter) {
-	let mapStateToProps_inner: (state: RootState_Base, props: P)=>any; let
-mapStateToProps_inner_getter: ()=>(state: RootState_Base, props: P)=>any;
+	let mapStateToProps_inner: (state: RootState_Base, props: P)=>any;
+	let mapStateToProps_inner_getter: ()=>(state: RootState_Base, props: P)=>any;
 	const isFuncGetter = funcOrFuncGetter.length == 0; //&& typeof TryCall(funcOrFuncGetter) == "function";
 	if (!isFuncGetter) mapStateToProps_inner = funcOrFuncGetter;
-	else mapStateToProps_inner_getter = funcOrFuncGetter;
+	else mapStateToProps_inner_getter = funcOrFuncGetter;*/
 
+export function Connect<T, P>(mapStateToProps_inner: (state: RootState_Base, props: P)=>any) {
 	const mapStateToProps_wrapper = function(state: RootState_Base, props: P) {
 		const s = this;
 		if (connectCompsFrozen && s.lastResult) {
@@ -138,7 +140,7 @@ mapStateToProps_inner_getter: ()=>(state: RootState_Base, props: P)=>any;
 		return result;
 	};
 
-	if (mapStateToProps_inner) {
+	/*if (mapStateToProps_inner) {
 		//return connect(mapStateToProps_wrapper, null, null, {withRef: true}); // {withRef: true} lets you do wrapperComp.getWrappedInstance()
 		return connect(mapStateToProps_wrapper, null, null, {forwardRef: true}); // {fowardRef: true} will make-so the "ref" callback will return the wrapped-comp rather than the Connect wrapper-comp
 	}
@@ -146,7 +148,9 @@ mapStateToProps_inner_getter: ()=>(state: RootState_Base, props: P)=>any;
 		mapStateToProps_inner = mapStateToProps_inner_getter();
 		return mapStateToProps_wrapper;
 	//}, null, null, {withRef: true});
-	}, null, null, {forwardRef: true});
+	}, null, null, {forwardRef: true});*/
+
+	return connect(mapStateToProps_wrapper, null, null, {forwardRef: true}) as any; // {fowardRef: true} will make-so the "ref" callback will return the wrapped-comp rather than the Connect wrapper-comp
 }
 
 export const pathListenerCounts = {};

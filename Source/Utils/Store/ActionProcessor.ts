@@ -80,8 +80,10 @@ export async function PostDispatchAction(action: Action<any>) {
 		/*if (g.justChangedURLFromCode) {
 			g.justChangedURLFromCode = false;
 		} else {*/
-		//if (!(action as any).payload.byCode) {
-		if (DeepGet(action, "payload/location/state/byCode") != true) {
+		//if (!(action as any).payload.fromStateChange) {
+		//if (DeepGet(action, "payload/location/state/fromStateChange") != true) {
+		// "POP" means the url was loaded from an address-bar type-in, or from history back/forward action
+		if (action.payload.action == "POP") {
 			LoadURL(url);
 		}
 	}

@@ -70,6 +70,12 @@
 	// by tag
 	// ==========
 
+	// these tags do not, by default, inherit from the html/body standards -- so make them do so
+	textarea, input, button, select {
+		font-family: inherit;
+		font-size: inherit;
+	}
+
 	a {
 		text-decoration: none !important;
 		&:not(.ignoreBaseCSS) {
