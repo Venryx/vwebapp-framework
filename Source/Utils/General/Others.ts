@@ -1,6 +1,6 @@
 import {VRect, Vector2i} from "js-vextensions";
 import {RemoveHelpers} from "../Database/DatabaseHelpers";
-import {AddSchema} from "../../Server/Server";
+import {AddSchema, GetSchemaJSON} from "../../Server/Server";
 
 export function GetUpdates(oldData, newData, useNullInsteadOfUndefined = true) {
 	const result = {};
@@ -40,7 +40,7 @@ AddSchema({
 
 const click_lastInfoForElement = {};
 export function IsDoubleClick(event: React.MouseEvent<any>, maxTimeGap = 500, compareByPath = true) {
-	const lastClickInfo = event.currentTarget.lastClickInfo;
+	const {lastClickInfo} = event.currentTarget;
 	const time = Date.now();
 	// console.log("Clicked...", event.currentTarget, ";", event.target, ";", lastClickInfo, ";", lastClickInfo && event.target == lastClickInfo.event.target);
 
@@ -114,4 +114,13 @@ export function GetDOMPath(el) {
 	}
 	stack.splice(0, 1); // removes the html element
 	return stack.join(" > ");
+}
+
+export function ClearPropsNotInSchema(obj, schemaName: string) {
+	const schema = GetSchemaJSON(schemaName);
+	for (const key of obj.VKeys(true)) {
+		if (schema["properties"][key] == null) {
+			delete obj[key];
+		}
+	}
 }

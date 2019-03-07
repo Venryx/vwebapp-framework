@@ -9,7 +9,6 @@ export * from "./ExportOverwriteEnabler";
 export * from "./Manager";
 
 export * from "./Server/Command";
-export * from "./Server/CommandMacros";
 export * from "./Server/Server";
 
 export * from "./Utils/Audio/TextToSpeech";

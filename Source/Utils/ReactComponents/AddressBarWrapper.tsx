@@ -8,17 +8,17 @@ import {loadingURL, NotifyURLLoaded} from "../URL/URLs";
 import {e} from "../../PrivateExports";
 import {Connect} from "../..";
 
-let lastURL: VURL;
+let lastProcessedURL: VURL;
 
 type Props = {} & Partial<{newURL: string, lastURL: string, pushURL: boolean}>;
 @Connect((state, {}: Props)=>{
 	const newURL = manager.GetNewURL();
-	const pushURL = !loadingURL && manager.DoesURLChangeCountAsPageChange(lastURL, newURL);
+	const pushURL = !loadingURL && manager.DoesURLChangeCountAsPageChange(lastProcessedURL, newURL);
 	// if (pushURL) Log(`Pushing: ${newURL} @oldURL:${lastURL}`);
 
-	var result = {newURL: newURL.toString({domain: false}), lastURL: lastURL ? lastURL.toString({domain: false}) : null, pushURL};
+	var result = {newURL: newURL.toString({domain: false}), lastURL: lastProcessedURL ? lastProcessedURL.toString({domain: false}) : null, pushURL};
 
-	lastURL = newURL;
+	lastProcessedURL = newURL;
 	if (loadingURL) NotifyURLLoaded();
 	return result;
 })
@@ -27,13 +27,14 @@ export class AddressBarWrapper extends BaseComponent<Props, {}> {
 		const {newURL, lastURL, pushURL} = props;
 		if (newURL === lastURL) return;
 
+		let action;
 		if (lastURL) {
-			var action = pushURL ? push(newURL) : replace(newURL);
+			action = pushURL ? push(newURL) : replace(newURL);
 			MaybeLog_Base(a=>a.urlLoads, ()=>`Dispatching new-url: ${newURL} @type:${action.type}`);
 		} else {
 			// if page just loaded, do one "start-up" LOCATION_CHANGED action, with whatever's in the address-bar
 			const startURL = e.GetCurrentURL(true).toString({domain: false});
-			var action = replace(startURL);
+			action = replace(startURL);
 			MaybeLog_Base(a=>a.urlLoads, ()=>`Dispatching start-url: ${e.GetCurrentURL(true)} @type:${action.type}`);
 		}
 

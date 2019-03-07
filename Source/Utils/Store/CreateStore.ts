@@ -92,7 +92,7 @@ export function CreateStore(initialState = {}) {
 		firebase.initializeApp(manager.firebaseConfig);
 	}
 	const firestoreDB = firebase.firestore();
-	firestoreDB.settings({timestampsInSnapshots: true});
+	firestoreDB.settings({});
 
 	const rootReducer = manager.MakeRootReducer();
 	const store = createStore(
