@@ -24,16 +24,6 @@ export function CreateStore(initialState = {}) {
 
 	const outerMiddleware = [
 		//routerMiddleware(browserHistory),
-		store=>next=>action=>{
-			const subactions = ActionSet.EnsureActionFlattened(action);
-			setTimeout(()=>{
-				for (const subaction of subactions) {
-					PostDispatchAction(subaction);
-					if (manager.PostDispatchAction) manager.PostDispatchAction(subaction);
-				}
-			});
-			return next(action);
-		},
 		routerMiddleware(browserHistory),
 	];
 	const innerMiddleware = [
@@ -49,6 +39,14 @@ export function CreateStore(initialState = {}) {
 				MidDispatchAction(subaction, returnValue);
 				if (manager.PreDispatchAction) manager.MidDispatchAction(subaction, returnValue);
 			}
+
+			setTimeout(()=>{
+				for (const subaction of subactions) {
+					PostDispatchAction(subaction);
+					if (manager.PostDispatchAction) manager.PostDispatchAction(subaction);
+				}
+			});
+
 			return returnValue;
 		},
 		store=>next=>action=>{
@@ -82,7 +80,7 @@ export function CreateStore(initialState = {}) {
 	//reduxConfig["userProfile"] = DBPath("users"); // root that user profiles are written to
 	const reduxFirebaseConfig = {
 		//userProfile: DBPath("users"), // root that user profiles are written to
-		userProfile: `versions/v${manager.dbVersion}-${manager.env_short}/users`, // root that user profiles are written to
+		userProfile: `versions/v${manager.dbVersion}-${manager.db_short}/users`, // root that user profiles are written to
 		enableLogging: true, // enable/disable Firebase Database Logging
 		updateProfileOnLogin: false, // enable/disable updating of profile on login
 		// profileDecorator: (userData) => ({ email: userData.email }) // customize format of user profile

@@ -59,14 +59,14 @@ export function DBPath(path = "", inVersionRoot = true) {
 	/*let versionPrefix = path.match(/^v[0-9]+/);
 	if (versionPrefix == null) // if no version prefix already, add one (referencing the current version)*/
 	if (inVersionRoot) {
-		path = `versions/v${manager.dbVersion}-${manager.env_short}${path ? `/${path}` : ""}`;
+		path = `versions/v${manager.dbVersion}-${manager.db_short}${path ? `/${path}` : ""}`;
 	}
 	return path;
 }
 export function DBPathSegments(pathSegments: (string | number)[], inVersionRoot = true) {
 	let result = pathSegments;
 	if (inVersionRoot) {
-		result = (["versions", `v${manager.dbVersion}-${manager.env_short}`] as any).concat(result);
+		result = (["versions", `v${manager.dbVersion}-${manager.db_short}`] as any).concat(result);
 	}
 	return result;
 }
@@ -204,28 +204,9 @@ export class GetData_Options {
 	queries?: any;
 }
 
-G({GetData});
-/** Begins request to get data at the given path in the Firebase database.
- *
- * Returns undefined when the current-data for the path is null/non-existent, but a request is in-progress.
- * Returns null when we've completed the request, and there is no data at that path. */
-//export function GetData(pathSegments: (string | number)[], options?: GetData_Options) {
-/*export function GetData(pathSegment1: string | number, pathSegment2: string | number, ...pathSegments: (string | number)[]);
-export function GetData(options: GetData_Options, pathSegment1: string | number, pathSegment2: string | number, ...pathSegments: (string | number)[]);*/
-export function GetData(...pathSegments: (string | number)[]);
-export function GetData(options: GetData_Options, ...pathSegments: (string | number)[]);
-export function GetData(...args) {
-	let pathSegments: (string | number)[]; let
-options: GetData_Options;
-	//if (typeof args[0] == "string") pathSegments = args;
-	if (typeof args[0] == "string") pathSegments = args;
-	else [options, ...pathSegments] = args;
-	options = E(new GetData_Options(), options);
-
-	pathSegments = DBPathSegments(pathSegments, options.inVersionRoot);
-
+export function ValidatePathSegments_GetDataFuncs(pathSegments: (string | number)[], options: GetData_Options | GetDataAsync_Options) {
 	if (manager.devEnv) {
-		//Assert((manager.dbVersion && manager.env_short) || !options.inVersionRoot, "Cannot call GetData in-version-root until the dbVersion and env_short variables are supplied.");
+		//Assert((manager.dbVersion && manager.db_short) || !options.inVersionRoot, "Cannot call GetData in-version-root until the dbVersion and db_short variables are supplied.");
 		Assert(!pathSegments.Contains("vundefined-undefined"), "The path contains \"vundefined-undefined\"! This suggests that a module, like firebase-forum, is calling GetData before InitLibs() has executed.");
 		Assert(pathSegments.every(segment=>typeof segment === "number" || !segment.Contains("/")), `Each string path-segment must be a plain prop-name. (ie. contain no "/" separators) @segments(${pathSegments})`);
 
@@ -239,6 +220,27 @@ options: GetData_Options;
 				Did you forget to add "." in front of field-path segments? (eg: "collection/doc/.field1/.field2")`.AsMultiline(0));
 		}
 	}
+}
+
+G({GetData});
+/** Begins request to get data at the given path in the Firebase database.
+ *
+ * Returns undefined when the current-data for the path is null/non-existent, but a request is in-progress.
+ * Returns null when we've completed the request, and there is no data at that path. */
+//export function GetData(pathSegments: (string | number)[], options?: GetData_Options) {
+/*export function GetData(pathSegment1: string | number, pathSegment2: string | number, ...pathSegments: (string | number)[]);
+export function GetData(options: GetData_Options, pathSegment1: string | number, pathSegment2: string | number, ...pathSegments: (string | number)[]);*/
+export function GetData(...pathSegments: (string | number)[]);
+export function GetData(options: GetData_Options, ...pathSegments: (string | number)[]);
+export function GetData(...args) {
+	let pathSegments: (string | number)[]; let options: GetData_Options;
+	//if (typeof args[0] == "string") pathSegments = args;
+	if (typeof args[0] == "string") pathSegments = args;
+	else [options, ...pathSegments] = args;
+	options = E(new GetData_Options(), options);
+
+	pathSegments = DBPathSegments(pathSegments, options.inVersionRoot);
+	ValidatePathSegments_GetDataFuncs(pathSegments, options);
 
 	const path = pathSegments.join("/");
 	/*if (options.queries && options.queries.VKeys().length) {
@@ -284,6 +286,7 @@ options: GetData_Options;
 
 export class GetDataAsync_Options {
 	inVersionRoot? = true;
+	collection? = false;
 	addHelpers? = true;
 }
 
@@ -295,11 +298,13 @@ G({GetDataAsync});
 export async function GetDataAsync(...pathSegments: (string | number)[]): Promise<any>;
 export async function GetDataAsync(options: GetDataAsync_Options, ...pathSegments: (string | number)[]): Promise<any>;
 export async function GetDataAsync(...args) {
-	let pathSegments: (string | number)[]; let
-options: GetDataAsync_Options;
+	let pathSegments: (string | number)[]; let options: GetDataAsync_Options;
 	if (typeof args[0] == "string") pathSegments = args;
 	else [options, ...pathSegments] = args;
 	options = E(new GetDataAsync_Options(), options);
+
+	pathSegments = DBPathSegments(pathSegments, options.inVersionRoot);
+	ValidatePathSegments_GetDataFuncs(pathSegments, options);
 
 	/*let firebase = store.firebase.helpers;
 	return await new Promise((resolve, reject) => {

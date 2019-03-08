@@ -34,7 +34,7 @@ export class Manager {
 
 	iconInfo: {[key: string]: any};
 
-	env_short: string;
+	db_short: string;
 	devEnv: boolean;
 	prodEnv: boolean;
 	dbVersion: number;
