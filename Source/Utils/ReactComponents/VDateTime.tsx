@@ -3,12 +3,13 @@ import {DatetimepickerProps} from "react-datetime";
 import DateTime from "react-datetime";
 import Moment from "moment";
 import React from "react";
+import {IsString} from "js-vextensions";
 
 function FixVal(val, props) {
 	//let timeOnly = props.dateFormat == false;
 	if (IsString(val)) {
 		if (val == "") return null;
-		let asMoment = Moment(val, ["HH:mm", "hh:mm a"]);
+		const asMoment = Moment(val, ["HH:mm", "hh:mm a"]);
 		if (!asMoment.isValid) return null;
 		return asMoment;
 	}
@@ -19,11 +20,11 @@ export class VDateTime extends BaseComponent
 		<{delayChangeTillDefocus: boolean, min?: Moment.Moment, max?: Moment.Moment, onChange: (val: Moment.Moment)=>void} & DatetimepickerProps,
 		{valueTemp: any}> {
 	render() {
-		let {value, onChange, delayChangeTillDefocus, min, max, ...rest} = this.props;
-		let {valueTemp} = this.state;
+		const {value, onChange, delayChangeTillDefocus, min, max, ...rest} = this.props;
+		const {valueTemp} = this.state;
 		return (
 			<DateTime {...rest} value={valueTemp !== undefined ? valueTemp : value}
-				onChange={val=> {
+				onChange={val=>{
 					if (!IsString(val)) {
 						if (min && val < min) val = min;
 						if (max && val > max) val = max;
@@ -33,10 +34,10 @@ export class VDateTime extends BaseComponent
 				}}
 				inputProps={{onBlur: e=>this.OnInputBlurOrBoxClose((e.target as HTMLInputElement).value)}}
 				onBlur={val=>this.OnInputBlurOrBoxClose(val)}/>
-			);
+		);
 	}
 	OnInputBlurOrBoxClose(val) {
-		let {value, onChange, delayChangeTillDefocus, min, max, ...rest} = this.props;
+		const {value, onChange, delayChangeTillDefocus, min, max, ...rest} = this.props;
 		if (!delayChangeTillDefocus) return;
 		if (!IsString(val)) {
 			if (min && val < min) val = min;

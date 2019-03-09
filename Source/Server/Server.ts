@@ -1,6 +1,7 @@
 import AJV from "ajv";
 import AJVKeywords from "ajv-keywords";
 import {RemoveHelpers} from "..";
+import {Clone, ToJSON, IsString, Assert} from "js-vextensions";
 
 export const ajv = AJVKeywords(new AJV()) as AJV_Extended;
 

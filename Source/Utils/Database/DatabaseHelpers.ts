@@ -1,4 +1,4 @@
-import {GetTreeNodesInObjTree, DeepSet, DeepGet, CachedTransform, GetStorageForCachedTransform} from "js-vextensions";
+import {GetTreeNodesInObjTree, DeepSet, DeepGet, CachedTransform, GetStorageForCachedTransform, Assert, IsString, IsNumberString, IsNumber, Clone} from "js-vextensions";
 import {ShallowChanged} from "react-vextensions";
 import u from "updeep";
 import firebase from "firebase";
@@ -322,7 +322,7 @@ export async function GetDataAsync(...args) {
 			});
 	});*/
 
-	const path = DBPath(pathSegments.join("/"), options.inVersionRoot);
+	const path = pathSegments.join("/");
 	const [colOrDocPath, fieldPathInDoc] = GetPathParts(path);
 	const isDoc = colOrDocPath.split("/").length % 2 == 0;
 

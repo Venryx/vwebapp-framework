@@ -1,6 +1,7 @@
-import { BaseComponent } from "react-vextensions";
+import {BaseComponent} from "react-vextensions";
 import React from "react";
-import { manager } from "vwebapp-framework/Source/Manager";
+import {manager} from "vwebapp-framework/Source/Manager";
+import {Assert} from "js-vextensions";
 
 // todo: get this working, despite our now being in the vwebapp-framework module
 
@@ -21,10 +22,10 @@ vWebAppFramework_manager.Populate({
 export class Icon extends BaseComponent<{icon: string, size: number, color?: string} & React.HTMLProps<SVGElement>, {}> {
 	static defaultProps = {color: "rgba(255,255,255,.7)"};
 	render() {
-		let {icon, size, color, ...rest} = this.props;
+		const {icon, size, color, ...rest} = this.props;
 		//let info = require(`../../../../../Resources/SVGs/${icon}.svg`).default;
 		//let info = files[`./${icon}.svg`];
-		let info = manager.iconInfo[`./${icon}.svg`];
+		const info = manager.iconInfo[`./${icon}.svg`];
 		Assert(info != null, `Could not find icon-info for "${icon}.svg" in manager.iconInfo map. See comment in vwebapp-framework/Source/Utils/ReactComponent/Icon.tsx for example code.`);
 		return (
 			<svg {...rest as any} viewBox={info.viewBox} width={size} height={size}>
