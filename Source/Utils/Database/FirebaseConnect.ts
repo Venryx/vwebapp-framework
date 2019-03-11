@@ -208,7 +208,11 @@ OnPopulated(()=>{
 
 			// Probably temp; this type was causing MAJOR slowdowns in cdl project. Removing it seems to, at least usually, not ruin anything, so if added back, clean or have author clean this system up!
 			if (action.type == "@@reduxFirestore/DOCUMENT_ADDED") {
-				return false;
+				const path = GetFirestoreDataSetterActionPath(action);
+				// if collection, block dispatch
+				if (path.split("/").length % 2 == 1) {
+					return false;
+				}
 			}
 
 			// these ones never store actual data, so always block them
