@@ -206,12 +206,17 @@ OnPopulated(()=>{
 			NotifyPathsReceiving(newFirestoreState.status.requesting.Pairs().filter(a=>a.value).map(a=>a.key));
 			NotifyPathsReceived(newFirestoreState.status.requested.Pairs().filter(a=>a.value).map(a=>a.key));
 
+			// Probably temp; this type was causing MAJOR slowdowns in cdl project. Removing it seems to, at least usually, not ruin anything, so if added back, clean or have author clean this system up!
+			if (action.type == "@@reduxFirestore/DOCUMENT_ADDED") {
+				return false;
+			}
+
 			// these ones never store actual data, so always block them
 			if (action.type === "@@reduxFirestore/SET_LISTENER" || action.type === "@@reduxFirestore/UNSET_LISTENER") {
 				return false; // block dispatch
 			}
-			// LISTENER_RESPONSE actions sometimes store (new) data, so conditionally block them
-			if (action.type == "@@reduxFirestore/LISTENER_RESPONSE") {
+			// certain actions only sometimes store (new) data, so conditionally block them
+			if (action.type == "@@reduxFirestore/DOCUMENT_ADDED" || action.type == "@@reduxFirestore/LISTENER_RESPONSE") {
 				// Here we check if the action changed more than just the statuses. If it didn't, block the action dispatch.
 				const path = GetFirestoreDataSetterActionPath(action);
 				const oldData = DeepGet(state.firestore.data, path);
