@@ -7,10 +7,11 @@ import {ToJSON} from "js-vextensions";
 // Basically, it's just that <Droppable> sections are usually not the root of a component, whereas <Draggable> sections almost always are.
 // Thus, a MakeDroppable decorator just wouldn't be very useful. (ie. it would have few components using)
 
+type DraggableCompProps = {type: string, draggableInfo: DraggableInfo, index: number};
 export type DragInfo = {provided, snapshot};
-export type DraggableInfo = any; // this is up to the parent project
+type DraggableInfo = any; // this is up to the parent project
 
-export function MakeDraggable(getDraggableCompProps: (props: Object)=>{type: string, draggableInfo: DraggableInfo, index: number}) {
+export function MakeDraggable(getDraggableCompProps: (props: Object)=>DraggableCompProps) {
 	return WrappedComponent=>{
 		class WrapperComponent extends React.Component {
 			static WrappedComponent = WrappedComponent;
@@ -23,19 +24,25 @@ export function MakeDraggable(getDraggableCompProps: (props: Object)=>{type: str
 				this.UpdateDraggableCompProps(props);
 			}
 
-			type: string;
+			compProps: DraggableCompProps;
+			/*type: string;
 			draggableInfo: DraggableInfo;
-			index: number;
+			index: number;*/
 			UpdateDraggableCompProps(props) {
-				const {type, draggableInfo, index} = getDraggableCompProps(props);
+				/*const {type, draggableInfo, index} = getDraggableCompProps(props);
 				this.type = type;
 				this.draggableInfo = draggableInfo;
-				this.index = index;
+				this.index = index;*/
+				this.compProps = getDraggableCompProps(props);
 			}
 
 			render() {
+				if (this.compProps == null) {
+					return <WrappedComponent {...this.props} dragInfo={null}/>;
+				}
+
 				return (
-					<Draggable type={this.type} draggableId={ToJSON(this.draggableInfo)} index={this.index}>
+					<Draggable type={this.compProps.type} draggableId={ToJSON(this.compProps.draggableInfo)} index={this.compProps.index}>
 						{(provided, snapshot)=>{
 							const dragInfo = {provided, snapshot};
 							return <WrappedComponent {...this.props} ref={c=>provided.innerRef(GetDOM(c))} dragInfo={dragInfo}/>;
