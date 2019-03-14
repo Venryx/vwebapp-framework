@@ -5,7 +5,7 @@ Object.defineProperty = function(o, p, attributes) {
 	const isWebpackExport = Object.keys(attributes).length == 2 && attributes.enumerable == true && attributes.get && attributes.get.toString().match(/return _.+\[key\];/);
 	if (isWebpackExport) {
 		// add an empty setter, just so that the export-override calls don't error
-		attributes_final = E(attributes, {set: ()=>{}, configurable: true});
+		attributes_final = Object.assign({}, attributes, {set: ()=>{}, configurable: true});
 	}
 	defineProperty_orig.call(this, o, p, attributes_final);
 };
