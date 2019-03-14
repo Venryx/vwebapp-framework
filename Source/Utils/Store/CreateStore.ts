@@ -104,7 +104,7 @@ export function CreateStore(initialState = {}) {
 			//routerEnhancer,
 			applyMiddleware(...outerMiddleware),
 			reactReduxFirebase(firebase, reduxFirebaseConfig),
-			reduxFirestore(firebase, {}),
+			reduxFirestore(firebase, {mergeOrdered: false, mergeOrderedDocUpdate: false, mergeOrderedCollectionUpdates: false}),
 			//batchedSubscribe(unstable_batchedUpdates),
 			applyMiddleware(...innerMiddleware), // place inner-middleware after reduxFirebase (deeper to func that *actually dispatches*), so it can intercept all its dispatched events
 			window["__REDUX_DEVTOOLS_EXTENSION__"] && window["__REDUX_DEVTOOLS_EXTENSION__"](reduxDevToolsConfig),

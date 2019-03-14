@@ -1,10 +1,10 @@
-import {GetTreeNodesInObjTree, DeepSet, DeepGet, CachedTransform, GetStorageForCachedTransform, Assert, IsString, IsNumberString, IsNumber, Clone} from "js-vextensions";
+import {GetTreeNodesInObjTree, DeepSet, DeepGet, CachedTransform, GetStorageForCachedTransform, Assert, IsString, IsNumberString, IsNumber, Clone, FromJSON, ToJSON} from "js-vextensions";
 import {ShallowChanged} from "react-vextensions";
 import u from "updeep";
 import firebase from "firebase";
 import {OnPopulated, manager} from "../../Manager";
 import {SplitStringBySlash_Cached} from "./StringSplitCache";
-import {RequestPath, ClearRequestedPaths, GetRequestedPaths, UnsetListeners, SetListeners} from "./FirebaseConnect";
+import {RequestPath, ClearRequestedPaths, GetRequestedPaths, UnsetListeners, SetListeners, WhereFilter, RequestPath_Query, ClearRequests_Query, GetRequests_Query, GetRequests_Query_JSON, SetListeners_Query, QueryRequest, GetRequests_Query_Keys} from "./FirebaseConnect";
 import {State_Base, StartBufferingActions, StopBufferingActions} from "../Store/StoreHelpers";
 import {MaybeLog_Base} from "../General/Logging";
 import {g} from "../../PrivateExports";
@@ -195,15 +195,7 @@ class DBPathInfo {
 }
 const pathInfos = {} as {[path: string]: DBPathInfo};
 
-export class GetData_Options {
-	inVersionRoot? = true;
-	makeRequest? = true;
-	collection? = false;
-	excludeCollections?: string[];
-	useUndefinedForInProgress? = false;
-	queries?: any;
-}
-
+export type PathSegment = string | number;
 export function ValidatePathSegments_GetDataFuncs(pathSegments: (string | number)[], options: GetData_Options | GetDataAsync_Options) {
 	if (manager.devEnv) {
 		//Assert((manager.dbVersion && manager.db_short) || !options.inVersionRoot, "Cannot call GetData in-version-root until the dbVersion and db_short variables are supplied.");
@@ -220,6 +212,15 @@ export function ValidatePathSegments_GetDataFuncs(pathSegments: (string | number
 				Did you forget to add "." in front of field-path segments? (eg: "collection/doc/.field1/.field2")`.AsMultiline(0));
 		}
 	}
+}
+
+export class GetData_Options {
+	inVersionRoot? = true;
+	makeRequest? = true;
+	collection? = false;
+	excludeCollections?: string[];
+	useUndefinedForInProgress? = false;
+	//queries?: any;
 }
 
 G({GetData});
@@ -253,13 +254,14 @@ export function GetData(...args) {
 	}*/
 
 	if (options.makeRequest) {
-		let queriesStr = "";
+		/*let queriesStr = "";
 		if (options.queries && options.queries.VKeys().length) {
 			for (const {name, value, index} of options.queries.Props()) {
 				queriesStr += `${(index == 0 ? "#" : "&") + name}=${value}`;
 			}
 		}
-		RequestPath(path + queriesStr);
+		RequestPath(path + queriesStr);*/
+		RequestPath(path);
 	}
 
 	//let result = State("firebase", "data", ...SplitStringByForwardSlash_Cached(path)) as any;
@@ -281,6 +283,32 @@ export function GetData(...args) {
 		if (!requestCompleted) return undefined; // undefined means, current-data for path is null/non-existent, but we haven't completed the current request yet
 		return null; // null means, we've completed the request, and there is no data at that path
 	}
+	return result;
+}
+
+export class GetData_Query_Options {
+	inVersionRoot? = true;
+	makeRequest? = true;
+	collection? = false;
+
+	key?: string; // if not set, we use the path+whereFilters as the key
+	whereFilters?: WhereFilter[];
+}
+export function GetData_Query(options: GetData_Query_Options, ...pathSegments: PathSegment[]) {
+	options = E(new GetData_Query_Options(), options);
+
+	pathSegments = DBPathSegments(pathSegments, options.inVersionRoot);
+	ValidatePathSegments_GetDataFuncs(pathSegments, options);
+
+	const path = pathSegments.join("/");
+	options.key = options.key || ToJSON({path, whereFilters: options.whereFilters}).replace(/[/]/g, "_");
+	if (options.makeRequest) {
+		RequestPath_Query(options.key, path, options.whereFilters);
+	}
+
+	const result = State_Base("firestore", "data", options.key);
+	// the storeAs prop appears to not be working (probably config mistake), so just get data from regular path for now
+	//let result = State_Base("firestore", "data", ...pathSegments.map(a=>(typeof a == "string" && a[0] == "." ? a.substr(1) : a))) as any;
 	return result;
 }
 
@@ -360,13 +388,19 @@ export async function GetAsync<T>(dbGetterFunc: ()=>T, statsLogger?: ({requested
 	let result;
 
 	const requestedPathsSoFar = {};
+	const queryRequestsSoFar = {};
 	let requestedPathsSoFar_last;
+	let queryRequestsSoFar_last;
 	do {
 		requestedPathsSoFar_last = Clone(requestedPathsSoFar);
+		queryRequestsSoFar_last = Clone(queryRequestsSoFar);
 
 		ClearRequestedPaths();
+		ClearRequests_Query();
 		result = dbGetterFunc();
 		const newRequestedPaths = GetRequestedPaths().Except(requestedPathsSoFar.VKeys());
+		const newQueryRequestJSONs = GetRequests_Query_JSON().Except(queryRequestsSoFar.VKeys());
+		const newQueryRequests = newQueryRequestJSONs.map(FromJSON) as QueryRequest[];
 
 		StartBufferingActions();
 
@@ -378,6 +412,8 @@ export async function GetAsync<T>(dbGetterFunc: ()=>T, statsLogger?: ({requested
 		// start watching paths (causes paths to be requested)
 		SetListeners(newRequestedPaths);
 
+		SetListeners_Query(newQueryRequestJSONs);
+
 		StopBufferingActions();
 
 		for (const path of newRequestedPaths) {
@@ -385,12 +421,22 @@ export async function GetAsync<T>(dbGetterFunc: ()=>T, statsLogger?: ({requested
 			// wait till data is received
 			await WaitTillPathDataIsReceived(path);
 		}
+		for (const query of newQueryRequests) {
+			//const query = FromJSON(queryJSON) as QueryRequest;
+			queryRequestsSoFar[query.key] = true;
+			//Log(`Waiting for query:${query.key}`);
+			// wait till data is received
+			await WaitTillQueryDataIsReceived(query.key);
+			//Log(`Got query:${query.key}`);
+		}
+
+		// todo: await receive of query-request data
 
 		// stop watching paths (since we already got their data)
 		// todo: find correct way of unwatching events; the way below seems to sometimes unwatch while still needed watched
 		// for now, we just never unwatch
 		//unWatchEvents(firebase, store.dispatch, getEventsFromInput(newRequestedPaths));
-	} while (ShallowChanged(requestedPathsSoFar, requestedPathsSoFar_last));
+	} while (ShallowChanged(requestedPathsSoFar, requestedPathsSoFar_last) || ShallowChanged(queryRequestsSoFar, queryRequestsSoFar_last));
 
 	/*let paths_final = requestedPathsSoFar.VKeys();
 	let paths_data = await Promise.all(paths_final.map(path=>GetDataAsync(path)));
@@ -469,6 +515,35 @@ export function WaitTillPathDataIsReceived(path: string): Promise<any> {
 		};
 		pathReceivedListeners[path] = pathReceivedListeners[path] || [];
 		pathReceivedListeners[path].push(listener);
+	});
+}
+
+export const queryReceiveStatuses = {} as {[key: string]: ReceiveStatus};
+export const queryReceivedListeners = {} as {[key: string]: Function[]};
+export function NotifyQueriesReceived(keys: string[]) {
+	for (const key of keys) {
+		queryReceiveStatuses[key] = "received";
+		if (queryReceivedListeners[key]) {
+			for (const listener of queryReceivedListeners[key]) listener();
+		}
+	}
+}
+export function WaitTillQueryDataIsReceived(key: string): Promise<any> {
+	return new Promise((resolve, reject)=>{
+		let queryDataReceived = queryReceiveStatuses[key] === "received";
+		// if data already received, resolve right away
+		if (queryDataReceived) resolve();
+
+		// else, add listener, and wait till store has received the data (then resolve it)
+		const listener = ()=>{
+			queryDataReceived = queryReceiveStatuses[key] === "received";
+			if (queryDataReceived) {
+				queryReceivedListeners[key].Remove(listener);
+				resolve();
+			}
+		};
+		queryReceivedListeners[key] = queryReceivedListeners[key] || [];
+		queryReceivedListeners[key].push(listener);
 	});
 }
 

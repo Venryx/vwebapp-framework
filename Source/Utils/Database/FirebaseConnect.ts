@@ -3,13 +3,16 @@ import {connect} from "react-redux";
 import {ShallowChanged} from "react-vextensions";
 import {setListeners, unsetListeners} from "redux-firestore/es/actions/firestore";
 import {firestoreReducer} from "redux-firestore";
-import {DeepGet, ToJSON} from "js-vextensions";
-import {GetPathParts, PathToListenerPath, activeStoreAccessCollectors, NotifyPathsReceiving, NotifyPathsReceived} from "./DatabaseHelpers";
+import {DeepGet, ToJSON, FromJSON, GetTreeNodesInObjTree, IsObject} from "js-vextensions";
+import _ from "lodash";
+import {GetPathParts, PathToListenerPath, activeStoreAccessCollectors, NotifyPathsReceiving, NotifyPathsReceived, NotifyQueriesReceived} from "./DatabaseHelpers";
 import {State_Base, ActionSet} from "../Store/StoreHelpers";
 import {SplitStringBySlash_Cached} from "./StringSplitCache";
 import {manager, RootState_Base, OnPopulated} from "../../Manager";
 import {g, e} from "../../PrivateExports";
 import {GetFirestoreDataSetterActionPath} from "../..";
+import {MaybeLog_Base, ShouldLog_Base} from "../General/Logging";
+import {Assert} from "../../../../../react-vcomponents/Main/dist/General";
 
 const firebase = firebase_ as any;
 
@@ -57,6 +60,7 @@ export function Connect<T, P>(mapStateToProps_inner: (state: RootState_Base, pro
 		ClearRequestedPaths();
 		ClearAccessedPaths();
 		//Assert(GetAccessedPaths().length == 0, "Accessed-path must be empty at start of mapStateToProps call (ie. the code in Connect()).");
+		ClearRequests_Query();
 
 		let changedPath = null;
 
@@ -126,6 +130,21 @@ export function Connect<T, P>(mapStateToProps_inner: (state: RootState_Base, pro
 			s.lastRequestedPaths = requestedPaths;
 		}
 
+		// query requests // todo: clean this up
+		const oldQueryRequests: string[] = s.lastQueryRequests || [];
+		const queryRequests: string[] = GetRequests_Query_JSON();
+		// if (firebase._ && ShallowChanged(requestedPaths, oldRequestedPaths)) {
+		if (ShallowChanged(queryRequests, oldQueryRequests)) {
+			g.setImmediate(()=>{
+				const removedQueries = oldQueryRequests.Except(...queryRequests);
+				// todo: remove listener for removed query-request
+				const addedQueries = queryRequests.Except(...oldQueryRequests);
+				//SetListeners(addedPaths);
+				SetListeners_Query(addedQueries);
+			});
+			s.lastQueryRequests = requestedPaths;
+		}
+
 		const accessedStorePaths: string[] = GetAccessedPaths();
 		//ClearAccessedPaths();
 		s.lastAccessedStorePaths_withData = {};
@@ -151,6 +170,25 @@ export function Connect<T, P>(mapStateToProps_inner: (state: RootState_Base, pro
 	}, null, null, {forwardRef: true});*/
 
 	return connect(mapStateToProps_wrapper, null, null, {forwardRef: true}) as any; // {fowardRef: true} will make-so the "ref" callback will return the wrapped-comp rather than the Connect wrapper-comp
+}
+
+export function SetListeners_Query(queryRequestJSONs: string[]) {
+	for (const queryJSON of queryRequestJSONs) {
+		const query = FromJSON(queryJSON) as QueryRequest;
+		const listenerMeta = PathToListenerPath(query.path);
+		listenerMeta.storeAs = query.key;
+
+		if (query.whereFilters) {
+			//Assert(query.whereFilters.length == 1, "Only one where-filter is supported atm.");
+			const deepestNode = GetTreeNodesInObjTree(listenerMeta, true).OrderBy(a=>a.ancestorNodes.length).Last(a=>IsObject(a.Value));
+			deepestNode.Value.where = query.whereFilters.map(filter=>{
+				return [filter.propPath, filter.comparison, filter.value];
+			});
+			//deepestNode.Value.storeAs = query.key;
+		}
+
+		manager.store.firestore.setListeners([listenerMeta]);
+	}
 }
 
 export const pathListenerCounts = {};
@@ -206,21 +244,25 @@ OnPopulated(()=>{
 			NotifyPathsReceiving(newFirestoreState.status.requesting.Pairs().filter(a=>a.value).map(a=>a.key));
 			NotifyPathsReceived(newFirestoreState.status.requested.Pairs().filter(a=>a.value).map(a=>a.key));
 
+			if (action.meta && action.meta.storeAs) {
+				NotifyQueriesReceived([action.meta.storeAs]);
+			}
+
 			// Probably temp; this type was causing MAJOR slowdowns in cdl project. Removing it seems to, at least usually, not ruin anything, so if added back, clean or have author clean this system up!
-			if (action.type == "@@reduxFirestore/DOCUMENT_ADDED") {
+			/*if (action.type == "@@reduxFirestore/DOCUMENT_ADDED") {
 				const path = GetFirestoreDataSetterActionPath(action);
 				// if collection, block dispatch
 				if (path.split("/").length % 2 == 1) {
 					return false;
 				}
-			}
+			}*/
 
 			// these ones never store actual data, so always block them
 			if (action.type === "@@reduxFirestore/SET_LISTENER" || action.type === "@@reduxFirestore/UNSET_LISTENER") {
 				return false; // block dispatch
 			}
 			// certain actions only sometimes store (new) data, so conditionally block them
-			if (action.type == "@@reduxFirestore/DOCUMENT_ADDED" || action.type == "@@reduxFirestore/LISTENER_RESPONSE") {
+			/*if (action.type == "@@reduxFirestore/DOCUMENT_ADDED" || action.type == "@@reduxFirestore/LISTENER_RESPONSE") {
 				// Here we check if the action changed more than just the statuses. If it didn't, block the action dispatch.
 				const path = GetFirestoreDataSetterActionPath(action);
 				const oldData = DeepGet(state.firestore.data, path);
@@ -229,7 +271,7 @@ OnPopulated(()=>{
 				if (newData === oldData || ToJSON(newData) === ToJSON(oldData)) {
 					return false;
 				}
-			}
+			}*/
 		}
 
 		const timeSinceLastDispatch = Date.now() - (actionTypeLastDispatchTimes[action.type] || 0);
@@ -259,10 +301,65 @@ OnPopulated(()=>{
 	});
 });
 
+
+export class WhereFilter {
+	constructor(propPath: string, comparison: string, value: string) {
+		this.propPath = propPath;
+		this.comparison = comparison;
+		this.value = value;
+	}
+	propPath: string;
+	comparison: string;
+	value: string;
+}
+
+export class QueryRequest {
+	constructor(initialData?: Partial<QueryRequest>) {
+		this.Extend(initialData);
+	}
+	key: string;
+	path: string;
+	whereFilters: WhereFilter[];
+}
+
+const allQueryRequests = {} as {[key: string]: boolean};
+let queryRequests = {} as {[key: string]: boolean};
+export function RequestPath_Query(key: string, path: string, whereFilters?: WhereFilter[]) {
+	const query = new QueryRequest({key, path, whereFilters});
+	const queryJSON = ToJSON(query);
+	MaybeLog_Base(a=>a.dbRequests, log=>{
+		if (allQueryRequests[queryJSON] == null || !ShouldLog_Base(a=>a.dbRequests_onlyFirst)) {
+			log(`${_.padEnd(`Requesting query (stage 1): ${queryJSON}`, 150)}Component:${g.inConnectFuncFor ? g.inConnectFuncFor.name : ""}`);
+		}
+	});
+	allQueryRequests[queryJSON] = true;
+
+	queryRequests[queryJSON] = true;
+}
+export function ClearRequests_Query() {
+	queryRequests = {};
+}
+export function GetRequests_Query_JSON(): string[] {
+	return queryRequests.VKeys();
+}
+export function GetRequests_Query(): QueryRequest[] {
+	return GetRequests_Query_JSON().map(FromJSON);
+}
+export function GetRequests_Query_Keys(): string[] {
+	return GetRequests_Query().map(a=>a.key);
+}
+
+const allDBPathsRequested = {};
 let requestedPaths = {} as {[key: string]: boolean};
 /** This only adds paths to a "request list". Connect() is in charge of making the actual db requests. */
 export function RequestPath(path: string) {
-	//MaybeLog(a => a.dbRequests, () => `${_.padEnd(`Requesting db-path (stage 1): ${path}`, 150)}Component:${g.inConnectFuncFor ? g.inConnectFuncFor.name : ''}`);
+	MaybeLog_Base(a=>a.dbRequests, log=>{
+		if (allDBPathsRequested[path] == null || !ShouldLog_Base(a=>a.dbRequests_onlyFirst)) {
+			log(`${_.padEnd(`Requesting db-path (stage 1): ${path}`, 150)}Component:${g.inConnectFuncFor ? g.inConnectFuncFor.name : ""}`);
+		}
+	});
+	allDBPathsRequested[path] = true;
+
 	// firestore path-requests are always by-doc, so cut off any field-paths
 	const path_toDoc = GetPathParts(path)[0];
 	requestedPaths[path_toDoc] = true;

@@ -8,7 +8,15 @@ import {ToJSON} from "js-vextensions";
 // Thus, a MakeDroppable decorator just wouldn't be very useful. (ie. it would have few components using)
 
 type DraggableCompProps = {type: string, draggableInfo: DraggableInfo, index: number};
-export type DragInfo = {provided, snapshot};
+
+export type DropProvided = {innerRef: (element: HTMLElement)=>any, placeholder?: React.ReactElement<any>, droppableProps: any}; // todo: get from @types/react-beautiful-dnd
+export type DropSnapshot = {isDraggingOver: boolean, draggingOverWith?: string}; // todo: get from @types/react-beautiful-dnd
+export type DropInfo = {provided: DropProvided, snapshot: DropSnapshot};
+
+export type DragProvided = {draggableProps: any, dragHandleProps: any}; // todo: get from @types/react-beautiful-dnd
+export type DragSnapshot = {isDragging: boolean}; // todo: get from @types/react-beautiful-dnd
+export type DragInfo = {provided: DragProvided, snapshot: DragSnapshot};
+
 type DraggableInfo = any; // this is up to the parent project
 
 export function MakeDraggable(getDraggableCompProps: (props: Object)=>DraggableCompProps) {
@@ -45,7 +53,7 @@ export function MakeDraggable(getDraggableCompProps: (props: Object)=>DraggableC
 					<Draggable type={this.compProps.type} draggableId={ToJSON(this.compProps.draggableInfo)} index={this.compProps.index}>
 						{(provided, snapshot)=>{
 							const dragInfo = {provided, snapshot};
-							return <WrappedComponent {...this.props} ref={c=>provided.innerRef(GetDOM(c))} dragInfo={dragInfo}/>;
+							return <WrappedComponent {...this.props} ref={c=>provided.innerRef(GetDOM(c) as any)} dragInfo={dragInfo}/>;
 						}}
 					</Draggable>
 				);

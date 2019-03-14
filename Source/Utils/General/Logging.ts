@@ -1,4 +1,4 @@
-import { GetStackTraceStr } from "js-vextensions";
+import {GetStackTraceStr} from "js-vextensions";
 
 /*var Debug = true;
 
@@ -31,12 +31,12 @@ console.warn = function(...args) {
 
 var error_orig = console.error;
 console.error = function(exception) {
-    var str = exception + "";
-    if (str.Contains('Warning: A component is `contentEditable`')) return;
-    //if (str.Contains("Warning: Unknown prop `")) return;
-    error_orig.apply(this, arguments);
+	var str = `${exception }`;
+	if (str.Contains("Warning: A component is `contentEditable`")) return;
+	//if (str.Contains("Warning: Unknown prop `")) return;
+	error_orig.apply(this, arguments);
 
-    //LogSourceStackTraceFrom(new Error());
+	//LogSourceStackTraceFrom(new Error());
 };
 
 // fix for that console.table doesn't seem to be working (as used by react-addons-perf)
@@ -53,7 +53,7 @@ export function Log(...messageSegments: any[]);
 export function Log(...args) {
 	let options: LogOptions = {};
 	let messageSegments: any[];
-	if (typeof args[0] === 'object') [options, ...messageSegments] = args;
+	if (typeof args[0] === "object") [options, ...messageSegments] = args;
 	else messageSegments = args;
 	// #mms: add-stack-trace-and-current-call-info-to-logs setting exists
 
@@ -75,22 +75,24 @@ export function Log(...args) {
 
 declare global { function LogLater(message, appendStackTrace?); } G({LogLater});
 export function LogLater(message, appendStackTrace = false) {
-    Log(message, appendStackTrace, true);
+	Log(message, appendStackTrace, true);
 }
 declare global { function LogWarning(message, appendStackTrace?, logLater?); } G({LogWarning});
 export function LogWarning(message, appendStackTrace = false, logLater = false) {
-	console.warn("LogWarning) " + message);
+	console.warn(`LogWarning) ${message}`);
 	return message;
 }
 
 declare global { function LogError(message, appendStackTrace?, logLater?); } G({LogError});
 export function LogError(message, appendStackTrace = false, logLater = false) {
-	console.error("LogError) " + message);
+	console.error(`LogError) ${message}`);
 	return message;
 }
 
 export class LogTypes_Base {
 	// from vwebapp-framework
+	dbRequests = false;
+	dbRequests_onlyFirst = false;
 	pageViews = false;
 	urlLoads = false;
 	cacheUpdates = false;
@@ -102,10 +104,10 @@ export function ShouldLog_Base<LogTypes extends LogTypes_Base>(shouldLogFunc: (l
 export function MaybeLog_Base<LogTypes extends LogTypes_Base>(shouldLogFunc: (logTypes: LogTypes)=>boolean, loggerFunc: any) {
 	if (!ShouldLog_Base(shouldLogFunc)) return;
 	// let loggerFuncReturnsString = loggerFunc.arguments.length == 0;
-	const loggerFuncIsSimpleGetter = loggerFunc.toString().replace(/ /g, '').includes('function()');
+	const loggerFuncIsSimpleGetter = loggerFunc.toString().replace(/ /g, "").includes("function()");
 	if (loggerFuncIsSimpleGetter) Log(loggerFunc());
 	else loggerFunc(Log);
-};
+}
 
 export function CreateShouldLog<LogTypes extends LogTypes_Base>() {
 	return function ShouldLog(shouldLogFunc: (logTypes: LogTypes)=>boolean) {
@@ -116,4 +118,4 @@ export function CreateMaybeLog<LogTypes extends LogTypes_Base>() {
 	return function MaybeLog(shouldLogFunc: (logTypes: LogTypes)=>boolean, loggerFunc: any) {
 		return MaybeLog_Base(shouldLogFunc, loggerFunc);
 	};
-};
+}
