@@ -5,7 +5,7 @@ import {replace, push} from "connected-react-router";
 import {Connect} from "../Database/FirebaseConnect";
 import {GetCurrentURL} from "../URL/URLs";
 import {State_Base} from "../Store/StoreHelpers";
-import {manager} from "../../Manager";
+import {manager, OnPopulated} from "../../Manager";
 import {State_overrides} from "../Store/StateOverrides";
 import {Action} from "../General/Action";
 
@@ -21,6 +21,11 @@ function isModifiedEvent(event) {
 	return !!(event.metaKey || event.altKey || event.ctrlKey || event.shiftKey);
 }
 
+let rootReducer;
+OnPopulated(()=>{
+	rootReducer = manager.MakeRootReducer(true);
+});
+
 export type Link_Props = {
 	onClick?, style?,
 	text?: string, to?: string, target?: string, replace?: boolean, // url-based
@@ -35,8 +40,8 @@ export type Link_Props = {
 		if (State_overrides.state) return this.lastResult;
 
 		let newState = State_Base();
-		//let rootReducer = MakeRootReducer();
-		const rootReducer = manager.store.reducer;
+		//let rootReducer = manager.MakeRootReducer();
+		//const rootReducer = manager.store.reducer;
 		for (const action of actions) {
 			newState = rootReducer(newState, action);
 		}

@@ -49,7 +49,7 @@ export class Manager {
 
 	GetStore: ()=>any;
 	firebaseConfig: any;
-	MakeRootReducer: ()=>((state, action)=>any);
+	MakeRootReducer: (pureOnly?: boolean)=>((state, action)=>any);
 	PreDispatchAction?: (action: Action<any>)=>void;
 	MidDispatchAction?: (action: Action<any>, newState: RootState_Base)=>void;
 	PostDispatchAction?: (action: Action<any>)=>void;
