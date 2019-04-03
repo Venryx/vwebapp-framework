@@ -1,5 +1,6 @@
 import {routerMiddleware} from "connected-react-router";
-import firebase_ from "firebase";
+import firebase from "firebase/app";
+import "firebase/auth";
 import "firebase/firestore";
 import {reactReduxFirebase} from "react-redux-firebase";
 import {applyMiddleware, compose, createStore, StoreEnhancer} from "redux";
@@ -10,8 +11,6 @@ import {g} from "../../PrivateExports";
 import {browserHistory} from "../URL/History";
 import {MidDispatchAction, PostDispatchAction, PreDispatchAction} from "./ActionProcessor";
 import {ActionSet} from "./StoreHelpers";
-
-const firebase = firebase_ as any;
 
 const dispatchInterceptors = [];
 export function AddDispatchInterceptor(interceptor: Function) {

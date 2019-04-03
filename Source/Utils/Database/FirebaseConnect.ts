@@ -1,20 +1,14 @@
-import firebase_ from "firebase";
+import {FromJSON, GetTreeNodesInObjTree, IsObject, ToJSON} from "js-vextensions";
+import _ from "lodash";
 import {connect} from "react-redux";
 import {ShallowChanged} from "react-vextensions";
-import {setListeners, unsetListeners} from "redux-firestore/es/actions/firestore";
 import {firestoreReducer} from "redux-firestore";
-import {DeepGet, ToJSON, FromJSON, GetTreeNodesInObjTree, IsObject} from "js-vextensions";
-import _ from "lodash";
-import {GetPathParts, PathToListenerPath, activeStoreAccessCollectors, NotifyPathsReceiving, NotifyPathsReceived, NotifyQueriesReceived} from "./DatabaseHelpers";
-import {State_Base, ActionSet} from "../Store/StoreHelpers";
-import {SplitStringBySlash_Cached} from "./StringSplitCache";
-import {manager, RootState_Base, OnPopulated} from "../../Manager";
-import {g, e} from "../../PrivateExports";
-import {GetFirestoreDataSetterActionPath} from "../..";
+import {manager, OnPopulated, RootState_Base} from "../../Manager";
+import {e, g} from "../../PrivateExports";
 import {MaybeLog_Base, ShouldLog_Base} from "../General/Logging";
-import {Assert} from "../../../../../react-vcomponents/Main/dist/General";
-
-const firebase = firebase_ as any;
+import {ActionSet, State_Base} from "../Store/StoreHelpers";
+import {activeStoreAccessCollectors, GetPathParts, NotifyPathsReceived, NotifyPathsReceiving, NotifyQueriesReceived, PathToListenerPath} from "./DatabaseHelpers";
+import {SplitStringBySlash_Cached} from "./StringSplitCache";
 
 // todo: rename to FirestoreConnect
 

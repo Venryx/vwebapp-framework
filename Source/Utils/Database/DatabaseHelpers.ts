@@ -1,7 +1,7 @@
 import {GetTreeNodesInObjTree, DeepSet, DeepGet, CachedTransform, GetStorageForCachedTransform, Assert, IsString, IsNumberString, IsNumber, Clone, FromJSON, ToJSON} from "js-vextensions";
 import {ShallowChanged} from "react-vextensions";
 import u from "updeep";
-import firebase from "firebase";
+import firebase from "firebase/app";
 import {OnPopulated, manager} from "../../Manager";
 import {SplitStringBySlash_Cached} from "./StringSplitCache";
 import {RequestPath, ClearRequestedPaths, GetRequestedPaths, UnsetListeners, SetListeners, WhereFilter, RequestPath_Query, ClearRequests_Query, GetRequests_Query, GetRequests_Query_JSON, SetListeners_Query, QueryRequest, GetRequests_Query_Keys} from "./FirebaseConnect";
