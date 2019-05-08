@@ -93,6 +93,7 @@ export abstract class Command<Payload, ReturnData = void> {
 			e.MaybeLog_Base(a=>a.commands, l=>l("Finishing command. @type:", this.constructor.name, " @command(", this, ") @dbUpdates(", dbUpdates, ")"));
 		} finally {
 			const areOtherCommandsBuffered = currentCommandRun_listeners.length > 0;
+			commandsWaitingToComplete.Remove(this);
 			NotifyListenersThatCurrentCommandFinished();
 			if (!areOtherCommandsBuffered) {
 				e.UnfreezeConnectComps();
