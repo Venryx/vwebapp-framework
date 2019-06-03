@@ -1,7 +1,7 @@
 import {Draggable} from "react-beautiful-dnd";
 import {GetDOM} from "react-vextensions";
-import React from "react";
 import {ToJSON} from "js-vextensions";
+import React from "react";
 
 // So why do we have a MakeDraggable decorator but not a MakeDroppable one?
 // Basically, it's just that <Droppable> sections are usually not the root of a component, whereas <Draggable> sections almost always are.
@@ -23,7 +23,7 @@ export function MakeDraggable(getDraggableCompProps: (props: Object)=>DraggableC
 	return WrappedComponent=>{
 		class WrapperComponent extends React.Component {
 			static WrappedComponent = WrappedComponent;
-			static displayName = WrapperComponent.displayName;
+			static displayName = WrappedComponent.displayName;
 
 			UNSAFE_componentWillMount() {
 				this.UpdateDraggableCompProps(this.props);

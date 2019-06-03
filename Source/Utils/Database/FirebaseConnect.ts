@@ -72,7 +72,7 @@ export function Connect<T, P>(mapStateToProps_inner: (state: RootState_Base, pro
 			}
 		}
 		//let propsChanged = ShallowChanged(props, s.lastProps || {});
-		const propsChanged = ShallowChanged(props, s.lastProps || {}, "children");
+		const propsChanged = ShallowChanged(props, s.lastProps || {}, {propsToIgnore: ["children"]});
 
 		//let result = storeDataChanged ? mapStateToProps_inner(state, props) : s.lastResult;
 		if (!storeDataChanged && !propsChanged) {

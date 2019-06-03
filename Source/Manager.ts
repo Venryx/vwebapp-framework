@@ -63,6 +63,10 @@ export class Manager {
 
 	// If provided, Command.ts will apply each Command's db-updates to a local copy of the db-data, then send this modified data to the ValidateDBData function (for assertions). Should probably disable in production.
 	ValidateDBData?: (newData: Object)=>void;
+
+	// YoutubePlayer
+	GetYoutubePlayerPoolContainer?: ()=>HTMLElement;
+	GetYoutubePlayersToKeepBuffered?: ()=>number;
 }
 export const manager = new Manager();
 

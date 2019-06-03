@@ -26,6 +26,7 @@ export * from "./Utils/General/Logging";
 export * from "./Utils/General/ModuleExportExposer";
 export * from "./Utils/General/Others";
 export * from "./Utils/General/RegexHelpers";
+export * from "./Utils/General/YoutubePlayer";
 
 export * from "./Utils/ReactComponents/AddressBarWrapper";
 export * from "./Utils/ReactComponents/DraggableLabel";
@@ -39,6 +40,7 @@ export * from "./Utils/ReactComponents/TreeView";
 export * from "./Utils/ReactComponents/VDateTime";
 export * from "./Utils/ReactComponents/VReactMarkdown_Remarkable";
 export * from "./Utils/ReactComponents/VReactMarkdown";
+export * from "./Utils/ReactComponents/YoutubePlayerUI";
 
 export * from "./Utils/Store/ActionProcessor";
 export * from "./Utils/Store/CreateStore";

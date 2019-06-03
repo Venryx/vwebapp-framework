@@ -572,7 +572,7 @@ export function CachedTransform_WithStore<T, T2, T3>(
 	const storage = GetStorageForCachedTransform(transformType, staticProps);
 	const dynamicProps_withStoreData = {...dynamicProps as any};
 	if (storage.lastDynamicProps) {
-		for (const key in storage.lastDynamicProps) {
+		for (const key of Object.keys(storage.lastDynamicProps)) {
 			if (key.startsWith("store_")) {
 				const path = key.substr("store_".length);
 				// let oldVal = storage.lastDynamicProps[key];
