@@ -34,6 +34,8 @@ export abstract class Command<Payload, ReturnData = void> {
 	userInfo: CommandUserInfo;
 	type: string;
 	payload: Payload;
+
+	runStartTime: number;
 	returnData;
 
 	// these methods are executed on the server (well, will be later)
@@ -79,6 +81,7 @@ export abstract class Command<Payload, ReturnData = void> {
 
 		try {
 			e.FreezeConnectComps();
+			this.runStartTime = Date.now();
 			await this.PreRun();
 
 			const dbUpdates = this.GetDBUpdates();
