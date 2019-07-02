@@ -7,9 +7,11 @@ import {IsString} from "js-vextensions";
 
 function FixVal(val, props) {
 	//let timeOnly = props.dateFormat == false;
-	if (IsString(val)) {
+	const {dateFormat, timeFormat} = props;
+	if (IsString(val) && dateFormat && timeFormat) {
 		if (val == "") return null;
-		const asMoment = Moment(val, ["HH:mm", "hh:mm a"]);
+		//const asMoment = Moment(val, ["HH:mm", "hh:mm a"]);
+		const asMoment = Moment(val, [`${dateFormat} ${timeFormat}`]);
 		if (!asMoment.isValid) return null;
 		return asMoment;
 	}
