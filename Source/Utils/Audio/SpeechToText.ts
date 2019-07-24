@@ -17,6 +17,10 @@ export class SpeechRecognizer {
 			this.autoRestart = true;
 			this.fixTranscriptBug = true;
 		}
+
+		// actually, it looks like the "transcript bug" might actually be the correct behavior (happens on Chrome Android and regular Chrome -- just didn't notice on regular because desktop lacked auto-stop bug)
+		// if this is the case, then... todo: fix final-transcript stitching to match official behavior (without needing this fixTranscriptBug flag)
+		this.fixTranscriptBug = true;
 	}
 
 	internalRecognizer: any;
@@ -34,7 +38,9 @@ export class SpeechRecognizer {
 		}
 
 		this.stopping = false;
+		this.onEndListeners.forEach(a=>a());
 	}
+	onEndListeners = [];
 	OnResult = event=>{
 		this.transcript_unfinalizedPortion = "";
 		for (const result of event.results) {
@@ -56,21 +62,32 @@ export class SpeechRecognizer {
 
 	// way to work around the Chrome Android bug of speech-recognition auto-stopping after a few seconds of silence
 	autoRestart = false;
-	// way to work around the Chrome ANdroid bug of all the "result" objects containing the whole transcript up to its point
+	// way to work around the Chrome Android bug of all the "result" objects containing the whole transcript up to its point
 	fixTranscriptBug = false;
 
-	transcript_finalizedPortion: string;
-	transcript_unfinalizedPortion: string;
+	transcript_finalizedPortion = "";
+	transcript_unfinalizedPortion = "";
+	GetTranscript_All() { return this.transcript_finalizedPortion + this.transcript_unfinalizedPortion; }
+	ClearTranscript() {
+		this.transcript_finalizedPortion = "";
+		this.transcript_unfinalizedPortion = "";
+	}
+
 	StartRecognizing(clearTranscript = true) {
-		if (clearTranscript) {
-			this.transcript_finalizedPortion = "";
-			this.transcript_unfinalizedPortion = "";
-		}
+		if (clearTranscript) this.ClearTranscript();
 
 		this.internalRecognizer.start();
 	}
-	StopRecognizing() {
-		this.stopping = true;
-		this.internalRecognizer.stop();
+	async StopRecognizing() {
+		// todo: make so this insta-resolves if recording never started in the first place (eg. when on non-https domain)
+		return new Promise((resolve, reject)=>{
+			this.stopping = true;
+			const onEndListener = ()=>{
+				resolve();
+				this.onEndListeners.Remove(onEndListener);
+			};
+			this.onEndListeners.push(onEndListener);
+			this.internalRecognizer.stop();
+		});
 	}
 }
