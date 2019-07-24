@@ -12,6 +12,8 @@ export * from "./Server/Command";
 export * from "./Server/Server";
 
 export * from "./Utils/Audio/TextToSpeech";
+export * from "./Utils/Audio/SoundRecorder";
+export * from "./Utils/Audio/SpeechToText";
 
 export * from "./Utils/Database/DatabaseHelpers";
 export * from "./Utils/Database/FirebaseConnect";

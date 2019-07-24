@@ -2,19 +2,28 @@ import {Timer, Assert} from "js-vextensions";
 import {manager} from "../../Manager";
 import {g} from "../../PrivateExports";
 
+export let youtubeAPILoadStarted = false;
 export let youtubeAPIReady = false;
+export const onYoutubeAPIReadyListeners = [] as Function[];
+g.onYouTubeIframeAPIReady = ()=>{
+	youtubeAPIReady = true;
+	Log("Youtube API ready.");
+	onYoutubeAPIReadyListeners.forEach(a=>a());
+};
+
 export function EnsureYoutubeAPIReady() {
 	return new Promise((resolve, reject)=>{
-		if (youtubeAPIReady) resolve();
-
-		// load youtube API
-		document.head.appendChild(document.createElement("script").VSet({src: "https://www.youtube.com/iframe_api"}));
-
-		g.onYouTubeIframeAPIReady = ()=>{
-			youtubeAPIReady = true;
-			Log("Youtube API ready.");
+		if (youtubeAPIReady) {
 			resolve();
-		};
+		} else {
+			// if youtube-api loading hasn't started yet, start loading youtube API
+			if (!youtubeAPILoadStarted) {
+				document.head.appendChild(document.createElement("script").VSet({src: "https://www.youtube.com/iframe_api"}));
+				youtubeAPILoadStarted = true;
+			}
+
+			onYoutubeAPIReadyListeners.push(resolve);
+		}
 	});
 }
 
@@ -107,7 +116,7 @@ export class YoutubePlayer {
 						events: {
 							onReady: ()=>{
 								this.ready = true;
-								for (const listener of this.readyListeners) listener();
+								this.readyListeners.forEach(a=>a());
 							},
 							onStateChange: e=>this.OnStateChange(e),
 						},
@@ -272,18 +281,16 @@ function GetYoutubePlayersToKeepBuffered() {
 export const youtubePlayers = [] as YoutubePlayer[];
 export function GetUnownedYoutubePlayers() { return youtubePlayers.filter(a=>!a.hasOwner); }
 export function GetBufferingOrBufferedYoutubePlayers() { return youtubePlayers.filter(a=>[YoutubePlayerState.BUFFERING, YoutubePlayerState.PLAYING, YoutubePlayerState.PAUSED, YoutubePlayerState.ENDED].Contains(a.state)); }
-export function GetUnownedYoutubePlayerReady(preferredClipInfoMatch: YoutubeClipInfo): Promise<YoutubePlayer> {
-	return new Promise(async(resolve, reject)=>{
-		//let unownedPlayers = youtubePlayers.filter(a=>a.state == YoutubePlayerState.ENDED);
-		// order by last-play-time, so that we prefer unowned-players which have not been used recently
-		const unownedPlayers_all = GetUnownedYoutubePlayers().OrderBy(a=>a.lastPlayTime);
-		const unownedPlayers_matchingClip = unownedPlayers_all.filter(a=>preferredClipInfoMatch && a.loadedClipInfo && a.loadedClipInfo.videoID == preferredClipInfoMatch.videoID && a.loadedClipInfo.quality == preferredClipInfoMatch.quality).OrderBy(a=>a.lastPlayTime);
+export async function GetUnownedYoutubePlayerReady(preferredClipInfoMatch: YoutubeClipInfo) {
+	//let unownedPlayers = youtubePlayers.filter(a=>a.state == YoutubePlayerState.ENDED);
+	// order by last-play-time, so that we prefer unowned-players which have not been used recently
+	const unownedPlayers_all = GetUnownedYoutubePlayers().OrderBy(a=>a.lastPlayTime);
+	const unownedPlayers_matchingClip = unownedPlayers_all.filter(a=>preferredClipInfoMatch && a.loadedClipInfo && a.loadedClipInfo.videoID == preferredClipInfoMatch.videoID && a.loadedClipInfo.quality == preferredClipInfoMatch.quality).OrderBy(a=>a.lastPlayTime);
 
-		// if unowned+matching player, always reuse that as it has no negative side effects
-		// else, reuse an unowned+nonmatching player *if* we've reached the buffered-players limit
-		// else, create a new one
-		const player = unownedPlayers_matchingClip.FirstOrX() || (youtubePlayers.length >= GetYoutubePlayersToKeepBuffered() && unownedPlayers_all.FirstOrX()) || new YoutubePlayer();
-		await player.EnsureReady();
-		resolve(player);
-	});
+	// if unowned+matching player, always reuse that as it has no negative side effects
+	// else, reuse an unowned+nonmatching player *if* we've reached the buffered-players limit
+	// else, create a new one
+	const player = unownedPlayers_matchingClip.FirstOrX() || (youtubePlayers.length >= GetYoutubePlayersToKeepBuffered() && unownedPlayers_all.FirstOrX()) || new YoutubePlayer();
+	await player.EnsureReady();
+	return player;
 }
