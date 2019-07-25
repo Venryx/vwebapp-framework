@@ -86,7 +86,7 @@ export class SpeechRecognizer {
 			const filteredSegments = validSegments.filter(a=>(a.isFinal && finalizedSegments) || (!a.isFinal && unfinalizedSegments));
 			const sessionText = filteredSegments.map(segment=>RemoveDanglingSpaces(segment.text)).join(" ");
 			return RemoveDanglingSpaces(sessionText);
-		}).join(" ");
+		}).filter(a=>a.length).join(" ");
 	}
 	// to be called when owner has already retrieved the existing text/transcript, and wants to prepare for another recording
 	ClearTranscript() {
