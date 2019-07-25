@@ -3,6 +3,10 @@ const SpeechRecognitionClass = window["SpeechRecognition"] || window["webkitSpee
 // Note that if the user checks "Desktop site", the user-agent will no longer contain "Android", breaking this detection.
 export const inChromeAndroid = navigator.userAgent.includes("; Android ") && navigator.userAgent.includes(" Chrome/");
 
+function RemoveDanglingSpaces(str: string) {
+	return str.replace(/(^ | $)/g, "");
+}
+
 export class SpeechRecognizer {
 	constructor(fixTranscriptBugIfPresent = true) {
 	//constructor() {
@@ -74,17 +78,14 @@ export class SpeechRecognizer {
 
 	transcriptSessions: TranscriptSession[] = [];
 	GetTranscript(finalizedSegments = true, unfinalizedSegments = true) {
-		if (this.fixTranscriptBug) {
-			return this.transcriptSessions.map(session=>{
-				let result = "";
-				if (finalizedSegments) result += session.segments.filter(a=>a.isFinal).map(a=>a.text).LastOrX(null, "");
-				if (unfinalizedSegments) result += session.segments.filter(a=>!a.isFinal).map(a=>a.text).LastOrX(null, "");
-				return result;
-			}).join(" ");
-		}
-
 		return this.transcriptSessions.map(session=>{
-			return session.segments.filter(a=>(a.isFinal && finalizedSegments) || (!a.isFinal && unfinalizedSegments)).map(segment=>segment.text).join(" ");
+			let validSegments = session.segments;
+			if (this.fixTranscriptBug) {
+				validSegments = [session.segments.filter(a=>a.isFinal).LastOrX(), session.segments.filter(a=>!a.isFinal).LastOrX()].filter(a=>a);
+			}
+			const filteredSegments = validSegments.filter(a=>(a.isFinal && finalizedSegments) || (!a.isFinal && unfinalizedSegments));
+			const sessionText = filteredSegments.map(segment=>RemoveDanglingSpaces(segment.text)).join(" ");
+			return RemoveDanglingSpaces(sessionText);
 		}).join(" ");
 	}
 	// to be called when owner has already retrieved the existing text/transcript, and wants to prepare for another recording
