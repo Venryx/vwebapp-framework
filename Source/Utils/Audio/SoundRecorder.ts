@@ -3,7 +3,9 @@ declare const MediaRecorder;
 export class SoundRecorder {
 	audioChunks = [];
 	//recorder: MediaRecorder;
+	stream: MediaStream;
 	recorder: any;
+	//effectsContext: AudioContext;
 
 	IsActive() {
 		return this.recorder != null && this.recorder.state != "inactive";
@@ -16,9 +18,13 @@ export class SoundRecorder {
 	}
 
 	async StartRecording() {
+		//let recorderClosed = this.recorder == null || this.recorder.state == "inactive";
+		/*const createEffectsContext_final = createEffectsContext && (this.effectsContext == null || this.effectsContext.state == "closed");
+		const stream = this.recorder == null || createEffectsContext_final ? await navigator.mediaDevices.getUserMedia({audio: true}) : null;*/
+
 		if (this.recorder == null) {
-			const stream = await navigator.mediaDevices.getUserMedia({audio: true});
-			this.recorder = new MediaRecorder(stream);
+			this.stream = await navigator.mediaDevices.getUserMedia({audio: true});
+			this.recorder = new MediaRecorder(this.stream);
 			this.recorder.ondataavailable = e=>{
 				this.audioChunks.push(e.data);
 				/*if (rec.state == "inactive") {
@@ -38,9 +44,12 @@ export class SoundRecorder {
 		if (!this.IsActive()) return;
 		return new Promise((resolve, reject)=>{
 			const self = this;
+			//this.effectsContext.close();
+			//this.effectsContext = null;
 			this.recorder.addEventListener("stop", function OnStop() { resolve(); self.recorder.removeEventListener("stop", OnStop); });
 			this.recorder.addEventListener("error", function OnError(error) { reject(error); self.recorder.removeEventListener("error", OnError); });
 			this.recorder.stop();
+			//this.recorder = null;
 		});
 	}
 }

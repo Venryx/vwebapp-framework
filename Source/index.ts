@@ -11,6 +11,7 @@ export * from "./Manager";
 export * from "./Server/Command";
 export * from "./Server/Server";
 
+export * from "./Utils/Audio/AudioNodes";
 export * from "./Utils/Audio/TextToSpeech";
 export * from "./Utils/Audio/SoundRecorder";
 export * from "./Utils/Audio/SpeechToText";
