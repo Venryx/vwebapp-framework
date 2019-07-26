@@ -7,9 +7,6 @@ export async function InitAudioNodes(audioContext: AudioContext) {
 
 const GeneralAudioProcessor_code = `
 	class GeneralAudioProcessor extends AudioWorkletProcessor {
-		notifyIntensities = [];
-		notifyIntensities_lastTimes = [];
-		minNotifyInterval = 0;
 		constructor() {
 			super();
 			this.port.onmessage = event=> {
@@ -20,9 +17,19 @@ const GeneralAudioProcessor_code = `
 				}
 			};
 			//this.port.start();
-		}
 
-		lastLogTime = 0;
+			// must initialize in constructor, to work in electron
+			this.notifyIntensities = [];
+			this.notifyIntensities_lastTimes = [];
+			this.minNotifyInterval = 0;
+			this.lastLogTime = 0;
+		}
+		
+		/*notifyIntensities = [];
+		notifyIntensities_lastTimes = [];
+		minNotifyInterval = 0;
+
+		lastLogTime = 0;*/
 		FrequentLog(str) {
 			if (Date.now() - this.lastLogTime > 100) {
 				console.log(str);

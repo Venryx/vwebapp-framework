@@ -105,3 +105,11 @@ export function GetRandomNumber(options: {min: number, max: number, mustBeIntege
 	}
 	return min + (Math.random() * range);
 }
+
+export function BlobToString(blob) {
+	return new Promise((resolve, reject)=>{
+		const reader = new FileReader();
+		reader.addEventListener("loadend", e=>resolve(e.srcElement["result"]));
+		reader.readAsText(blob);
+	});
+}
