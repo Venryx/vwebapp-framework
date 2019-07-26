@@ -5,8 +5,11 @@ export class SoundRecorder {
 	//recorder: MediaRecorder;
 	recorder: any;
 
-	IsRecording() {
+	IsActive() {
 		return this.recorder != null && this.recorder.state != "inactive";
+	}
+	IsRecording() {
+		return this.recorder != null && this.recorder.state == "recording";
 	}
 	IsPaused() {
 		return this.recorder != null && this.recorder.state == "paused";
@@ -32,6 +35,7 @@ export class SoundRecorder {
 		this.recorder.start();
 	}
 	StopRecording() {
+		if (!this.IsActive()) return;
 		return new Promise((resolve, reject)=>{
 			const self = this;
 			this.recorder.addEventListener("stop", function OnStop() { resolve(); self.recorder.removeEventListener("stop", OnStop); });
