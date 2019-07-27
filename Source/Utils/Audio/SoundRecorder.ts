@@ -17,13 +17,15 @@ export class SoundRecorder {
 		return this.recorder != null && this.recorder.state == "paused";
 	}
 
-	async StartRecording() {
+	async StartRecording(micDeviceID?: string) {
 		//let recorderClosed = this.recorder == null || this.recorder.state == "inactive";
 		/*const createEffectsContext_final = createEffectsContext && (this.effectsContext == null || this.effectsContext.state == "closed");
 		const stream = this.recorder == null || createEffectsContext_final ? await navigator.mediaDevices.getUserMedia({audio: true}) : null;*/
 
 		if (this.recorder == null) {
-			this.stream = await navigator.mediaDevices.getUserMedia({audio: true});
+			this.stream = await navigator.mediaDevices.getUserMedia({
+				audio: {deviceId: micDeviceID ? {exact: micDeviceID} : undefined},
+			});
 			this.recorder = new MediaRecorder(this.stream);
 			this.recorder.ondataavailable = e=>{
 				this.audioChunks.push(e.data);
