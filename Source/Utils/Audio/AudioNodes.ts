@@ -14,6 +14,7 @@ const GeneralAudioProcessor_code = `
 				if (message.type == "init") {
 					this.notifyIntensities = message.notifyIntensities;
 					this.minNotifyInterval = message.minNotifyInterval;
+					this.logIntensities = message.logIntensities;
 				}
 			};
 			//this.port.start();
@@ -28,6 +29,7 @@ const GeneralAudioProcessor_code = `
 		/*notifyIntensities = [];
 		notifyIntensities_lastTimes = [];
 		minNotifyInterval = 0;
+		logIntensities = false;
 
 		lastLogTime = 0;*/
 		FrequentLog(str) {
@@ -46,7 +48,9 @@ const GeneralAudioProcessor_code = `
 					//channel[i] = inputChannels[index][i];
 
 					let actualIntensity = inputChannels[index][i];
-					//this.FrequentLog("Test4: " + actualIntensity);
+					if (this.logIntensities) {
+						this.FrequentLog("Actual intensity: " + actualIntensity);
+					}
 					for (let [index, notifyIntensity] of this.notifyIntensities.entries()) {
 						if (actualIntensity >= notifyIntensity) {
 							let lastTime = this.notifyIntensities_lastTimes[index] || 0;
