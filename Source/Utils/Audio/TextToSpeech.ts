@@ -1,3 +1,5 @@
+import {g} from "../../PrivateExports";
+
 const compsObservingVoices = [];
 export function ObserveVoices(target: Function) {
 	const oldCompWillMount = target.prototype.ComponentWillMount;
@@ -12,13 +14,16 @@ export function ObserveVoices(target: Function) {
 	};
 }
 
-speechSynthesis.onvoiceschanged = ()=>{
-	for (const comp of compsObservingVoices) {
-		comp.Update();
-	}
-};
+if (g.speechSynthesis) {
+	speechSynthesis.onvoiceschanged = ()=>{
+		for (const comp of compsObservingVoices) {
+			comp.Update();
+		}
+	};
+}
 
 export function GetVoices() {
+	if (g.speechSynthesis == null) return [];
 	const result = speechSynthesis.getVoices();
 	if (result.length == 0) {
 		result.push({name: "[no voices found]"} as any);
@@ -37,6 +42,7 @@ export class TextSpeaker {
 	speaking = false;
 	Speak(info: SpeakInfo, stopOtherSpeech = true) {
 		return new Promise((resolve, reject)=>{
+			if (g.speechSynthesis == null) return reject(new Error("Speech-synthesis not supported."));
 			const voice = GetVoices().find(a=>a.name == info.voice);
 			//Assert(voice != null, `Could not find voice named "${info.voice}".`);
 
@@ -73,5 +79,6 @@ export class TextSpeaker {
 }
 
 export function StopAllSpeech() {
+	if (g.speechSynthesis == null) return;
 	speechSynthesis.cancel();
 }
