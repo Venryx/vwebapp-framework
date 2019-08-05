@@ -43,7 +43,7 @@ export function Connect<T, P>(funcOrFuncGetter) {
 	if (!isFuncGetter) mapStateToProps_inner = funcOrFuncGetter;
 	else mapStateToProps_inner_getter = funcOrFuncGetter;*/
 
-export function Connect<T, P>(mapStateToProps_inner: (state: RootState_Base, props: P)=>any) {
+export function Connect<T, P>(mapStateToProps_inner: (state: RootState_Base, props: P)=>any, forwardRef = true) {
 	const mapStateToProps_wrapper = function(state: RootState_Base, props: P) {
 		const s = this;
 		if (connectCompsFrozen && s.lastResult) {
@@ -163,7 +163,7 @@ export function Connect<T, P>(mapStateToProps_inner: (state: RootState_Base, pro
 	//}, null, null, {withRef: true});
 	}, null, null, {forwardRef: true});*/
 
-	return connect(mapStateToProps_wrapper, null, null, {forwardRef: true}) as any; // {fowardRef: true} will make-so the "ref" callback will return the wrapped-comp rather than the Connect wrapper-comp
+	return connect(mapStateToProps_wrapper, null, null, forwardRef ? {forwardRef: true} : {}) as any; // {fowardRef: true} will make-so the "ref" callback will return the wrapped-comp rather than the Connect wrapper-comp
 }
 
 export function SetListeners_Query(queryRequestJSONs: string[]) {
