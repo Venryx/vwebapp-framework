@@ -1,9 +1,10 @@
-import {VRect, Vector2i} from "js-vextensions";
+import {VRect, Vector2i, GetPropsChanged} from "js-vextensions";
 import {RemoveHelpers} from "../Database/DatabaseHelpers";
 import {AddSchema, GetSchemaJSON} from "../../Server/Server";
 
-export function GetUpdates(oldData, newData, useNullInsteadOfUndefined = true) {
-	const result = {};
+// like js-vextensions GetPropsChanged(), except also applies RemoveHelpers on the result (since intended to be used for db-objects)
+export function GetUpdates(oldData, newData, useJSONCompare = false, useNullInsteadOfUndefined = true) {
+	/*const result = {};
 	for (const key of oldData.VKeys(true).concat(newData.VKeys(true))) {
 		if (newData[key] !== oldData[key]) {
 			result[key] = newData[key];
@@ -11,6 +12,10 @@ export function GetUpdates(oldData, newData, useNullInsteadOfUndefined = true) {
 				result[key] = null;
 			}
 		}
+	}*/
+	const result = GetPropsChanged(oldData, newData, false, useJSONCompare).ToMap(a=>a.key, a=>a.newVal) as Object;
+	if (useNullInsteadOfUndefined) {
+		result.Pairs().filter(a=>a.value === undefined).forEach(a=>result[a.key] = null);
 	}
 	return RemoveHelpers(result);
 }
