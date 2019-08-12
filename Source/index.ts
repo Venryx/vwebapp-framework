@@ -34,6 +34,7 @@ export * from "./Utils/General/YoutubePlayer";
 
 export * from "./Utils/ReactComponents/AddressBarWrapper";
 export * from "./Utils/ReactComponents/DraggableLabel";
+export * from "./Utils/ReactComponents/ErrorBoundary";
 export * from "./Utils/ReactComponents/Icon";
 export * from "./Utils/ReactComponents/InfoButton";
 export * from "./Utils/ReactComponents/Link";
