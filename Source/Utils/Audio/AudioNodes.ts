@@ -65,7 +65,6 @@ const GeneralAudioProcessor_code = `
 			});
 			return true;
 		}
-		
 	}
 	registerProcessor("GeneralAudioProcessor", GeneralAudioProcessor);
 `.AsMultiline(0);
