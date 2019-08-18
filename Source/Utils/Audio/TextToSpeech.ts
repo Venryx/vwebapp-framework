@@ -57,14 +57,25 @@ export class TextSpeaker {
 			speech.rate = info.rate || 1; // for me, this can range from 10% to 1000%
 			speech.pitch = info.pitch || 1; // for me, this can range from ~1% to 200%
 
-			speech.onend = ()=>{
+			speech.addEventListener("start", ()=>{
+				this.speaking = true; // set speaking to true here as well (this runs after the "end" event of the previous speech, preventing our correct speaking:true state from being overwritten)
+			});
+			speech.addEventListener("end", ()=>{
 				this.speaking = false;
 				resolve();
-			};
-			speech.onerror = ()=>{
+			});
+			speech.addEventListener("error", ()=>{
 				this.speaking = false;
 				reject();
-			};
+			});
+
+			/*speech.addEventListener("boundary", e=>Log("boundary:", e));
+			speech.addEventListener("end", e=>Log("end:", e));
+			speech.addEventListener("error", e=>Log("error:", e));
+			speech.addEventListener("mark", e=>Log("mark:", e));
+			speech.addEventListener("pause", e=>Log("pause:", e));
+			speech.addEventListener("resume", e=>Log("resume:", e));
+			speech.addEventListener("start", e=>Log("start:", e));*/
 
 			speechSynthesis.speak(speech);
 			this.speaking = true;
