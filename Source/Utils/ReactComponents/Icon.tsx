@@ -1,5 +1,5 @@
 import {BaseComponent} from "react-vextensions";
-import React from "react";
+import React, {SVGFactory, DetailedHTMLFactory} from "react";
 import {manager} from "vwebapp-framework/Source/Manager";
 import {Assert} from "js-vextensions";
 
@@ -19,27 +19,36 @@ vWebAppFramework_manager.Populate({
 */
 
 //export class Icon extends BaseComponent<{icon: IconType, color?: string}, {}> {
-type Props = {icon?: string, iconData?: string, size: number, color?: string}
-	& React.SVGProps<SVGSVGElement> // if "icon" prop used
-	& React.HTMLProps<HTMLDivElement>; // if "iconData" prop used
+type Props = {
+	divContainer?: boolean, icon?: string, iconData?: string, size: number, color?: string
+} & React.SVGProps<SVGSVGElement> & React.HTMLProps<HTMLDivElement>;
 export class Icon extends BaseComponent<Props, {}> {
 	static defaultProps = {color: "rgba(255,255,255,.7)"};
 	render() {
-		const {icon, iconData, size, color, onClick, ...rest} = this.props;
-		if (iconData) {
-			return (
-				<div {...rest as any} style={{background: `url(${iconData})`, width: size, height: size}}/>
+		const {divContainer, icon, iconData, size, color, style, ...rest} = this.props;
+
+		let svgComp: JSX.Element;
+		if (icon) {
+			//let info = require(`../../../../../Resources/SVGs/${icon}.svg`).default;
+			//let info = files[`./${icon}.svg`];
+			const info = manager.iconInfo[`./${icon}.svg`];
+			Assert(info != null, `Could not find icon-info for "${icon}.svg" in manager.iconInfo map. See comment in vwebapp-framework/Source/Utils/ReactComponent/Icon.tsx for example code.`);
+			svgComp = (
+				<svg {...rest as any} viewBox={info.viewBox} width={size} height={size} style={E(style)}>
+					<use xlinkHref={`#${info.id}`} style={{fill: color}}/>
+				</svg>
 			);
 		}
 
-		//let info = require(`../../../../../Resources/SVGs/${icon}.svg`).default;
-		//let info = files[`./${icon}.svg`];
-		const info = manager.iconInfo[`./${icon}.svg`];
-		Assert(info != null, `Could not find icon-info for "${icon}.svg" in manager.iconInfo map. See comment in vwebapp-framework/Source/Utils/ReactComponent/Icon.tsx for example code.`);
-		return (
-			<svg {...rest as any} viewBox={info.viewBox} width={size} height={size}>
-				<use xlinkHref={`#${info.id}`} style={{fill: color}}/>
-			</svg>
-		);
+		const divContainer_final = divContainer || iconData;
+		if (divContainer_final) {
+			return (
+				<div {...rest as any} style={E({width: size, height: size}, iconData && {background: `url(${iconData})`}, style)}>
+					{svgComp}
+				</div>
+			);
+		}
+
+		return svgComp;
 	}
 }
