@@ -19,10 +19,19 @@ vWebAppFramework_manager.Populate({
 */
 
 //export class Icon extends BaseComponent<{icon: IconType, color?: string}, {}> {
-export class Icon extends BaseComponent<{icon: string, size: number, color?: string} & React.HTMLProps<SVGElement>, {}> {
+type Props = {icon?: string, iconData?: string, size: number, color?: string}
+	& React.SVGProps<SVGSVGElement> // if "icon" prop used
+	& React.HTMLProps<HTMLDivElement>; // if "iconData" prop used
+export class Icon extends BaseComponent<Props, {}> {
 	static defaultProps = {color: "rgba(255,255,255,.7)"};
 	render() {
-		const {icon, size, color, ...rest} = this.props;
+		const {icon, iconData, size, color, onClick, ...rest} = this.props;
+		if (iconData) {
+			return (
+				<div {...rest as any} style={{background: `url(${iconData})`, width: size, height: size}}/>
+			);
+		}
+
 		//let info = require(`../../../../../Resources/SVGs/${icon}.svg`).default;
 		//let info = files[`./${icon}.svg`];
 		const info = manager.iconInfo[`./${icon}.svg`];
