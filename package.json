@@ -76,6 +76,7 @@
 		"firebase-feedback": "0.0.4",
 		"firebase-forum": "0.0.4",
 		"js-vextensions": "0.0.8",
+		"moment": "2.24.0",
 		"raven-js": "^3.27.0",
 		"react": "^16.7.0",
 		"react-beautiful-dnd": "^10.0.4",
