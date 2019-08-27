@@ -1,9 +1,9 @@
 import AJV from "ajv";
 import AJVKeywords from "ajv-keywords";
-import {RemoveHelpers} from "..";
-import {Clone, ToJSON, IsString, Assert} from "js-vextensions";
+import {Clone, ToJSON, IsString, Assert, IsObject} from "js-vextensions";
+import {RemoveHelpers} from "./DatabaseHelpers";
 
-export const ajv = AJVKeywords(new AJV()) as AJV_Extended;
+export const ajv = AJVKeywords(new AJV({allErrors: true})) as AJV_Extended;
 
 export function Schema(schema) {
 	schema = E({additionalProperties: false}, schema);
@@ -142,4 +142,42 @@ export function Schema_WithOptionalPropsAllowedNull(schema: any) {
 		}
 	}
 	return result;
+}
+
+/*export function GetInvalidPropPaths(obj: Object, schemaObj: Object, checkForExtraneous = true, checkForNotMatching = true, ignoreParentsOfInvalids = true) {
+	Assert(IsObject(schemaObj), "schemaObj must be an object. (eg. result from GetSchemaJSON)");
+	const result = [];
+	for (const pair of obj.Pairs()) {
+		const propSchema_raw = (schemaObj["properties"] || {})[pair.key];
+		const propSchema = propSchema_raw && propSchema_raw["$ref"] ? GetSchemaJSON(propSchema_raw["$ref"]) : propSchema_raw;
+
+		const selfInvalid =
+			(checkForExtraneous && propSchema == null) ||
+			(checkForNotMatching && propSchema && Validate_Full(propSchema, null, pair.value) != null);
+
+		// if object (and we have schema-data available for this level), look for invalid prop-paths within it
+		if (IsObject(pair.value) && propSchema) {
+			const subResults = GetInvalidPropPaths(pair.value, propSchema);
+			if (!ignoreParentsOfInvalids || subResults.length == 0) result.push(pair.key);
+			result.push(...subResults.map(subPath=>`${pair.key}/${subPath}`));
+		} else {
+			if (selfInvalid) result.push(pair.key);
+		}
+	}
+	return result;
+}*/
+export function GetInvalidPropPaths(data: Object, schemaObject: Object) {
+	const passed = ajv.validate(schemaObject, data);
+	if (passed) return [];
+
+	return ajv.errors.map(error=>{
+		let propPath = error.dataPath
+			.replace(/^\./, "") // remove starting dot
+			.replace(/[.[\]]/g, "/") // replace instances of ".", "[", and "]" with "/"
+			.replace(/\/+/g, "/"); // collapse each sequence of "/" into a single "/" (can be caused by: "arrayProp[0].prop" -> "arrayProp/0//prop")
+		if (error.keyword == "additionalProperties") {
+			propPath += `/${error.params["additionalProperty"]}`;
+		}
+		return {propPath, error};
+	});
 }

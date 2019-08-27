@@ -188,6 +188,9 @@ export function RemoveHelpers(data) {
 	}
 	return data;
 }
+export function WithoutHelpers(data) {
+	return RemoveHelpers(Clone(data));
+}
 
 class DBPathInfo {
 	lastTimestamp = -1;

@@ -9,7 +9,6 @@ export * from "./ExportOverwriteEnabler";
 export * from "./Manager";
 
 export * from "./Server/Command";
-export * from "./Server/Server";
 
 export * from "./Utils/Audio/AudioNodes";
 export * from "./Utils/Audio/TextToSpeech";
@@ -19,6 +18,7 @@ export * from "./Utils/Audio/SpeechToText";
 export * from "./Utils/Database/DatabaseHelpers";
 export * from "./Utils/Database/FirebaseConnect";
 //export * from "./Utils/Database/QuickJoin";
+export * from "./Utils/Database/SchemaHelpers";
 export * from "./Utils/Database/StringSplitCache";
 
 export * from "./Utils/General/Action";
