@@ -46,8 +46,9 @@ export function WrapData<T>(data: T) {
 
 var schemaAddListeners = {};
 export function WaitTillSchemaAddedThenRun(schemaName: string, callback: ()=>void) {
-	// if schema is already added, run right away
-	if (ajv.getSchema(schemaName)) {
+	// if schema is already added, run right away (avoid ajv.getSchema, since it errors on not-yet-resolvable refs)
+	//if (ajv.getSchema(schemaName)) {
+	if (schemaJSON[schemaName] != null) {
 		callback();
 		return;
 	}
