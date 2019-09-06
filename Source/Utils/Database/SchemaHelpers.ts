@@ -11,7 +11,16 @@ export function Schema(schema) {
 }
 
 const schemaJSON = {};
-export function AddSchema(schema, name: string) {
+export async function AddSchema(name: string, schemaOrGetter: Object | (()=>Object));
+export async function AddSchema(name: string, dependencySchemas: string[], schemaGetter: ()=>Object); // only accept schema-getter, since otherwise there's no point to adding the dependency-schemas
+export async function AddSchema(...args: any[]) {
+	let name: string, dependencySchemas: string[], schemaOrGetter: any;
+	if (args.length == 2) [name, schemaOrGetter] = args;
+	else [name, dependencySchemas, schemaOrGetter] = args;
+
+	if (dependencySchemas) await Promise.all(dependencySchemas.map(schemaName=>WaitTillSchemaAdded(schemaName)));
+	let schema = schemaOrGetter instanceof Function ? schemaOrGetter() : schemaOrGetter;
+
 	schema = Schema(schema);
 	schemaJSON[name] = schema;
 	ajv.removeSchema(name); // for hot-reloading
@@ -45,14 +54,16 @@ export function WrapData<T>(data: T) {
 }*/
 
 var schemaAddListeners = {};
-export function WaitTillSchemaAddedThenRun(schemaName: string, callback: ()=>void) {
-	// if schema is already added, run right away (avoid ajv.getSchema, since it errors on not-yet-resolvable refs)
-	//if (ajv.getSchema(schemaName)) {
-	if (schemaJSON[schemaName] != null) {
-		callback();
-		return;
-	}
-	schemaAddListeners[schemaName] = (schemaAddListeners[schemaName] || []).concat(callback);
+export function WaitTillSchemaAdded(schemaName: string): Promise<void> {
+	return new Promise((resolve, reject)=>{
+		// if schema is already added, run right away (avoid ajv.getSchema, since it errors on not-yet-resolvable refs)
+		//if (ajv.getSchema(schemaName)) {
+		if (schemaJSON[schemaName] != null) {
+			resolve();
+			return;
+		}
+		schemaAddListeners[schemaName] = (schemaAddListeners[schemaName] || []).concat(resolve);
+	});
 }
 
 type AJV_Extended = AJV.Ajv & {

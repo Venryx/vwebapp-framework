@@ -28,20 +28,20 @@ export function GetScreenRect(el: HTMLElement) {
 	return new VRect(clientRect.left, clientRect.top, clientRect.width, clientRect.height, false);
 }
 
-AddSchema({
+AddSchema("Vector2i", {
 	properties: {
 		x: {type: "number"},
 		y: {type: "number"},
 	},
-}, "Vector2i");
-AddSchema({
+});
+AddSchema("VRect", {
 	properties: {
 		x: {type: "number"},
 		y: {type: "number"},
 		width: {type: "number"},
 		height: {type: "number"},
 	},
-}, "VRect");
+});
 
 const click_lastInfoForElement = {};
 export function IsDoubleClick(event: React.MouseEvent<any>, maxTimeGap = 500, compareByPath = true) {
