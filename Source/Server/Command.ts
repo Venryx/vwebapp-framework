@@ -128,7 +128,7 @@ export abstract class Command<Payload, ReturnData = void> {
 		} */
 
 		// locally-apply db-updates, then validate the result (for now, only works for already-loaded data paths)
-		const oldData = e.RemoveHelpers(Clone(e.State_Base(`firestore/data/${e.DBPath()}`)));
+		const oldData = e.WithoutHelpers(e.State_Base(`firestore/data/${e.DBPath()}`));
 		const newData = e.ApplyDBUpdates_Local(oldData, dbUpdates);
 		manager.ValidateDBData(newData);
 	}

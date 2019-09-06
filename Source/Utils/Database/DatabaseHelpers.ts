@@ -166,7 +166,7 @@ export function ProcessDBData(data, standardizeForm: boolean, addHelpers: boolea
 		// add special _key or _id prop
 		if (addHelpers && typeof treeNode.Value == "object") {
 			const key = treeNode.prop == "_root" ? rootKey : treeNode.prop;
-			if (parseInt(key).toString() == key) {
+			if (IsNumberString(key)) {
 				treeNode.Value._id = parseInt(key);
 				//treeNode.Value._Set("_id", parseInt(key));
 			}
@@ -458,7 +458,7 @@ G({GetAsync_Raw});
 export async function GetAsync_Raw<T>(dbGetterFunc: ()=>T, statsLogger?: ({requestedPaths: string})=>void): Promise<T> {
 	const value = await GetAsync(dbGetterFunc, statsLogger);
 	if (value == null) return value;
-	return RemoveHelpers(Clone(value));
+	return WithoutHelpers(value);
 }
 
 type ReceiveStatus = "not started" | "receiving" | "received";
