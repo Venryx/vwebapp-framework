@@ -106,10 +106,19 @@ export function GetRandomNumber(options: {min: number, max: number, mustBeIntege
 	return min + (Math.random() * range);
 }
 
-export function BlobToString(blob) {
+export type ReadAsString_FuncName = "readAsBinaryString" | "readAsDataURL" | "readAsText";
+export function BlobToString(blob: Blob, readAsFuncName = "readAsText" as ReadAsString_FuncName) {
 	return new Promise((resolve, reject)=>{
 		const reader = new FileReader();
-		reader.addEventListener("loadend", e=>resolve(e.srcElement["result"]));
-		reader.readAsText(blob);
-	});
+		//reader.addEventListener("loadend", e=>resolve(e.srcElement["result"]));
+		reader.addEventListener("loadend", e=>resolve(reader.result as string));
+		reader[readAsFuncName](blob);
+	}) as Promise<string>;
+}
+export function BlobToArrayBuffer(blob: Blob) {
+	return new Promise((resolve, reject)=>{
+		const reader = new FileReader();
+		reader.addEventListener("loadend", e=>resolve(reader.result as ArrayBuffer));
+		reader.readAsArrayBuffer(blob);
+	}) as Promise<ArrayBuffer>;
 }
