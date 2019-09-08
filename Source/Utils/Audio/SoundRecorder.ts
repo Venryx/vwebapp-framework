@@ -1,6 +1,12 @@
 declare const MediaRecorder;
+export type MediaRecorderConstructor = new(..._)=>any;
 
 export class SoundRecorder {
+	constructor(MediaRecorderClass?: MediaRecorderConstructor) {
+		this.MediaRecorderClass = MediaRecorderClass || MediaRecorder;
+	}
+	MediaRecorderClass: MediaRecorderConstructor;
+
 	audioChunks = [];
 	//recorder: MediaRecorder;
 	stream: MediaStream;
@@ -26,9 +32,10 @@ export class SoundRecorder {
 			this.stream = await navigator.mediaDevices.getUserMedia({
 				audio: {deviceId: micDeviceID ? {exact: micDeviceID} : undefined},
 			});
-			this.recorder = new MediaRecorder(this.stream);
-			this.recorder.ondataavailable = e=>{
-				this.audioChunks.push(e.data);
+			this.recorder = new this.MediaRecorderClass(this.stream);
+			this.recorder.addEventListener("dataavailable", e=>{
+				const audioData = e.data as Blob;
+				this.audioChunks.push(audioData);
 				/*if (rec.state == "inactive") {
 					let blob = new Blob(this.audioChunks, {type:'audio/x-mpeg-3'});
 					recordedAudio.src = URL.createObjectURL(blob);
@@ -38,7 +45,7 @@ export class SoundRecorder {
 					audioDownload.download = 'mp3';
 					audioDownload.innerHTML = 'download';
 				}*/
-			};
+			});
 		}
 		this.recorder.start();
 	}
