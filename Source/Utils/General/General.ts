@@ -1,4 +1,5 @@
 import Moment from "moment";
+import {Assert} from "js-vextensions";
 
 G({Moment});
 
@@ -121,4 +122,12 @@ export function BlobToArrayBuffer(blob: Blob) {
 		reader.addEventListener("loadend", e=>resolve(reader.result as ArrayBuffer));
 		reader.readAsArrayBuffer(blob);
 	}) as Promise<ArrayBuffer>;
+}
+
+export function ConvertGetterFuncToPropChain(pathGetterFunc: Function) {
+	const pathStr = pathGetterFunc.toString().match(/return a\.(.+?);/)[1] as string;
+	Assert(!pathStr.includes("["), "Getter-func cannot contain bracket-based property-access.");
+	//let result = pathStr.replace(/\./g, "/");
+	const result = pathStr.split(".");
+	return result;
 }
