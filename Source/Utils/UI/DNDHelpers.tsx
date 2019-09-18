@@ -7,6 +7,7 @@ import React from "react";
 // Basically, it's just that <Droppable> sections are usually not the root of a component, whereas <Draggable> sections almost always are.
 // Thus, a MakeDroppable decorator just wouldn't be very useful. (ie. it would have few components using)
 
+//type DraggableCompProps = {type: string, draggableInfo: DraggableInfo, index: number, enabled: boolean};
 type DraggableCompProps = {type: string, draggableInfo: DraggableInfo, index: number};
 
 export type DropProvided = {innerRef: (element: HTMLElement)=>any, placeholder?: React.ReactElement<any>, droppableProps: any}; // todo: get from @types/react-beautiful-dnd
@@ -41,16 +42,19 @@ export function MakeDraggable(getDraggableCompProps: (props: Object)=>DraggableC
 				this.type = type;
 				this.draggableInfo = draggableInfo;
 				this.index = index;*/
+				//this.compProps = E({enabled: true}, getDraggableCompProps(props));
 				this.compProps = getDraggableCompProps(props);
 			}
 
 			render() {
+				//if (this.compProps == null || !this.compProps.enabled) {
 				if (this.compProps == null) {
 					return <WrappedComponent {...this.props} dragInfo={null}/>;
 				}
 
+				const draggableID = ToJSON(this.compProps.draggableInfo);
 				return (
-					<Draggable type={this.compProps.type} draggableId={ToJSON(this.compProps.draggableInfo)} index={this.compProps.index}>
+					<Draggable type={this.compProps.type} key={draggableID} draggableId={draggableID} index={this.compProps.index}>
 						{(provided, snapshot)=>{
 							const dragInfo = {provided, snapshot};
 							return <WrappedComponent {...this.props} ref={c=>provided.innerRef(GetDOM(c) as any)} dragInfo={dragInfo}/>;
