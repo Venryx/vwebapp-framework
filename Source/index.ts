@@ -39,6 +39,7 @@ export * from "./Utils/ReactComponents/ErrorBoundary";
 export * from "./Utils/ReactComponents/Icon";
 export * from "./Utils/ReactComponents/InfoButton";
 export * from "./Utils/ReactComponents/Link";
+export * from "./Utils/ReactComponents/PageContainer";
 export * from "./Utils/ReactComponents/Route";
 export * from "./Utils/ReactComponents/Slider";
 export * from "./Utils/ReactComponents/Tooltip";
