@@ -4,9 +4,9 @@ import React from "react";
 import DateTime, {DatetimepickerProps} from "react-datetime";
 import {BaseComponent} from "react-vextensions";
 
-function RawValToMoment(val: Moment.Moment | string, props: VDateTime_Props): Moment.Moment {
+function RawValToMoment(val: Moment.Moment | string, dateFormat: string | false, timeFormat: string | false): Moment.Moment {
 	//let timeOnly = props.dateFormat == false;
-	const {dateFormat, timeFormat} = props;
+	//const {dateFormat, timeFormat} = props;
 
 	// if string-input did not exactly match dateFormat+timeFormat, this function will try to parse the meaning anyway
 	if (IsString(val)) {
@@ -30,6 +30,14 @@ function KeepInRange(val: Moment.Moment, min: Moment.Moment, max: Moment.Moment)
 	if (max && result > max) result = max;
 	return result;
 }
+function MomentOrString_Normalize(momentOrStr_raw: Moment.Moment | string, dateFormat: string | false, timeFormat: string | false, min: Moment.Moment, max: Moment.Moment) {
+	let result: Moment.Moment = null;
+	if (momentOrStr_raw) {
+		result = RawValToMoment(momentOrStr_raw, dateFormat, timeFormat);
+		result = KeepInRange(result, min, max);
+	}
+	return result;
+}
 
 export type VDateTime_Props = {
 	delayChangeTillDefocus: boolean, min?: Moment.Moment, max?: Moment.Moment, onChange: (val: Moment.Moment)=>void,
@@ -44,14 +52,13 @@ export class VDateTime extends BaseComponent<VDateTime_Props, {editedValue_raw: 
 	};*/
 
 	render() {
-		const {value, onChange, delayChangeTillDefocus, min, max, ...rest} = this.props;
+		const {value, onChange, delayChangeTillDefocus, dateFormat, timeFormat, min, max, ...rest} = this.props;
 		const {editedValue_raw} = this.state;
 		return (
 			<DateTime {...rest} value={editedValue_raw != null ? editedValue_raw : value}
 				onChange={newVal_raw=>{
-					let newVal = RawValToMoment(newVal_raw, this.props);
-					newVal = KeepInRange(newVal, min, max);
-					if (`${newVal}` == `${RawValToMoment(editedValue_raw, this.props)}`) return; // if no change, ignore event
+					const newVal = MomentOrString_Normalize(newVal_raw, dateFormat, timeFormat, min, max);
+					if (`${newVal}` == `${RawValToMoment(editedValue_raw, dateFormat, timeFormat)}`) return; // if no change, ignore event
 
 					if (delayChangeTillDefocus) {
 						this.SetState({editedValue_raw: newVal_raw}, null, false);
@@ -65,10 +72,8 @@ export class VDateTime extends BaseComponent<VDateTime_Props, {editedValue_raw: 
 		);
 	}
 	OnInputBlurOrBoxClose(newVal_raw: Moment.Moment | string) {
-		const {value, onChange, delayChangeTillDefocus, min, max} = this.props;
-		let newVal = RawValToMoment(newVal_raw, this.props);
-		newVal = KeepInRange(newVal, min, max);
-
+		const {value, onChange, delayChangeTillDefocus, dateFormat, timeFormat, min, max} = this.props;
+		const newVal = MomentOrString_Normalize(newVal_raw, dateFormat, timeFormat, min, max);
 		//if (`${newVal}` == `${value}`) return; // if no change, ignore event
 		const valChanged = `${newVal}` != `${value}`; // don't just return if same value; we still need to clear edited-value (in case date-time string needs normalization)
 
