@@ -58,6 +58,18 @@ export function MakeDraggable(getDraggableCompProps: (props: Object)=>DraggableC
 						{(provided, snapshot)=>{
 							const dragInfo = {provided, snapshot};
 							return <WrappedComponent {...this.props} ref={c=>provided.innerRef(GetDOM(c) as any)} dragInfo={dragInfo}/>;
+							// test
+							/*return (
+								<div ref={c=>provided.innerRef(c as any)}
+										{...(dragInfo && dragInfo.provided.draggableProps)}
+										{...(dragInfo && dragInfo.provided.dragHandleProps)}
+										style={E(
+											{width: 350, background: HSLA(0, 0, 0, .5), whiteSpace: "normal"},
+											dragInfo && dragInfo.provided.draggableProps.style,
+										)}>
+									{ToJSON(dragInfo).substr(0, 30)}
+								</div>
+							);*/
 						}}
 					</Draggable>
 				);

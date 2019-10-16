@@ -32,7 +32,7 @@ export type Link_Props = {
 	//actions?: (dispatch: Function)=>void,
 	actions?: Action<any>[],
 	//updateURLOnActions?: boolean, // action-based
-} & React.HTMLProps<HTMLAnchorElement>;
+} & Omit<React.HTMLProps<HTMLAnchorElement>, "href">;
 //@Connect((state, {to, actions, updateURLOnActions}: Props)=> {
 @Connect((state, {to, actions}: Link_Props)=>{
 	if (actions) {
