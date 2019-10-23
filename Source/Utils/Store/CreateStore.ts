@@ -82,6 +82,13 @@ export function CreateStore(initialState = {}) {
 	// store instantiation and HMR setup
 	// ==========
 
+	// if first run (in firebase-mock/test, or not hot-reloading), initialize the firebase app/sdk
+	if (!firebaseAppIsReal || firebaseApp.apps.length == 0) {
+		firebaseApp.initializeApp(manager.firebaseConfig);
+	}
+	const firestoreDB = firebaseApp.firestore();
+	if (firebaseAppIsReal) firestoreDB.settings({});
+
 	//reduxConfig["userProfile"] = DBPath("users"); // root that user profiles are written to
 	const reduxFirebaseConfig = {
 		//userProfile: DBPath("users"), // root that user profiles are written to
@@ -91,16 +98,6 @@ export function CreateStore(initialState = {}) {
 		// profileDecorator: (userData) => ({ email: userData.email }) // customize format of user profile
 		useFirestoreForProfile: true,
 	};
-	if (firebaseAppIsReal && firebaseApp.apps.length == 0) {
-		firebaseApp.initializeApp(manager.firebaseConfig);
-	}
-	const firestoreDB = firebaseApp.firestore();
-	if (firebaseAppIsReal) {
-		firestoreDB.settings({});
-	} else {
-		//g.SeedDB(firestoreDB);
-		firestoreDB["autoFlush"]();
-	}
 
 	const rootReducer = manager.MakeRootReducer();
 	const store = createStore(
