@@ -4,7 +4,7 @@ import {MockFirebaseSdk, MockAuthentication, MockFirestore} from "firebase-mock"
 export let firebaseApp = firebase_real;
 export let firebaseAppIsReal = true;
 
-// test
+// firebase mocking (replacing the firebase SDK with a local simplified version, for testing)
 // ==========
 
 if (window.location.href.includes("/personal/---TestingMap---")) {
