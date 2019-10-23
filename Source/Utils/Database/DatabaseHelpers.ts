@@ -1,16 +1,16 @@
 import {GetTreeNodesInObjTree, DeepSet, DeepGet, CachedTransform, GetStorageForCachedTransform, Assert, IsString, IsNumberString, IsNumber, Clone, FromJSON, ToJSON} from "js-vextensions";
 import {ShallowChanged} from "react-vextensions";
 import u from "updeep";
-import firebase from "firebase/app";
 import {OnPopulated, manager} from "../../Manager";
 import {SplitStringBySlash_Cached} from "./StringSplitCache";
 import {RequestPath, ClearRequestedPaths, GetRequestedPaths, UnsetListeners, SetListeners, WhereFilter, RequestPath_Query, ClearRequests_Query, GetRequests_Query, GetRequests_Query_JSON, SetListeners_Query, QueryRequest, GetRequests_Query_Keys} from "./FirebaseConnect";
 import {State_Base, StartBufferingActions, StopBufferingActions} from "../Store/StoreHelpers";
 import {MaybeLog_Base} from "../General/Logging";
 import {g} from "../../PrivateExports";
+import {firebaseApp} from "./Firebase";
 
 OnPopulated(()=>{
-	G({firebase_: firebase}); // doesn't show as R.firebase, fsr
+	G({firebase_: firebaseApp}); // doesn't show as R.firebase, fsr
 });
 
 export function IsAuthValid(auth) {
@@ -645,7 +645,7 @@ export async function ApplyDBUpdates(rootPath: string, dbUpdates: Object) {
 
 		const docRef = manager.firestoreDB.doc(docPath);
 		if (fieldPathInDoc) {
-			value = value != null ? value : (firebase as any).firestore.FieldValue.delete();
+			value = value != null ? value : firebaseApp.firestore.FieldValue.delete();
 
 			// await docRef.update({ [fieldPathInDoc]: value });
 			// set works even if the document doesn't exist yet, so use set instead of update
@@ -670,7 +670,7 @@ export async function ApplyDBUpdates(rootPath: string, dbUpdates: Object) {
 
 			const docRef = manager.firestoreDB.doc(docPath);
 			if (fieldPathInDoc) {
-				value = value != null ? value : (firebase as any).firestore.FieldValue.delete();
+				value = value != null ? value : firebaseApp.firestore.FieldValue.delete();
 
 				// batch.update(docRef, { [fieldPathInDoc]: value });
 				// set works even if the document doesn't exist yet, so use set instead of update

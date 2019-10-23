@@ -1,4 +1,4 @@
-import {VURL} from "js-vextensions";
+import {VURL, Assert} from "js-vextensions";
 import {connectRouter} from "connected-react-router";
 import {browserHistory} from "./Utils/URL/History";
 import {LogOptions} from "./Utils/General/Logging";
@@ -31,6 +31,11 @@ export class Manager {
 	// shortcuts
 	get store() { return this.GetStore(); }
 	get firestoreDB() { return this.store.firebase.firestore(); }
+	/* get firestoreDB() {
+		//return this.store.firebase.firestore();
+		Assert(window["firestoreDB"] != null);
+		return window["firestoreDB"];
+	} */
 
 	iconInfo: {[key: string]: any};
 

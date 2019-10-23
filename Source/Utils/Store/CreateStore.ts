@@ -1,16 +1,22 @@
 import {routerMiddleware} from "connected-react-router";
-import firebase from "firebase/app";
+import Firebase from "firebase/app";
 import "firebase/auth";
 import "firebase/firestore";
 import {reactReduxFirebase} from "react-redux-firebase";
 import {applyMiddleware, compose, createStore, StoreEnhancer} from "redux";
 import {reduxFirestore} from "redux-firestore";
 import {persistStore} from "redux-persist";
+import {Timer} from "js-vextensions";
 import {manager} from "../../Manager";
 import {g} from "../../PrivateExports";
 import {browserHistory} from "../URL/History";
 import {MidDispatchAction, PostDispatchAction, PreDispatchAction} from "./ActionProcessor";
 import {ActionSet} from "./StoreHelpers";
+import {FirebaseApp, DBPath} from "../Database/DatabaseHelpers";
+import {firebaseAppIsReal, firebaseApp} from "../Database/Firebase";
+
+// general
+// ==========
 
 const dispatchInterceptors = [];
 export function AddDispatchInterceptor(interceptor: Function) {
@@ -85,11 +91,16 @@ export function CreateStore(initialState = {}) {
 		// profileDecorator: (userData) => ({ email: userData.email }) // customize format of user profile
 		useFirestoreForProfile: true,
 	};
-	if (firebase.apps.length == 0) {
-		firebase.initializeApp(manager.firebaseConfig);
+	if (firebaseAppIsReal && firebaseApp.apps.length == 0) {
+		firebaseApp.initializeApp(manager.firebaseConfig);
 	}
-	const firestoreDB = firebase.firestore();
-	firestoreDB.settings({});
+	const firestoreDB = firebaseApp.firestore();
+	if (firebaseAppIsReal) {
+		firestoreDB.settings({});
+	} else {
+		//g.SeedDB(firestoreDB);
+		firestoreDB["autoFlush"]();
+	}
 
 	const rootReducer = manager.MakeRootReducer();
 	const store = createStore(
@@ -102,8 +113,8 @@ export function CreateStore(initialState = {}) {
 			//autoRehydrate({log: true}),
 			//routerEnhancer,
 			applyMiddleware(...outerMiddleware),
-			reactReduxFirebase(firebase, reduxFirebaseConfig),
-			reduxFirestore(firebase, {mergeOrdered: false, mergeOrderedDocUpdate: false, mergeOrderedCollectionUpdates: false}),
+			reactReduxFirebase(firebaseApp, reduxFirebaseConfig),
+			reduxFirestore(firebaseApp, {mergeOrdered: false, mergeOrderedDocUpdate: false, mergeOrderedCollectionUpdates: false}),
 			//batchedSubscribe(unstable_batchedUpdates),
 			applyMiddleware(...innerMiddleware), // place inner-middleware after reduxFirebase (deeper to func that *actually dispatches*), so it can intercept all its dispatched events
 			window["__REDUX_DEVTOOLS_EXTENSION__"] && window["__REDUX_DEVTOOLS_EXTENSION__"](reduxDevToolsConfig),
