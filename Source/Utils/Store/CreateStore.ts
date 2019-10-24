@@ -34,26 +34,29 @@ export function CreateStore(initialState = {}) {
 	const innerMiddleware = [
 		store=>next=>action=>{
 			const subactions = ActionSet.EnsureActionFlattened(action);
+
+			// middleware is not required to return any specific values; we return the result from the next-middleware, when provided the last subaction, but this isn't necessary
+			let returnValue;
+
+			// take each subaction, and send it to the following middlewares, as if it were a completely separate action
+			// (since we're in the middleware chain, this causes the store-changes to all be considered one change, meaning redux-connected UI elements only re-render once)
 			for (const subaction of subactions) {
 				PreDispatchAction(subaction);
 				if (manager.PreDispatchAction) manager.PreDispatchAction(subaction);
-			}
 
-			const returnValue = next(action);
-			for (const subaction of subactions) {
+				returnValue = next(subaction);
 				MidDispatchAction(subaction, returnValue);
 				if (manager.PreDispatchAction) manager.MidDispatchAction(subaction, returnValue);
-			}
 
-			setTimeout(()=>{
-				for (const subaction of subactions) {
+				setTimeout(()=>{
 					PostDispatchAction(subaction);
 					if (manager.PostDispatchAction) manager.PostDispatchAction(subaction);
-				}
-			});
+				});
+			}
 
 			return returnValue;
 		},
+		// middleware that adds the stack-trace and calls the dispatch-interceptors (which are able to cancel dispatching of the action)
 		store=>next=>action=>{
 			const actionStacks_actionTypeIgnorePatterns = [
 				"@@reactReduxFirebase/", // ignore redux actions
@@ -63,7 +66,13 @@ export function CreateStore(initialState = {}) {
 			}
 			for (const interceptor of dispatchInterceptors) {
 				const result = interceptor(action);
-				if (result == false) return;
+				if (result == false) {
+					// change the action-type, so that it does nothing (thus, still shows up in redux-devtools -- unlike simply returning/not-dispatching)
+					/*action.type += "_canceledByDI";
+					break;*/
+					// completely cancel the dispatching of the action (thus, doesn't even show in redux-devtools)
+					return;
+				}
 			}
 
 			const returnValue = next(action);
@@ -114,7 +123,7 @@ export function CreateStore(initialState = {}) {
 			reduxFirestore(firebaseApp, {mergeOrdered: false, mergeOrderedDocUpdate: false, mergeOrderedCollectionUpdates: false}),
 			//batchedSubscribe(unstable_batchedUpdates),
 			applyMiddleware(...innerMiddleware), // place inner-middleware after reduxFirebase (deeper to func that *actually dispatches*), so it can intercept all its dispatched events
-			window["__REDUX_DEVTOOLS_EXTENSION__"] && window["__REDUX_DEVTOOLS_EXTENSION__"](reduxDevToolsConfig),
+			g.__REDUX_DEVTOOLS_EXTENSION__ && g.__REDUX_DEVTOOLS_EXTENSION__(reduxDevToolsConfig), // have redux-devtools apply first, so it only sees the root action of "store.dispatch(action)"
 		].filter(a=>a)) as StoreEnhancer<any>,
 	); // as ProjectStore;
 	store["reducer"] = rootReducer;

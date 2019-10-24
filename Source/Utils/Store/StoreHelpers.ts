@@ -156,7 +156,11 @@ export function StartBufferingActions() {
 export function StopBufferingActions() {
 	const oldBufferedActions = bufferedActions;
 	bufferedActions = null;
-	manager.store.dispatch(new ActionSet(...oldBufferedActions));
+	if (oldBufferedActions.length == 1) {
+		manager.store.dispatch(oldBufferedActions[0]);
+	} else if (oldBufferedActions.length > 1) {
+		manager.store.dispatch(new ActionSet(...oldBufferedActions));
+	}
 }
 
 /* export let uiConnectRefreshCalls: ((targetThis, rootState, props)=>any)[];
