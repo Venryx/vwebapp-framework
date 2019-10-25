@@ -1,5 +1,5 @@
 //export {useSelector as UseSelector} from "react-redux";
-import {Assert, Timer} from "js-vextensions";
+import {Assert, Timer, DeepGet} from "js-vextensions";
 import {useState, useEffect} from "react";
 import {shallowEqual, useSelector} from "react-redux";
 import {inRenderFunc, ShallowChanged} from "react-vextensions";
@@ -102,6 +102,25 @@ export class Accessor_Storage<T1 = any, T2 = any, T3 = any> {
 	db_lastQueryRequests: string[];
 }
 
+/* export function DeepGet_Fast<T>(obj, path: string): T {
+	let result = obj;
+	for (const pathNode of SplitStringBySlash_Cached(path)) {
+		if (result == null) return null;
+		result = result[pathNode];
+	}
+	return result;
+} */
+/* const pathToGetterFuncCache = {};
+export function DeepGet_Eval<T>(obj, path: string): T {
+	//return pathToGetterFuncCache[path]eval(`obj.${path.replace(/\//g, ".")}`);
+	if (pathToGetterFuncCache[path] == null) {
+		//const func = new Function("obj", `return obj.${path.replace(/\//g, ".")}`);
+		const func = new Function("obj", `return obj["${path.replace(/\//g, `"]["`)}"]`);
+		pathToGetterFuncCache[path] = func;
+	}
+	return pathToGetterFuncCache[path](obj);
+} */
+
 //const inHooks_CachedTransform_WithStore = false;
 export function Hooks_CachedTransform_WithStore<T, T2, T3>(
 	name: string,
@@ -127,7 +146,18 @@ export function Hooks_CachedTransform_WithStore<T, T2, T3>(
 
 	const lastDynamicProps_params_paths = Object.keys(accessorStorage.lastDynamicProps_store);
 	for (const path of lastDynamicProps_params_paths) {
-		const newValue = State_Base({countAsAccess: false}, path);
+		//const newValue = State_Base({countAsAccess: false}, path);
+		const newValue = DeepGet(manager.store.getState(), path); // fsr, this is the fastest
+		//const newValue = DeepGet_Fast(manager.store.getState(), path);
+		/* let newValue = manager.store.getState();
+		//for (const pathNode of SplitStringBySlash_Cached(path)) {
+		const pathNodes = SplitStringBySlash_Cached(path);
+		for (let i = 0, {length} = pathNodes; i < length; i++) {
+			if (newValue == null) break;
+			newValue = newValue[pathNodes[i]];
+		} */
+		//const newValue = DeepGet_Eval(manager.store.getState(), path);
+
 		//newStoreValues[path] = newValue;
 		if (newValue !== accessorStorage.lastDynamicProps_store[path]) {
 			dynamicPropsChanged = true;
@@ -152,6 +182,7 @@ export function Hooks_CachedTransform_WithStore<T, T2, T3>(
 		// this is for store requests/access
 		const collector = new StoreRequestCollector().Start();
 
+		// try blocks supposedly reduce performance, but I don't see a difference in the end-user perf-tests
 		try {
 			result = transformFunc();
 		} finally {
