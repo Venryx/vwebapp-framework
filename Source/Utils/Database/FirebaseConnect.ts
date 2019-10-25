@@ -372,13 +372,13 @@ export function GetRequestedPaths() {
 }
 
 export let accessedStorePaths = {} as {[key: string]: boolean};
-export function OnAccessPath(path: string) {
+export function OnAccessPath(path: string, value: any) {
 	// Log("Accessing-path Stage1: " + path);
 	// let path = pathSegments.join("/");
 	accessedStorePaths[path] = true;
 	if (activeStoreAccessCollectors) {
 		for (const collector of activeStoreAccessCollectors) {
-			collector.storePathsRequested.push(path);
+			collector.storePathsRequested_withValues[path] = value;
 		}
 	}
 }

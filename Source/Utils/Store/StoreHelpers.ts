@@ -80,7 +80,7 @@ export function State_Base<T>(...args) {
 	if (options.countAsAccess) {
 		const path = typeof args[0] === "string" && args.length === 1 ? args[0] : pathSegments.join("/");
 		//Assert(g.inConnectFunc, "State(), with countAsAccess:true, must be called from within a Connect() func.");
-		e.OnAccessPath(path);
+		e.OnAccessPath(path, selectedData);
 	}
 	return selectedData;
 }

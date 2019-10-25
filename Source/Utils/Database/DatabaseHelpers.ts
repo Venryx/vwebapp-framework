@@ -550,9 +550,10 @@ export function WaitTillQueryDataIsReceived(key: string): Promise<any> {
 	});
 }
 
-export const activeStoreAccessCollectors = [];
+export const activeStoreAccessCollectors = [] as StoreRequestCollector[];
 export class StoreRequestCollector {
-	storePathsRequested = [] as string[];
+	//storePathsRequested = [] as string[];
+	storePathsRequested_withValues = {} as {[key: string]: any};
 	Start() {
 		activeStoreAccessCollectors.push(this);
 		return this;
@@ -594,9 +595,12 @@ export function CachedTransform_WithStore<T, T2, T3>(
 	}
 
 	// for each accessed store entry, add it to VCache's "last dynamic props" for this transform
-	for (const path of collector.storePathsRequested) {
+	/*for (const path of collector.storePathsRequested_withValues) {
 		const val = State_Base({countAsAccess: false}, path);
 		storage.lastDynamicProps[`store_${path}`] = val;
+	}*/
+	for (const {key: path, value} of collector.storePathsRequested_withValues.Pairs()) {
+		storage.lastDynamicProps[`store_${path}`] = value;
 	}
 
 	return result;

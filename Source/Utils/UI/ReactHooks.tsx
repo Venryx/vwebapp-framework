@@ -102,12 +102,16 @@ export class Accessor_Storage<T1 = any, T2 = any, T3 = any> {
 	db_lastQueryRequests: string[];
 }
 
+//const inHooks_CachedTransform_WithStore = false;
 export function Hooks_CachedTransform_WithStore<T, T2, T3>(
 	name: string,
 	accessorStorage: Accessor_Storage, //setVCacheStorage,
 	dynamicProps_params_newValues: T2,
 	transformFunc: ()=>T3,
 ): T3 {
+	/*Assert(!inHooks_CachedTransform_WithStore, "Calls to Hooks_CachedTransform_WithStore cannot be nested.");
+	inHooks_CachedTransform_WithStore = true;*/
+
 	/* const s = firebaseConnectStorage as any;
 	if (connectCompsFrozen && s.lastResult) {
 		return s.lastResult;
@@ -119,12 +123,12 @@ export function Hooks_CachedTransform_WithStore<T, T2, T3>(
 		dynamicPropsChanged = true;
 	}
 
-	const newStoreValues = {}; // just optimization
+	//const newStoreValues = {}; // just optimization
 
 	const lastDynamicProps_params_paths = Object.keys(accessorStorage.lastDynamicProps_store);
 	for (const path of lastDynamicProps_params_paths) {
 		const newValue = State_Base({countAsAccess: false}, path);
-		newStoreValues[path] = newValue;
+		//newStoreValues[path] = newValue;
 		if (newValue !== accessorStorage.lastDynamicProps_store[path]) {
 			dynamicPropsChanged = true;
 			break;
@@ -159,7 +163,8 @@ export function Hooks_CachedTransform_WithStore<T, T2, T3>(
 		accessorStorage.lastDynamicProps_params = dynamicProps_params_newValues;
 		//vCacheStorage.lastDynamicProps_store = dynamicProps_store_newValues;
 		// for each accessed store entry, add it to VCache's "last dynamic props" for this transform
-		accessorStorage.lastDynamicProps_store = collector.storePathsRequested.ToMap(path=>path, path=>newStoreValues[path] || State_Base({countAsAccess: false}, path));
+		//accessorStorage.lastDynamicProps_store = collector.storePathsRequested.ToMap(path=>path, path=>newStoreValues[path] || State_Base({countAsAccess: false}, path));
+		accessorStorage.lastDynamicProps_store = collector.storePathsRequested_withValues;
 		accessorStorage.lastDebugInfo = {};
 		accessorStorage.lastResult = result;
 
