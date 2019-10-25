@@ -551,7 +551,7 @@ export function WaitTillQueryDataIsReceived(key: string): Promise<any> {
 }
 
 export const activeStoreAccessCollectors = [];
-class DBRequestCollector {
+export class StoreRequestCollector {
 	storePathsRequested = [] as string[];
 	Start() {
 		activeStoreAccessCollectors.push(this);
@@ -586,7 +586,7 @@ export function CachedTransform_WithStore<T, T2, T3>(
 		}
 	}
 
-	const collector = new DBRequestCollector().Start();
+	const collector = new StoreRequestCollector().Start();
 	try {
 		var result = CachedTransform(transformType, staticProps, dynamicProps_withStoreData, transformFunc);
 	} finally {
