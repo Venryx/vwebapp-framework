@@ -2,7 +2,7 @@ import {DeepGet, Assert, nl, IsFunction} from "js-vextensions";
 import {manager, RootState_Base} from "../../Manager";
 import {State_Options, State_overrides} from "./StateOverrides";
 import {Action, IsACTSetFor} from "../General/Action";
-import {e} from "../../PrivateExports";
+import {e, g} from "../../PrivateExports";
 //import {reducer as formReducer} from "redux-form";
 
 /*declare global {
@@ -66,9 +66,9 @@ export function State_Base<T>(...args) {
 		pathSegments = e.SplitStringBySlash_Cached(pathSegments[0] as string);
 	}
 
-	if (manager.devEnv) {
-		Assert(pathSegments.All(segment=>segment != null), `Path-segment cannot be null. @segments(${pathSegments})`);
-		Assert(pathSegments.All(segment=>typeof segment == "number" || !segment.Contains("/")),
+	if (manager.devEnv && !g.inSpeedTest) {
+		Assert(pathSegments.every(segment=>segment != null), `Path-segment cannot be null. @segments(${pathSegments})`);
+		Assert(pathSegments.every(segment=>typeof segment == "number" || !segment.includes("/")),
 			`Each string path-segment must be a plain prop-name. (ie. contain no "/" separators) @segments(${pathSegments})`);
 	}
 
