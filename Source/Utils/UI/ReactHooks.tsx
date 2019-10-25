@@ -1,6 +1,6 @@
 //export {useSelector as UseSelector} from "react-redux";
-import {Assert} from "js-vextensions";
-import {useState} from "react";
+import {Assert, Timer} from "js-vextensions";
+import {useState, useEffect} from "react";
 import {shallowEqual, useSelector} from "react-redux";
 import {inRenderFunc, ShallowChanged} from "react-vextensions";
 import {State_Base, connectCompsFrozen, ClearRequestedPaths, ClearAccessedPaths, ClearRequests_Query, SplitStringBySlash_Cached, manager, GetRequestedPaths, SetListeners, GetRequests_Query_JSON, SetListeners_Query, GetAccessedPaths} from "../..";
@@ -13,6 +13,34 @@ export function UseSelector<TState, TSelected>(
 ): TSelected {
 	return useSelector(selector, equalityFn);
 }
+
+// general
+// ==========
+
+// will try to finish this once I have more experience with react-hooks
+/* export function UseCheckStillHoveredTimer() {
+	let checkStillHoveredTimer;
+	useEffect(()=>{
+		checkStillHoveredTimer = new Timer(100, ()=>{
+			const dom = GetDOM(this.root);
+			if (dom == null) {
+				checkStillHoveredTimer.Stop();
+				return;
+			}
+			const mainRect = VRect.FromLTWH(dom.getBoundingClientRect());
+
+			const leftBoxDOM = dom.querySelector(".NodeUI_LeftBox");
+			const leftBoxRect = leftBoxDOM ? VRect.FromLTWH(leftBoxDOM.getBoundingClientRect()) : null;
+
+			const mouseRect = new VRect(mousePos, new Vector2i(1, 1));
+			const intersectsOne = mouseRect.Intersects(mainRect) || (leftBoxRect && mouseRect.Intersects(leftBoxRect));
+			// Log(`Main: ${mainRect} Mouse:${mousePos} Intersects one?:${intersectsOne}`);
+			setHovered(intersectsOne);
+		});
+		return ()=>checkStillHoveredTimer.Stop(); // cleanup func
+	}, []);
+	return checkStillHoveredTimer;
+} */
 
 // wrapper for store-accessor functions
 // ==========
@@ -135,34 +163,38 @@ export function Hooks_CachedTransform_WithStore<T, T2, T3>(
 		accessorStorage.lastDebugInfo = {};
 		accessorStorage.lastResult = result;
 
+		// we call setImmediate so that the UI doesn't freeze up (it does this during Cypress tests, anyway)
+		function RunImmediately(func: Function) {
+			//if (!g.Cypress) func();
+			g.setImmediate(func);
+		}
+
 		const oldRequestedPaths: string[] = accessorStorage.db_lastRequestedPaths || [];
 		const requestedPaths: string[] = GetRequestedPaths();
 		// if (firebase._ && ShallowChanged(requestedPaths, oldRequestedPaths)) {
 		if (!shallowEqual(requestedPaths, oldRequestedPaths)) {
-			//g.setImmediate(()=>{
-
-			// s.lastEvents = getEventsFromInput(requestedPaths.map(path=>GetPathParts(path)[0]));
-			const removedPaths = oldRequestedPaths.Except(...requestedPaths);
-			// todo: find correct way of unwatching events; the way below seems to sometimes unwatch while still needed watched
-			// for now, we just never unwatch
-			// unWatchEvents(store.firebase, DispatchDBAction, getEventsFromInput(removedPaths));
-			// store.firestore.unsetListeners(removedPaths.map(path=>GetPathParts(path)[0]));
-			/* const removedPaths_toDocs = removedPaths.map(path => GetPathParts(path)[0]);
+			RunImmediately(()=>{
+				// s.lastEvents = getEventsFromInput(requestedPaths.map(path=>GetPathParts(path)[0]));
+				const removedPaths = oldRequestedPaths.Except(...requestedPaths);
+				// todo: find correct way of unwatching events; the way below seems to sometimes unwatch while still needed watched
+				// for now, we just never unwatch
+				// unWatchEvents(store.firebase, DispatchDBAction, getEventsFromInput(removedPaths));
+				// store.firestore.unsetListeners(removedPaths.map(path=>GetPathParts(path)[0]));
+				/* const removedPaths_toDocs = removedPaths.map(path => GetPathParts(path)[0]);
 				const removedPaths_toDocs_asListenerPaths = removedPaths_toDocs.map(path => PathToListenerPath(path));
 				// store.firestore.unsetListeners(removedPaths_toDocs_asListenerPaths);
 				unsetListeners(firebase['firebase_'] || firebase, DispatchDBAction, removedPaths_toDocs_asListenerPaths); */
-			// UnsetListeners(removedPaths);
+				// UnsetListeners(removedPaths);
 
-			const addedPaths = requestedPaths.Except(...oldRequestedPaths);
-			/* const addedPaths_toDocs = addedPaths.map(path => GetPathParts(path)[0]);
+				const addedPaths = requestedPaths.Except(...oldRequestedPaths);
+				/* const addedPaths_toDocs = addedPaths.map(path => GetPathParts(path)[0]);
 				const addedPaths_toDocs_asListenerPaths = addedPaths_toDocs.map(path => PathToListenerPath(path));
 				// watchEvents(store.firebase, DispatchDBAction, getEventsFromInput(addedPaths.map(path=>GetPathParts(path)[0])));
 				// for debugging, you can check currently-watched-paths using: store.firestore._.listeners
 				// store.firestore.setListeners(addedPaths_toDocs_asListenerPaths);
 				setListeners(firebase['firebase_'] || firebase, DispatchDBAction, addedPaths_toDocs_asListenerPaths); */
-			SetListeners(addedPaths);
-
-			//});
+				SetListeners(addedPaths);
+			});
 			accessorStorage.db_lastRequestedPaths = requestedPaths;
 		}
 
@@ -171,15 +203,13 @@ export function Hooks_CachedTransform_WithStore<T, T2, T3>(
 		const queryRequests: string[] = GetRequests_Query_JSON();
 		// if (firebase._ && ShallowChanged(requestedPaths, oldRequestedPaths)) {
 		if (!shallowEqual(queryRequests, oldQueryRequests)) {
-			//g.setImmediate(()=>{
-
-			const removedQueries = oldQueryRequests.Except(...queryRequests);
-			// todo: remove listener for removed query-request
-			const addedQueries = queryRequests.Except(...oldQueryRequests);
-			//SetListeners(addedPaths);
-			SetListeners_Query(addedQueries);
-
-			//});
+			RunImmediately(()=>{
+				const removedQueries = oldQueryRequests.Except(...queryRequests);
+				// todo: remove listener for removed query-request
+				const addedQueries = queryRequests.Except(...oldQueryRequests);
+				//SetListeners(addedPaths);
+				SetListeners_Query(addedQueries);
+			});
 			accessorStorage.db_lastQueryRequests = requestedPaths;
 		}
 	}
