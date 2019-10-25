@@ -58,12 +58,21 @@ export function State_Base<T>(...args) {
 	let pathSegments: (string | number)[], options = new State_Options();
 	if (args.length == 0) return State_overrides.state || manager.store.getState();
 	if (typeof args[0] == "function") pathSegments = ConvertPathGetterFuncToPropChain(args[0]);
-	else if (typeof args[0] == "string") pathSegments = args;
+
+	/*else if (typeof args[0] == "string") pathSegments = args;
 	else [options, ...pathSegments] = args;
 
 	// if only one string provided, assume it's the full path
 	if (pathSegments.length === 1) {
 		pathSegments = e.SplitStringBySlash_Cached(pathSegments[0] as string);
+	}*/
+
+	// this version is faster because it doesn't need the [...pathSegments] for the State_Base({}, "full/string/path") variant
+	else if (typeof args[0] == "string") {
+		pathSegments = args.length === 1 ? e.SplitStringBySlash_Cached(args[0] as string) : args;
+	} else {
+		[options] = args;
+		pathSegments = args.length === 2 ? e.SplitStringBySlash_Cached(args[1] as string) : args.slice(1);
 	}
 
 	if (manager.devEnv && !g.inSpeedTest) {
