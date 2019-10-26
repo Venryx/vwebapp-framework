@@ -1,4 +1,6 @@
 import React from "react";
+import {Assert} from "js-vextensions";
+import {SimpleShouldUpdate, WarnOfTransientObjectProps, SimpleShouldUpdate_Options, WarnOfTransientObjectProps_Options} from "react-vextensions";
 import {OnPopulated} from "../../Manager";
 
 export function StandardCompProps() {
@@ -49,3 +51,28 @@ OnPopulated(()=>{
 		return createElement_old.apply(this, arguments);
 	};
 });
+
+export class ExpensiveComponent_Options {
+	simpleShouldUpdate_call? = true;
+	simpleShouldUpdate_options?: Partial<SimpleShouldUpdate_Options> = new SimpleShouldUpdate_Options();
+	warnOfTransientObjectProps_call? = true;
+	warnOfTransientObjectProps_options?: Partial<WarnOfTransientObjectProps_Options> = new WarnOfTransientObjectProps_Options();
+}
+export function ExpensiveComponent(targetClass: Function);
+export function ExpensiveComponent(options: Partial<ExpensiveComponent_Options>);
+export function ExpensiveComponent(...args) {
+	//Assert(targetClass instanceof Function, `Must decorate a class directly. (no "()" in "@ExpensiveComponent" line)`);
+	//let options = new ExpensiveComponent_Options();
+	let options = new ExpensiveComponent_Options();
+	if (typeof args[0] == "function") {
+		ApplyToClass(args[0]);
+	} else {
+		options = E(options, args[0]);
+		return ApplyToClass;
+	}
+
+	function ApplyToClass(targetClass: Function) {
+		if (options.simpleShouldUpdate_call) SimpleShouldUpdate(options.simpleShouldUpdate_options)(targetClass);
+		if (options.warnOfTransientObjectProps_call) WarnOfTransientObjectProps(options.warnOfTransientObjectProps_options)(targetClass);
+	}
+}
