@@ -569,7 +569,7 @@ export class StoreRequestCollector {
 *		"Do not re-evaluate the code below unless dynamic-props have changed, or one of the store-paths it accessed last time has changed."
 * 		(with the transformType and staticProps defining what "here" means)
 */
-export function CachedTransform_WithStore<T, T2, T3>(
+/* export function CachedTransform_WithStore<T, T2, T3>(
 	transformType: string, staticProps: any[], dynamicProps: T2,
 	transformFunc: (debugInfo: any, staticProps: any[], dynamicProps: T2)=>T3,
 ): T3 {
@@ -598,13 +598,13 @@ export function CachedTransform_WithStore<T, T2, T3>(
 	/*for (const path of collector.storePathsRequested_withValues) {
 		const val = State_Base({countAsAccess: false}, path);
 		storage.lastDynamicProps[`store_${path}`] = val;
-	}*/
+	}*#/
 	for (const {key: path, value} of collector.storePathsRequested_withValues.Pairs()) {
 		storage.lastDynamicProps[`store_${path}`] = value;
 	}
 
 	return result;
-}
+} */
 
 export function AssertValidatePath(path: string) {
 	Assert(!path.endsWith("/"), "Path cannot end with a slash. (This may mean a path parameter is missing)");

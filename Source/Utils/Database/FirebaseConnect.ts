@@ -95,11 +95,19 @@ export function Connect<T, P>(mapStateToProps_inner: (state: RootState_Base, pro
 			result[key] = getter.call(s, state, props);
 		});
 
+		// we call setImmediate so that the UI doesn't freeze up (it does this during Cypress tests, anyway)
+		function RunImmediately(func: Function) {
+			//func();
+			//if (!g.Cypress) func();
+			g.setImmediate(func);
+			//g.setTimeout(func, 0);
+		}
+
 		const oldRequestedPaths: string[] = s.lastRequestedPaths || [];
 		const requestedPaths: string[] = GetRequestedPaths();
 		// if (firebase._ && ShallowChanged(requestedPaths, oldRequestedPaths)) {
 		if (ShallowChanged(requestedPaths, oldRequestedPaths)) {
-			g.setImmediate(()=>{
+			RunImmediately(()=>{
 				// s.lastEvents = getEventsFromInput(requestedPaths.map(path=>GetPathParts(path)[0]));
 				const removedPaths = oldRequestedPaths.Except(...requestedPaths);
 				// todo: find correct way of unwatching events; the way below seems to sometimes unwatch while still needed watched
@@ -129,7 +137,7 @@ export function Connect<T, P>(mapStateToProps_inner: (state: RootState_Base, pro
 		const queryRequests: string[] = GetRequests_Query_JSON();
 		// if (firebase._ && ShallowChanged(requestedPaths, oldRequestedPaths)) {
 		if (ShallowChanged(queryRequests, oldQueryRequests)) {
-			g.setImmediate(()=>{
+			RunImmediately(()=>{
 				const removedQueries = oldQueryRequests.Except(...queryRequests);
 				// todo: remove listener for removed query-request
 				const addedQueries = queryRequests.Except(...oldQueryRequests);

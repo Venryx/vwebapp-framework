@@ -7,7 +7,7 @@ import {applyMiddleware, compose, createStore, StoreEnhancer} from "redux";
 import {reduxFirestore} from "redux-firestore";
 import {persistStore} from "redux-persist";
 import {Timer} from "js-vextensions";
-import {manager} from "../../Manager";
+import {manager, OnStoreCreated_listeners} from "../../Manager";
 import {g} from "../../PrivateExports";
 import {browserHistory} from "../URL/History";
 import {MidDispatchAction, PostDispatchAction, PreDispatchAction} from "./ActionProcessor";
@@ -159,6 +159,9 @@ export function CreateStore(initialState = {}) {
 		Log("Clearing redux-store's state and local-storage...");
 		ClearLocalData(persister);
 	}
+
+	// wait till current call-stack ends -- ie. store gets stored in store variable ;) -- then trigger OnStoreCreated listeners
+	setTimeout(()=>OnStoreCreated_listeners.forEach(a=>a()), 0);
 
 	return {store, persister};
 }

@@ -31,7 +31,7 @@ console.warn = function(...args) {
 
 var error_orig = console.error;
 console.error = function(exception) {
-	var str = `${exception }`;
+	var str = `${exception}`;
 	if (str.Contains("Warning: A component is `contentEditable`")) return;
 	//if (str.Contains("Warning: Unknown prop `")) return;
 	error_orig.apply(this, arguments);
@@ -47,7 +47,11 @@ export type LogFunc_Full = (options: LogOptions, ...messageSegments: any[])=>any
 export type LogFunc_Min = (...messageSegments: any[])=>any;
 export var onLogFuncs = [] as LogFunc_Full[];
 
-export type LogOptions = {appendStackTrace?: boolean, logLater?: boolean};
+export interface LogOptions {
+	type?: "log" | "warn" | "error";
+	appendStackTrace?: boolean;
+	logLater?: boolean;
+}
 export function Log(options: LogOptions, ...messageSegments: any[]);
 export function Log(...messageSegments: any[]);
 export function Log(...args) {
@@ -64,7 +68,8 @@ export function Log(...args) {
 		messageSegments.push(`\n@${GetStackTraceStr()}`);
 	}
 
-	console.log(...messageSegments);
+	const logType = options.type || "log";
+	console[logType](...messageSegments);
 
 	for (const onLogFunc of onLogFuncs) {
 		onLogFunc(options, messageSegments);
@@ -73,20 +78,23 @@ export function Log(...args) {
 	return messageSegments.length == 1 ? messageSegments[0] : messageSegments;
 }
 
-declare global { function LogLater(message, appendStackTrace?); } G({LogLater});
-export function LogLater(message, appendStackTrace = false) {
-	Log(message, appendStackTrace, true);
+/*export function LogLater(options: LogOptions, ...messageSegments: any[]);
+export function LogLater(...messageSegments: any[]);
+export function LogLater(...args) {
+	if (typeof args[0] == "object") return Log(E({logLater: true}, args[0]), ...args.slice(1));
+	return Log({logLater: true}, ...args);
+}*/
+export function LogWarning(options: LogOptions, ...messageSegments: any[]);
+export function LogWarning(...messageSegments: any[]);
+export function LogWarning(...args) {
+	if (typeof args[0] == "object") return Log(E({type: "warn"}, args[0]), ...args.slice(1));
+	return Log({type: "warn"}, ...args);
 }
-declare global { function LogWarning(message, appendStackTrace?, logLater?); } G({LogWarning});
-export function LogWarning(message, appendStackTrace = false, logLater = false) {
-	console.warn(`LogWarning) ${message}`);
-	return message;
-}
-
-declare global { function LogError(message, appendStackTrace?, logLater?); } G({LogError});
-export function LogError(message, appendStackTrace = false, logLater = false) {
-	console.error(`LogError) ${message}`);
-	return message;
+export function LogError(options: LogOptions, ...messageSegments: any[]);
+export function LogError(...messageSegments: any[]);
+export function LogError(...args) {
+	if (typeof args[0] == "object") return Log(E({type: "error"}, args[0]), ...args.slice(1));
+	return Log({type: "error"}, ...args);
 }
 
 export class LogTypes_Base {

@@ -3,6 +3,7 @@ import {manager, RootState_Base} from "../../Manager";
 import {State_Options, State_overrides} from "./StateOverrides";
 import {Action, IsACTSetFor} from "../General/Action";
 import {e, g} from "../../PrivateExports";
+import {GetStoreValue} from "./PathWatchManager";
 //import {reducer as formReducer} from "redux-form";
 
 /*declare global {
@@ -84,7 +85,8 @@ export function State_Base<T>(...args) {
 	options.state = options.state || State_overrides.state || manager.store.getState();
 	options.countAsAccess = options.countAsAccess != null ? options.countAsAccess : (State_overrides.countAsAccess != null ? State_overrides.countAsAccess : true);
 
-	const selectedData = DeepGet(options.state, pathSegments);
+	//const selectedData = DeepGet(options.state, pathSegments);
+	const selectedData = GetStoreValue(options.state, pathSegments);
 	//if (options.countAsAccess && pathSegments.length) {
 	if (options.countAsAccess) {
 		const path = typeof args[0] === "string" && args.length === 1 ? args[0] : pathSegments.join("/");
