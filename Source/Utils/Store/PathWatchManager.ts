@@ -2,19 +2,35 @@
 import {Assert} from "js-vextensions";
 import {useState, useEffect} from "react";
 import {shallowEqual, useSelector} from "react-redux";
+import {BaseComponent} from "react-vextensions";
+import _ from "lodash";
 import {ClearAccessedPaths, ClearRequestedPaths, ClearRequests_Query, GetRequestedPaths, GetRequests_Query_JSON, manager, SetListeners, SetListeners_Query} from "../..";
 import {OnStoreCreated} from "../../Manager";
 import {g} from "../../PrivateExports";
 
 export class PathWatchNode {
-	constructor(initialValue: any) {
+	constructor(parent: PathWatchNode, key: string, initialValue: any) {
+		this.parent = parent;
+		this.key = key;
 		this.lastValue = initialValue;
+	}
+
+	parent: PathWatchNode;
+	key: string;
+	GetPath() {
+		let result = this.key;
+		let nextParent = this.parent;
+		while (nextParent != null && nextParent.key != null) {
+			result = `${nextParent.key}/${result}`;
+			nextParent = nextParent.parent;
+		}
+		return result;
 	}
 
 	children = {} as {[key: string]: PathWatchNode};
 	GetChild(key: string | number, currentValue: any) {
 		if (this.children[key] == null) {
-			this.children[key] = new PathWatchNode(currentValue);
+			this.children[key] = new PathWatchNode(this, key.toString(), currentValue);
 		}
 		return this.children[key];
 	}
@@ -52,7 +68,7 @@ export class PathWatchNode {
 	}*/
 }
 
-export const pathWatchTree = new PathWatchNode(null);
+export const pathWatchTree = new PathWatchNode(null, null, null);
 
 OnStoreCreated(()=>{
 	//pathWatchTree = new PathWatchNode(manager.store.getState());
@@ -170,7 +186,7 @@ export function Watch<T>(accessor: ()=>T, dependencies: any[]): T {
 		/*const [watcher, _] = useState(new Watcher({
 			NotifyDataChanged: ForceRender,
 		}));*/
-		const [watcher, _] = useState(new Watcher());
+		const [watcher, __] = useState(new Watcher());
 		useEffect(()=>{
 			// cleanup function (runs when component is unmounted)
 			return ()=>{
@@ -178,6 +194,16 @@ export function Watch<T>(accessor: ()=>T, dependencies: any[]): T {
 				watcher.DisconnectAndMarkDisabled();
 			};
 		}, []);
+
+		// add this watcher's watched-paths to the component's stash, for debugging
+		const comp = BaseComponent.componentCurrentlyRendering as BaseComponent<any> & {watches_lastRenderID: number, watches_lastRunWatchID: number};
+		const renderID = comp.renderCount;
+		const isFirstWatchOfRender = renderID != comp.watches_lastRenderID;
+		if (isFirstWatchOfRender) comp.watches_lastRunWatchID = -1;
+		const watchID = comp.watches_lastRunWatchID + 1;
+		comp.Debug({[`watcher${_.padStart((watchID + 1).toString(), 2, "0")}_paths`]: watcher.watchedNodes.map(a=>a.GetPath())});
+		comp.watches_lastRenderID = renderID;
+		comp.watches_lastRunWatchID = watchID;
 
 		return useSelector(()=>{
 			if (!watcher.needsRerun && shallowEqual(dependencies, watcher.lastDependencies)) {
@@ -270,7 +296,8 @@ export function StoreAccessor(...args) {
 
 	accessor["Watch"] = function(...callArgs) {
 		return Watch(()=>{
-			return accessor.apply(this, callArgs);
+			//return accessor.apply(this, callArgs);
+			return accessor(...callArgs);
 		}, callArgs);
 	};
 	return accessor as any;
