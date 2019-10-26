@@ -38,8 +38,11 @@ export function CreateStore(initialState = {}) {
 			// middleware is not required to return any specific values; we return the result from the next-middleware, when provided the last subaction, but this isn't necessary
 			let returnValue;
 
-			// take each subaction, and send it to the following middlewares, as if it were a completely separate action
-			// (since we're in the middleware chain, this causes the store-changes to all be considered one change, meaning redux-connected UI elements only re-render once)
+			// mark each subaction (other than the last one) with the "dontTriggerSubscribers" prop; this makes-so store subscribers/listeners will not be notified after that action's dispatch
+			//	note: the "dontTriggerSubscribers" prop only actually works if you apply a Webpack-based code-replacement, as seen here: https://github.com/canonical-debate-lab/client/Scripts/Build/WebpackConfig.js#L350
+			subactions.slice(0, -1).forEach(a=>a["dontTriggerSubscribers"] = true);
+
+			// take each subaction, and send it to the following middlewares, as if it were a completely separate action (also, call our [Pre/Mid/Post]DispatchAction functions)
 			for (const subaction of subactions) {
 				PreDispatchAction(subaction);
 				if (manager.PreDispatchAction) manager.PreDispatchAction(subaction);
