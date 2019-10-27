@@ -16,14 +16,18 @@ export class PathWatchNode {
 
 	parent: PathWatchNode;
 	key: string;
+	path_cached: string;
 	GetPath() {
-		let result = this.key;
-		let nextParent = this.parent;
-		while (nextParent != null && nextParent.key != null) {
-			result = `${nextParent.key}/${result}`;
-			nextParent = nextParent.parent;
+		if (this.path_cached == null) {
+			let result = this.key;
+			let nextParent = this.parent;
+			while (nextParent != null && nextParent.key != null) {
+				result = `${nextParent.key}/${result}`;
+				nextParent = nextParent.parent;
+			}
+			this.path_cached = result;
 		}
-		return result;
+		return this.path_cached;
 	}
 
 	children = {} as {[key: string]: PathWatchNode};
