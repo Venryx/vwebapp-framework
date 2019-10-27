@@ -200,14 +200,14 @@ export function Watch<T>(accessor: ()=>T, dependencies: any[]): T {
 			const zws = String.fromCharCode(65279); // zero width space (used to force ordering of object keys)
 			const debugData = {
 				[`${zws.repeat(0)}${accessorDisplayStr}`]: dependencies,
+				[`${zws.repeat(1)}Result`]: result,
 				[`${zws.repeat(2)}ReadsFromStore @length(${watcher.watchedNodes.length})`]: watchedNodes_pathsAndValues,
 				[`${zws.repeat(3)}RequestsFromDB @length(${requestedDBPaths.length})`]: requestedDBPaths,
-				[`${zws.repeat(4)}Result`]: result,
-				[`${zws.repeat(5)}OtherData`]: watcher,
+				[`${zws.repeat(4)}OtherData`]: watcher,
 			};
+			watcher.debugDataHistory.Insert(0, debugData);
 			comp.debug.VKeys().filter(a=>a.startsWith(debugKey_base)).forEach(key=>Reflect.deleteProperty(comp.debug, key)); // delete old versions of entry
 			comp.Debug({[debugKey]: debugData}); // store new version
-			watcher.debugDataHistory.Insert(0, debugData);
 
 			watcher.lastDependencies = dependencies;
 			watcher.lastResult = result;
