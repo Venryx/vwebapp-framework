@@ -195,7 +195,7 @@ export function Watch<T>(accessor: ()=>T, dependencies: any[]): T {
 
 			// add some debug info to the component's debug object, for viewing in react-devtools
 			const debugKey_base = `Watcher${_.padStart((watchID + 1).toString(), 2, "0")} `;
-			const accessorDisplayStr = `@${accessor["displayName"] || "Unknown"}(${(dependencies || []).map(()=>"X").join(",")})`;
+			const accessorDisplayStr = `@${accessor["displayName"] || ""}(${(dependencies || []).map(()=>"X").join(",")})`;
 			const debugKey = [debugKey_base, `@store(${watcher.watchedNodes.length})`, `@db(${requestedDBPaths.length})`, accessorDisplayStr].filter(a=>a).join(" ");
 			const zws = String.fromCharCode(65279); // zero width space (used to force ordering of object keys)
 			const debugData = {
