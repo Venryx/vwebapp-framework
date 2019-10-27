@@ -14,6 +14,7 @@ import {MidDispatchAction, PostDispatchAction, PreDispatchAction} from "./Action
 import {ActionSet} from "./StoreHelpers";
 import {FirebaseApp, DBPath} from "../Database/DatabaseHelpers";
 import {firebaseAppIsReal, firebaseApp} from "../Database/Firebase";
+import {pathWatchManagerEnhancer} from "../..";
 
 // general
 // ==========
@@ -119,6 +120,8 @@ export function CreateStore(initialState = {}) {
 		// You can think of the earlier ones as "wrapping" and being able to "monitor the results of" the ones after it, but (usually) telling them "you apply first, then I will".
 		// So put your middleware earlier in this list if you want it to monitor another middleware's *results*. And put it after if you want it to be able to *intercept* its actions and such.
 		(compose as any)(...[
+			//applyMiddleware(pathWatchManagerMiddleware),
+			pathWatchManagerEnhancer,
 			//autoRehydrate({log: true}),
 			//routerEnhancer,
 			applyMiddleware(...outerMiddleware),
