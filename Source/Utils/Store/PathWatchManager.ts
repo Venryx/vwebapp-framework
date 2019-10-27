@@ -1,13 +1,11 @@
 //export {useSelector as UseSelector} from "react-redux";
 import {Assert} from "js-vextensions";
-import {useState, useEffect} from "react";
+import _ from "lodash";
+import {useEffect, useState} from "react";
 import {shallowEqual, useSelector} from "react-redux";
 import {BaseComponent} from "react-vextensions";
-import _ from "lodash";
-import {ClearAccessedPaths, ClearRequestedPaths, ClearRequests_Query, GetRequestedPaths, GetRequests_Query_JSON, manager, SetListeners, SetListeners_Query} from "../..";
-import {OnStoreCreated} from "../../Manager";
+import {ClearAccessedPaths, ClearRequestedPaths, ClearRequests_Query, GetRequestedPaths, GetRequests_Query_JSON, SetListeners, SetListeners_Query} from "../..";
 import {g} from "../../PrivateExports";
-import {AddDispatchInterceptor} from "./CreateStore";
 
 export class PathWatchNode {
 	constructor(parent: PathWatchNode, key: string, initialValue: any) {
@@ -61,29 +59,6 @@ export class PathWatchNode {
 			child.value.CheckForChanges(newVal != null ? newVal[child.key] : undefined);
 		}
 	}
-	// for approach 2 and 3
-	/*CheckForChanges(newVal, scheduleWatcherNotifyDataChanged?: (watcher: Watcher)=>void) {
-		// if our value is the same, we know the whole subtree is the same (since reducers never mutate the state-tree)
-		if (newVal === this.lastValue) return;
-
-		// process for self
-		this.watchers.forEach(watcher=>{
-			if (scheduleWatcherNotifyDataChanged) scheduleWatcherNotifyDataChanged(watcher);
-			else watcher.NotifyDataChanged();
-		});
-		this.lastValue = newVal;
-
-		// process for children
-		for (const child of this.children.Pairs()) {
-			child.value.CheckForChanges(newVal != null ? newVal[child.key] : undefined, scheduleWatcherNotifyDataChanged);
-		}
-	}*/
-
-	/*currentCallStoreValue: any;
-	// gets value, with other processing
-	GetValue() {
-		//let newValue =
-	}*/
 }
 
 export const pathWatchTree = new PathWatchNode(null, null, null);
@@ -99,29 +74,8 @@ export const pathWatchManagerEnhancer = createStore=>(reducer, initialState)=>{
 	return store;
 };
 
-/*OnStoreCreated(()=>{
-	//pathWatchTree = new PathWatchNode(manager.store.getState());
-	pathWatchTree.lastValue = manager.store.getState();
-	/*manager.store.subscribe(()=>{
-		Log("Checking CheckPathWatchTreeForChanges");
-		CheckPathWatchTreeForChanges();
-	});*#/
-	// use dispatch-interceptor, so that we actually get run before the react-redux useSelector subscription runs
-	/*AddDispatchInterceptor(()=>{
-		Log("Checking CheckPathWatchTreeForChanges");
-		CheckPathWatchTreeForChanges();
-	});*#/
-});*/
 export function CheckPathWatchTreeForChanges(store) {
-	// for approach 1
 	pathWatchTree.CheckForChanges(store.getState());
-	// for approach 2 and 3 (since they call forceUpdate synchronously, we have to check the watcher.disabled states each loop)
-	/* const watchersToNotifyDataChanged = [] as Watcher[];
-	pathWatchTree.CheckForChanges(store.getState(), watcher=>watchersToNotifyDataChanged.push(watcher));
-	for (const watcher of watchersToNotifyDataChanged.Distinct()) {
-		if (watcher.disabled) continue; // if watcher was disabled (ie. comp unmounted) while in this loop (which can happen since NotifyDataChanged calls forceUpdate), ignore watcher
-		watcher.NotifyDataChanged();
-	} */
 }
 
 export let currentWatcherBeingRun: Watcher;
@@ -135,15 +89,6 @@ export function NotifyWatcherRunEnd(watcher: Watcher) {
 	Assert(currentWatcherBeingRun == watcher);
 	currentWatcherBeingRun = null;
 }
-// todo: figure out why multiple watchers are being run at the same time, and resolve it if possible
-/*export const currentWatchersBeingRun = [] as Watcher[];
-export function NotifyWatcherRunStart(watcher: Watcher) {
-	if (currentWatchersBeingRun.Contains(watcher)) return;
-	currentWatchersBeingRun.push(watcher);
-}
-export function NotifyWatcherRunEnd(watcher: Watcher) {
-	currentWatchersBeingRun.Remove(watcher);
-}*/
 
 export function GetStoreValue(storeState: any, pathSegments: (string | number)[]) {
 	let targetNode = pathWatchTree;
@@ -151,35 +96,14 @@ export function GetStoreValue(storeState: any, pathSegments: (string | number)[]
 	let targetStoreVal = storeState;
 
 	for (const [index, pathNode] of pathSegments.entries()) {
-		//if (targetNode == null) break;
-		//if (targetStoreVal == null) break;
-		//targetNode = targetNode.children[pathNode];
 		targetStoreVal = targetStoreVal != null ? targetStoreVal[pathNode] : undefined;
 		targetNode = targetNode.GetChild(pathNode, targetStoreVal);
-
-		/* if (currentWatcherBeingRun) {
-			// if this step in the chain is null, or it's the last step, mark it as being watched by the watcher
-			//if (targetStoreVal == null || index == pathSegments.length - 1) {
-			targetNode.NotifyWatcherAccess(currentWatcherBeingRun);
-			//}
-		} */
-
-		/* if (targetNode.lastValue !== targetStoreVal) {
-			//targetNode.currentCallStoreValue = targetStoreVal;
-			targetNode.NotifyValueChanged(targetStoreVal);
-		} */
 	}
-	//if (targetNode == null) return null;
-	//if (targetStoreVal == null) return null;
 
 	if (currentWatcherBeingRun) {
 		targetNode.NotifyWatcherAccess(currentWatcherBeingRun);
 	}
-	/*for (const watcher of currentWatchersBeingRun) {
-		targetNode.NotifyWatcherAccess(watcher);
-	}*/
 
-	//return targetNode.GetValue();
 	return targetStoreVal;
 }
 
@@ -195,17 +119,7 @@ export class Watcher {
 	needsRerun = true;
 	NotifyDataChanged() {
 		Assert(!this.disabled);
-		// for approach 1
-		this.needsRerun = true;
-		// for approach 2
-		/*const oldLastResult = this.lastResult;
-		this["run"]();
-		if (this.lastResult !== oldLastResult) {
-			this.comp.forceUpdate();
-		}*/
-		// for approach 3
-		/* this.needsRerun = true;
-		this.comp.forceUpdate(); */
+		this.needsRerun = true; // just set flag; the useSelector() is subscribed to store, so will automatically re-run the code within Watch
 	}
 
 	watchedNodes = [] as PathWatchNode[];
@@ -239,14 +153,6 @@ export function Watch<T>(accessor: ()=>T, dependencies: any[]): T {
 	//inWatchFunc_lastStack = GetStackTraceStr();
 
 	try {
-		/*const [_, triggerRefresh_setter] = useState(0);
-		const TriggerWatcherRefresh = ()=>triggerRefresh_setter(Date.now());*/
-		/*const [, forceRender_raw] = useReducer(s=>s + 1, 0);
-		const ForceRender = ()=>forceRender_raw({});*/
-
-		/*const [watcher, _] = useState(new Watcher({
-			NotifyDataChanged: ForceRender,
-		}));*/
 		const comp = BaseComponent.componentCurrentlyRendering as BaseComponent<any> & {watches_lastRenderID: number, watches_lastRunWatchID: number};
 		const [watcher, __] = useState(new Watcher({comp}));
 		Assert(watcher.comp == comp);
@@ -275,13 +181,10 @@ export function Watch<T>(accessor: ()=>T, dependencies: any[]): T {
 		comp.watches_lastRenderID = renderID;
 		comp.watches_lastRunWatchID = watchID;
 
-		// approach 1
 		return useSelector(()=>{
-			//comp["pwm_lastReadState"] = manager.store.getState();
 			if (!watcher.needsRerun && shallowEqual(dependencies, watcher.lastDependencies)) {
 				return watcher.lastResult;
 			}
-			//comp["pwm_lastProcessedState"] = manager.store.getState();
 
 			DBHelper_Pre();
 			NotifyWatcherRunStart(watcher);
@@ -302,69 +205,10 @@ export function Watch<T>(accessor: ()=>T, dependencies: any[]): T {
 			watcher.needsRerun = false; // reset flag
 			return result;
 		});
-
-		// approach 2 (issue: the run func below must be refreshed each render/reach-to-this-line, because otherwise the accessor() func it calls will access values in render-func's previous closure that are outdated)
-		/*if (watcher["run"] == null || !shallowEqual(dependencies, watcher.lastDependencies)) {
-			watcher["run"] = ()=>{
-				DBHelper_Pre();
-				NotifyWatcherRunStart(watcher);
-				let result;
-				try {
-					result = accessor();
-				} finally {
-					NotifyWatcherRunEnd(watcher);
-				}
-				const requestedDBPaths = DBHelper_Post(watcher);
-				/*const watchedNodes_pathsAndValues = watcher.watchedNodes.ToMap((a, index)=>`${_.padStart(index.toString(), 3, " ")}: ${a.GetPath()}`, a=>a.lastValue);
-				const baseKey = `watcher${_.padStart((watchID + 1).toString(), 2, "0")}_pathsAndLastSeenValues`;*#/
-				if (comp.debug) comp.debug.VKeys().filter(a=>a.startsWith(`${watcherKeyStr}_requestsFromDB `)).forEach(key=>Reflect.deleteProperty(comp.debug, key)); // delete old versions of entry
-				comp.Debug({[`${watcherKeyStr}_requestsFromDB @length(${requestedDBPaths.length})`]: requestedDBPaths});
-
-				watcher.lastDependencies = dependencies;
-				watcher.lastResult = result;
-				watcher.needsRerun = false; // reset flag
-				return result;
-			};
-			watcher["run"]();
-		}
-		return watcher.lastResult;*/
-
-		/*if (watcher.needsRerun || !shallowEqual(dependencies, watcher.lastDependencies)) {
-			DBHelper_Pre();
-			NotifyWatcherRunStart(watcher);
-			let result;
-			try {
-				result = accessor();
-			} finally {
-				NotifyWatcherRunEnd(watcher);
-			}
-			const requestedDBPaths = DBHelper_Post(watcher);
-			/*const watchedNodes_pathsAndValues = watcher.watchedNodes.ToMap((a, index)=>`${_.padStart(index.toString(), 3, " ")}: ${a.GetPath()}`, a=>a.lastValue);
-			const baseKey = `watcher${_.padStart((watchID + 1).toString(), 2, "0")}_pathsAndLastSeenValues`;*#/
-			if (comp.debug) comp.debug.VKeys().filter(a=>a.startsWith(`${watcherKeyStr}_requestsFromDB `)).forEach(key=>Reflect.deleteProperty(comp.debug, key)); // delete old versions of entry
-			comp.Debug({[`${watcherKeyStr}_requestsFromDB @length(${requestedDBPaths.length})`]: requestedDBPaths});
-
-			watcher.lastDependencies = dependencies;
-			watcher.lastResult = result;
-			watcher.needsRerun = false; // reset flag
-		}
-		return watcher.lastResult;*/
-
 	} finally {
 		inWatchFunc = false;
 	}
 }
-
-/*const setTimeout_clearStack_funcs = [];
-const timer = new Timer(100, ()=>{
-	for (const func of setTimeout_clearStack_funcs) {
-		func();
-	}
-	setTimeout_clearStack_funcs.length = 0;
-}).Start();
-export function setTimeout_clearStack(func) {
-	setTimeout_clearStack_funcs.push(func);
-}*/
 
 function DBHelper_Pre() {
 	// these are for db-requests
@@ -380,7 +224,6 @@ function DBHelper_Post(watcher: Watcher) {
 		//if (!g.Cypress) func();
 		g.setImmediate(func);
 		//g.setTimeout(func, 0);
-		//g.setTimeout(func, 10000);
 	}
 
 	const oldRequestedPaths: string[] = watcher.db_lastRequestedPaths || [];
