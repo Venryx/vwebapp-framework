@@ -168,20 +168,11 @@ export function Watch<T>(accessor: ()=>T, dependencies: any[]): T {
 			};
 		}, []);
 
-		// add this watcher's watched-paths to the component's debug object, for debugging
-		const renderID = comp.renderCount;
+		// figure out render-id (index) and watcher-id (index)
+		const renderID = comp.renderCount - 1;
 		const isFirstWatchOfRender = renderID != comp.watches_lastRenderID;
 		if (isFirstWatchOfRender) comp.watches_lastRunWatchID = -1;
 		const watchID = comp.watches_lastRunWatchID + 1;
-		//let watchedNodes_paths = watcher.watchedNodes.map(a=>a.GetPath());
-		//const watchedNodes_pathsAndValues = watcher.watchedNodes.ToMap(a=>a.GetPath(), a=>a.lastValue);
-		//const watchedNodes_pathsAndValues = new Map(watcher.watchedNodes.map(a=>([a.GetPath(), a.lastValue]))); // put in native Map, so length gets shown in react-devtools
-		/*const arrayClassWithLengthPartOfClassName = eval(`(()=>{ return function Array_${watcher.watchedNodes.length}() {}; })()`);
-		Object.setPrototypeOf(watchedNodes_pathsAndValues, arrayClassWithLengthPartOfClassName.prototype);*/
-		const watchedNodes_pathsAndValues = watcher.watchedNodes.ToMap((a, index)=>`${_.padStart(index.toString(), 3, " ")}: ${a.GetPath()}`, a=>a.lastValue);
-		const watcherKeyStr = `watcher${_.padStart((watchID + 1).toString(), 2, "0")}`;
-		if (comp.debug) comp.debug.VKeys().filter(a=>a.startsWith(`${watcherKeyStr}_readsFromStore `)).forEach(key=>Reflect.deleteProperty(comp.debug, key)); // delete old versions of entry
-		comp.Debug({[`${watcherKeyStr}_readsFromStore @length(${watcher.watchedNodes.length})`]: watchedNodes_pathsAndValues});
 		comp.watches_lastRenderID = renderID;
 		comp.watches_lastRunWatchID = watchID;
 
@@ -198,11 +189,22 @@ export function Watch<T>(accessor: ()=>T, dependencies: any[]): T {
 			} finally {
 				NotifyWatcherRunEnd(watcher);
 			}
+			const watchedNodes_pathsAndValues = watcher.watchedNodes.ToMap((a, index)=>`${_.padStart(index.toString(), 3, " ")}: ${a.GetPath()}`, a=>a.lastValue);
 			const requestedDBPaths = DBHelper_Post(watcher);
-			/*const watchedNodes_pathsAndValues = watcher.watchedNodes.ToMap((a, index)=>`${_.padStart(index.toString(), 3, " ")}: ${a.GetPath()}`, a=>a.lastValue);
-			const baseKey = `watcher${_.padStart((watchID + 1).toString(), 2, "0")}_pathsAndLastSeenValues`;*/
-			if (comp.debug) comp.debug.VKeys().filter(a=>a.startsWith(`${watcherKeyStr}_requestsFromDB `)).forEach(key=>Reflect.deleteProperty(comp.debug, key)); // delete old versions of entry
-			comp.Debug({[`${watcherKeyStr}_requestsFromDB @length(${requestedDBPaths.length})`]: requestedDBPaths});
+
+			// add some debug info to the component's debug object, for viewing in react-devtools
+			const debugKey_base = `watcher${_.padStart((watchID + 1).toString(), 2, "0")} `;
+			const debugKey = `${debugKey_base}@store(${watcher.watchedNodes.length}) @db(${requestedDBPaths.length})`;
+			const zws = String.fromCharCode(65279); // zero width space (used to force ordering of object keys)
+			const debugData = {
+				[`${zws.repeat(0)}readsFromStore @length(${watcher.watchedNodes.length})`]: watchedNodes_pathsAndValues,
+				[`${zws.repeat(1)}requestsFromDB @length(${requestedDBPaths.length})`]: requestedDBPaths,
+				[`${zws.repeat(2)}result`]: result,
+				[`${zws.repeat(3)}oldResult`]: watcher.lastResult,
+				[`${zws.repeat(4)}otherData`]: watcher,
+			};
+			comp.debug.VKeys().filter(a=>a.startsWith(debugKey_base)).forEach(key=>Reflect.deleteProperty(comp.debug, key)); // delete old versions of entry
+			comp.Debug({[debugKey]: debugData}); // store new version
 
 			watcher.lastDependencies = dependencies;
 			watcher.lastResult = result;
