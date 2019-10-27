@@ -145,6 +145,7 @@ export class Watcher {
 	comp: BaseComponent<any>;
 	db_lastRequestedPaths: string[];
 	db_lastQueryRequests: string[];
+	debugDataHistory = [] as any[];
 }
 
 export let inWatchFunc = false;
@@ -193,18 +194,20 @@ export function Watch<T>(accessor: ()=>T, dependencies: any[]): T {
 			const requestedDBPaths = DBHelper_Post(watcher);
 
 			// add some debug info to the component's debug object, for viewing in react-devtools
-			const debugKey_base = `watcher${_.padStart((watchID + 1).toString(), 2, "0")} `;
-			const debugKey = `${debugKey_base}@store(${watcher.watchedNodes.length}) @db(${requestedDBPaths.length})`;
+			const debugKey_base = `Watcher${_.padStart((watchID + 1).toString(), 2, "0")} `;
+			const accessorDisplayStr = `@${accessor["displayName"] || "Unknown"}(${(dependencies || []).map(()=>"X").join(",")})`;
+			const debugKey = [debugKey_base, `@store(${watcher.watchedNodes.length})`, `@db(${requestedDBPaths.length})`, accessorDisplayStr].filter(a=>a).join(" ");
 			const zws = String.fromCharCode(65279); // zero width space (used to force ordering of object keys)
 			const debugData = {
-				[`${zws.repeat(0)}readsFromStore @length(${watcher.watchedNodes.length})`]: watchedNodes_pathsAndValues,
-				[`${zws.repeat(1)}requestsFromDB @length(${requestedDBPaths.length})`]: requestedDBPaths,
-				[`${zws.repeat(2)}result`]: result,
-				[`${zws.repeat(3)}oldResult`]: watcher.lastResult,
-				[`${zws.repeat(4)}otherData`]: watcher,
+				[`${zws.repeat(0)}${accessorDisplayStr}`]: dependencies,
+				[`${zws.repeat(2)}ReadsFromStore @length(${watcher.watchedNodes.length})`]: watchedNodes_pathsAndValues,
+				[`${zws.repeat(3)}RequestsFromDB @length(${requestedDBPaths.length})`]: requestedDBPaths,
+				[`${zws.repeat(4)}Result`]: result,
+				[`${zws.repeat(5)}OtherData`]: watcher,
 			};
 			comp.debug.VKeys().filter(a=>a.startsWith(debugKey_base)).forEach(key=>Reflect.deleteProperty(comp.debug, key)); // delete old versions of entry
 			comp.Debug({[debugKey]: debugData}); // store new version
+			watcher.debugDataHistory.Insert(0, debugData);
 
 			watcher.lastDependencies = dependencies;
 			watcher.lastResult = result;
@@ -270,11 +273,16 @@ export function StoreAccessor(...args) {
 	if (args.length == 1) [accessor] = args;
 	else if (args.length == 2) [name, accessor] = args;
 
+	if (name) accessor["displayName"] = name;
 	accessor["Watch"] = function(...callArgs) {
-		return Watch(()=>{
+		const outerAccessor = ()=>{
 			//return accessor.apply(this, callArgs);
 			return accessor(...callArgs);
-		}, callArgs);
+		};
+		if (name) outerAccessor["displayName"] = name;
+		//outerAccessor["callArgs"] = callArgs;
+		//outerAccessor["displayName"] = `${name || "Unknown"}(${callArgs.join(", ")})`;
+		return Watch(outerAccessor, callArgs);
 	};
 	return accessor as any;
 }
