@@ -309,10 +309,12 @@ class StoreAccessorProfileData {
 		this.name = name;
 		// make names the same length, for easier scanning in console listing // not needed for console.table
 		//this.name = _.padEnd(name, 50, " ");
+		this.callCount = 0;
 		this.totalRunTime = 0;
 		this.totalRunTime_asRoot = 0;
 	}
 	name: string;
+	callCount: number;
 	totalRunTime: number;
 	totalRunTime_asRoot: number;
 	//origAccessors: Function[];
@@ -348,6 +350,7 @@ export function StoreAccessor(...args) {
 			const runTime = performance.now() - startTime;
 
 			const profileData = storeAccessorProfileData[name] || (storeAccessorProfileData[name] = new StoreAccessorProfileData(name));
+			profileData.callCount++;
 			profileData.totalRunTime += runTime;
 			if (accessorStack.length == 1) {
 				profileData.totalRunTime_asRoot += runTime;
