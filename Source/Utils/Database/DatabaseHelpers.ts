@@ -8,6 +8,7 @@ import {State_Base, StartBufferingActions, StopBufferingActions} from "../Store/
 import {MaybeLog_Base} from "../General/Logging";
 import {g} from "../../PrivateExports";
 import {firebaseApp} from "./Firebase";
+import {watchStack} from "../..";
 
 OnPopulated(()=>{
 	G({firebase_: firebaseApp}); // doesn't show as R.firebase, fsr
@@ -265,6 +266,9 @@ export function GetData(...args) {
 		}
 		RequestPath(path + queriesStr);*/
 		RequestPath(path);
+		if (watchStack.length) {
+			watchStack.Last().NotifyDBPathRequestMade(path);
+		}
 	}
 
 	//let result = State("firebase", "data", ...SplitStringByForwardSlash_Cached(path)) as any;
@@ -307,6 +311,11 @@ export function GetData_Query(options: GetData_Query_Options, ...pathSegments: P
 	options.key = options.key || ToJSON({path, whereFilters: options.whereFilters}).replace(/[/]/g, "_");
 	if (options.makeRequest) {
 		RequestPath_Query(options.key, path, options.whereFilters);
+		if (watchStack.length) {
+			const query = new QueryRequest({key: options.key, path, whereFilters: options.whereFilters});
+			const queryJSON = ToJSON(query);
+			watchStack.Last().NotifyDBQueryRequestMade(queryJSON);
+		}
 	}
 
 	const result = State_Base("firestore", "data", options.key);
