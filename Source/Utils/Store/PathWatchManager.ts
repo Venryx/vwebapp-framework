@@ -322,7 +322,7 @@ class StoreAccessorProfileData {
 export const storeAccessorProfileData = {} as {[key: string]: StoreAccessorProfileData};
 export function LogStoreAccessorRunTimes() {
 	const accessorRunTimes_ordered = storeAccessorProfileData.VValues().OrderByDescending(a=>a.totalRunTime);
-	Log(`Store-accessor cumulative run-times: @TotalTimeInRootAccessors(${accessorRunTimes_ordered.map(a=>a.totalRunTime_asRoot).Sum()})`);
+	Log(`Store-accessor cumulative run-times: @TotalCalls(${accessorRunTimes_ordered.map(a=>a.callCount).Sum()}) @TotalTimeInRootAccessors(${accessorRunTimes_ordered.map(a=>a.totalRunTime_asRoot).Sum()})`);
 	//Log({}, accessorRunTimes_ordered);
 	console.table(accessorRunTimes_ordered);
 }
@@ -401,14 +401,14 @@ export function GetStorageForSubWatch<T2, T3>(transformType: string, staticProps
 export const subWatchers = {} as {[storageKey: string]: Watcher};
 type SafePrimitive = boolean | string | number;
 type SafeParam = SafePrimitive | SafePrimitive[];
-function IsSafePrimitive(val) { return typeof val == "boolean" || typeof val == "number" || typeof val == "string"; }
+function IsSafePrimitive(val) { return val == null || typeof val == "boolean" || typeof val == "number" || typeof val == "string"; }
 function IsSafeParam(val) { return IsSafePrimitive(val) || (val instanceof Array && val.every(IsSafePrimitive)); }
 export function GetSubWatcherForAccessorID(accessorID_base: string, accessorID_params: SafeParam[]) {
 	//Assert(accessorID_params.every(IsSafePrimitive), `Every entry in accessorID_params must be a primitive. See the description of the SubWatch function for an explanation of why this is needed.`);
 	Assert(accessorID_params.every(IsSafeParam), `Every entry in accessorID_params must be a primitive (or primitive-array). See the description of the SubWatch function for an explanation of why this is needed.`);
 
 	//let storageKey = `${accessorID_base}|${JSON.stringify(accessorID_params)}`;
-	const storageKey = `${accessorID_base}|${accessorID_params.join("|")}`;
+	const storageKey = `${accessorID_base}|${accessorID_params.map(a=>(a === undefined ? null : a)).join("|")}`;
 	const storage = subWatchers[storageKey] as Watcher || (subWatchers[storageKey] = new Watcher());
 	return storage;
 }
