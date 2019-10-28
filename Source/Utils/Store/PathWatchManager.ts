@@ -52,14 +52,18 @@ export class PathWatchNode {
 	CheckForChanges(newVal) {
 		// if our value is the same, we know the whole subtree is the same (since reducers never mutate the state-tree)
 		if (newVal === this.lastValue) return;
+		this.lastValue = newVal;
+
+		// Note: If you want to find out why some data in the store isn't getting "propagated up" to a watcher/component, here is a good place to put a conditional breakpoint.
 
 		// process for self
-		this.watchers.forEach(watcher=>{
+		const watchers_copy = this.watchers.slice(); // make copy of the watchers array, since calling NotifyThatSomethingWatchedHasChanged() may mutate it (delete destroyed watchers, or reorder persistent watchers)
+		watchers_copy.forEach(watcher=>{
+			if (watcher.destroyed) return;
 			// if watcher is a "root watcher" (ie. under comp render-func, but NOT within a SubWatch call), and current processing IS within a SubWatch call, don't notify this watcher (it should only watch for when SubWatch returns a new result)
-			if (watcher.IsRootWatcher && watchStack.length >= 2) return;
+			//if (watcher.IsRootWatcher && watchStack.length >= 2) return;
 			watcher.NotifyThatSomethingWatchedHasChanged();
 		});
-		this.lastValue = newVal;
 
 		// process for children
 		for (const child of this.children.Pairs()) {
@@ -171,12 +175,21 @@ export class Watcher {
 	NotifyThatSomethingWatchedHasChanged() {
 		Assert(!this.destroyed);
 		if (this.IsRootWatcher) {
-			this.needsRerun = true; // just set flag; the useSelector() is subscribed to store, so will automatically re-run the code within Watch
+			// approach 1
+			//this.needsRerun = true; // just set flag; the useSelector() is subscribed to store, so will automatically re-run the code within Watch
+			// approach 2
+			this.needsRerun = true;
+			this.comp.forceUpdate();
 		} else {
 			const oldResult = this.lastResult;
 			this.Run([]); // subwatchers never have (passed) dependencies, since their accessors are disallowed from accessing non-cell-id closure values
 			if (this.lastResult !== oldResult) {
-				this.parentWatchers.forEach(a=>a.NotifyThatSomethingWatchedHasChanged());
+				//this.parentWatchers.forEach(a=>a.NotifyThatSomethingWatchedHasChanged());
+				const parentWatchers_copy = this.parentWatchers.slice(); // make copy of the watchers array, since calling NotifyThatSomethingWatchedHasChanged() may mutate it (delete destroyed watchers, or reorder persistent watchers)
+				parentWatchers_copy.forEach(parentWatcher=>{
+					if (parentWatcher.destroyed) return;
+					parentWatcher.NotifyThatSomethingWatchedHasChanged();
+				});
 			}
 		}
 	}
@@ -277,30 +290,31 @@ export function Watch<T>(accessor: (watcher: Watcher)=>T, dependencies: any[]): 
 	comp.watches_lastRenderID = renderID;
 	comp.watches_lastRunWatchID = watchID;
 
-	return useSelector(()=>{
-		if (watcher.needsRerun || !shallowEqual(dependencies, watcher.lastDependencies)) {
-			watcher.accessor = accessor; // we need to update this each time, due to the old closure being outdated
-			watcher.Run(dependencies);
+	// approach 1 uses this wrapper; approach 2 doesn't, instead calling forceUpdate() within NotifyThatSomethingWatchedHasChanged() [approach 2 is simpler, and slightly faster, so I'm now going with that]
+	//return useSelector(()=>{
+	if (watcher.needsRerun || !shallowEqual(dependencies, watcher.lastDependencies)) {
+		watcher.accessor = accessor; // we need to update this each time, due to the old closure being outdated
+		watcher.Run(dependencies);
 
-			// add some debug info to the component's debug object, for viewing in react-devtools
-			const debugKey_base = `Watcher${_.padStart((watchID + 1).toString(), 2, "0")} `;
-			const accessorDisplayStr = `@${accessor["displayName"] || ""}(${(dependencies || []).map(()=>"X").join(",")})`;
-			const debugKey = [debugKey_base, `@store(${watcher.watchedNodes.length})`, `@db(${watcher.requestedDBPaths.length})`, accessorDisplayStr].filter(a=>a).join(" ");
-			const zws = String.fromCharCode(65279); // zero width space (used to force ordering of object keys)
-			const watchedNodes_pathsAndValues = watcher.watchedNodes.ToMap((a, index)=>`${_.padStart(index.toString(), 3, " ")}: ${a.GetPath()}`, a=>a.lastValue);
-			const debugData = {
-				[`${zws.repeat(0)}${accessorDisplayStr}`]: dependencies,
-				[`${zws.repeat(1)}Result`]: watcher.lastResult,
-				[`${zws.repeat(2)}ReadsFromStore @length(${watcher.watchedNodes.length})`]: watchedNodes_pathsAndValues,
-				[`${zws.repeat(3)}RequestsFromDB @length(${watcher.requestedDBPaths.length})`]: watcher.requestedDBPaths,
-				[`${zws.repeat(4)}OtherData`]: watcher,
-			};
-			watcher.debugDataHistory.Insert(0, debugData);
-			comp.debug.VKeys().filter(a=>a.startsWith(debugKey_base)).forEach(key=>Reflect.deleteProperty(comp.debug, key)); // delete old versions of entry
-			comp.Debug({[debugKey]: debugData}); // store new version
-		}
-		return watcher.lastResult;
-	});
+		// add some debug info to the component's debug object, for viewing in react-devtools
+		const debugKey_base = `Watcher${_.padStart((watchID + 1).toString(), 2, "0")} `;
+		const accessorDisplayStr = `@${accessor["displayName"] || ""}(${(dependencies || []).map(()=>"X").join(",")})`;
+		const debugKey = [debugKey_base, `@store(${watcher.watchedNodes.length})`, `@db(${watcher.requestedDBPaths.length})`, accessorDisplayStr].filter(a=>a).join(" ");
+		const zws = String.fromCharCode(65279); // zero width space (used to force ordering of object keys)
+		const watchedNodes_pathsAndValues = watcher.watchedNodes.ToMap((a, index)=>`${_.padStart(index.toString(), 3, " ")}: ${a.GetPath()}`, a=>a.lastValue);
+		const debugData = {
+			[`${zws.repeat(0)}${accessorDisplayStr}`]: dependencies,
+			[`${zws.repeat(1)}Result`]: watcher.lastResult,
+			[`${zws.repeat(2)}ReadsFromStore @length(${watcher.watchedNodes.length})`]: watchedNodes_pathsAndValues,
+			[`${zws.repeat(3)}RequestsFromDB @length(${watcher.requestedDBPaths.length})`]: watcher.requestedDBPaths,
+			[`${zws.repeat(4)}OtherData`]: watcher,
+		};
+		watcher.debugDataHistory.Insert(0, debugData);
+		comp.debug.VKeys().filter(a=>a.startsWith(debugKey_base)).forEach(key=>Reflect.deleteProperty(comp.debug, key)); // delete old versions of entry
+		comp.Debug({[debugKey]: debugData}); // store new version
+	}
+	return watcher.lastResult;
+	//});
 }
 
 // for profiling
@@ -409,6 +423,10 @@ export function GetSubWatcherForAccessorID(accessorID_base: string, accessorID_p
 
 	//let storageKey = `${accessorID_base}|${JSON.stringify(accessorID_params)}`;
 	const storageKey = `${accessorID_base}|${accessorID_params.map(a=>(a === undefined ? null : a)).join("|")}`;
+	//const storageKey = JSON.stringify([accessorID_base, accessorID_params.map(a=>(a === undefined ? null : a))]);
+	//const storageKey = JSON.stringify([accessorID_base as any].concat(accessorID_params));
+	//const storageKey = JSON.stringify(arguments);
+	//const storageKey = QuickJoinByPipe(arguments as any);
 	const storage = subWatchers[storageKey] as Watcher || (subWatchers[storageKey] = new Watcher());
 	return storage;
 }
