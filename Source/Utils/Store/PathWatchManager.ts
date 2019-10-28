@@ -232,30 +232,35 @@ export class Watcher {
 	ApplyDBRequests() {
 		// we call setImmediate so that the UI doesn't freeze up (it does this during Cypress tests, anyway)
 		function RunImmediately(func: Function) {
-			func();
+			// for cypress, we have to break the call-stack, else it processes way too much data between each UI refresh
+			if (g.Cypress) g.setImmediate(func);
+			else func();
 			// if using one of these delayed versions, you have to change the code below to make a local copy of this.requestedDBPaths and such, so the delayed callback has the same value as here
 			//if (!g.Cypress) func();
 			//g.setImmediate(func);
 			//g.setTimeout(func, 0);
 		}
 
-		if (!shallowEqual(this.requestedDBPaths, this.requestedDBPaths_previous)) {
+		// make local copies of these fields, to ensure they're unchanged when processed in a bit by the callbacks below
+		const {requestedDBPaths, requestedDBPaths_previous, requestedDBQueries, requestedDBQueries_previous} = this;
+
+		if (!shallowEqual(requestedDBPaths, requestedDBPaths_previous)) {
 			RunImmediately(()=>{
-				const removedPaths = this.requestedDBPaths_previous.Except(...this.requestedDBPaths);
+				const removedPaths = requestedDBPaths_previous.Except(...requestedDBPaths);
 				// todo: find correct way of unwatching paths; the way below seems to sometimes unwatch while still needed watched (for now, we just never unwatch)
 				// UnsetListeners(removedPaths);
-				const addedPaths = this.requestedDBPaths.Except(...this.requestedDBPaths_previous);
+				const addedPaths = requestedDBPaths.Except(...requestedDBPaths_previous);
 				SetListeners(addedPaths);
 			});
 		}
 
 		// query requests // todo: clean this up
 		// if (firebase._ && ShallowChanged(requestedPaths, oldRequestedPaths)) {
-		if (!shallowEqual(this.requestedDBQueries, this.requestedDBQueries_previous)) {
+		if (!shallowEqual(requestedDBQueries, requestedDBQueries_previous)) {
 			RunImmediately(()=>{
-				const removedQueries = this.requestedDBQueries_previous.Except(...this.requestedDBQueries);
+				const removedQueries = requestedDBQueries_previous.Except(...requestedDBQueries);
 				// todo: find correct way of unwatching queries
-				const addedQueries = this.requestedDBQueries.Except(...this.requestedDBQueries_previous);
+				const addedQueries = requestedDBQueries.Except(...requestedDBQueries_previous);
 				//SetListeners(addedPaths);
 				SetListeners_Query(addedQueries);
 			});
