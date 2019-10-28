@@ -3,7 +3,7 @@ import {manager, RootState_Base} from "../../Manager";
 import {State_Options, State_overrides} from "./StateOverrides";
 import {Action, IsACTSetFor} from "../General/Action";
 import {e, g} from "../../PrivateExports";
-import {GetStoreValue} from "./PathWatchManager";
+import {GetStoreValue, StoreAccessor} from "./PathWatchManager";
 //import {reducer as formReducer} from "redux-form";
 
 /*declare global {
@@ -51,11 +51,16 @@ function State<T>(pathOrPathSegments, state?: RootState, countAsAccess?: boolean
 	function State<T>(options: State_Options, ...pathSegments: (string | number)[]);
 }*/
 
-export function State_Base<T>(): RootState_Base;
-export function State_Base<T>(pathGetterFunc: (state: RootState_Base)=>T): T;
-export function State_Base<T>(...pathSegments: (string | number)[]);
-export function State_Base<T>(options: State_Options, ...pathSegments: (string | number)[]);
-export function State_Base<T>(...args) {
+interface StateFunc<RootState> {
+	<T>(): RootState;
+	<T>(pathGetterFunc: (state: RootState)=>T): T;
+	<T>(...pathSegments: (string | number)[]);
+	<T>(options: State_Options, ...pathSegments: (string | number)[]);
+}
+interface StateFunc_WithWatch<RootState> extends StateFunc<RootState> {
+	Watch: StateFunc<RootState>;
+}
+export const State_Base: StateFunc_WithWatch<RootState_Base> = StoreAccessor("State", (...args)=>{
 	let pathSegments: (string | number)[], options = new State_Options();
 	if (args.length == 0) return State_overrides.state || manager.store.getState();
 	if (typeof args[0] == "function") pathSegments = ConvertPathGetterFuncToPropChain(args[0]);
@@ -94,17 +99,19 @@ export function State_Base<T>(...args) {
 		e.OnAccessPath(path, selectedData);
 	}
 	return selectedData;
-}
+});
 
 export function CreateState<RootState>() {
-	function State<T>(): RootState;
+	/*function State<T>(): RootState;
 	function State<T>(pathGetterFunc: (state: RootState)=>T): T;
 	function State<T>(...pathSegments: (string | number)[]);
 	function State<T>(options: State_Options, ...pathSegments: (string | number)[]);
 	function State<T>(...args) {
 		return State_Base(...args);
 	}
-	return State;
+	return State;*/
+	//return State_Base as typeof State_Base<RootStateType, any>;
+	return State_Base as StateFunc_WithWatch<RootState>;
 }
 
 function ConvertPathGetterFuncToPropChain(pathGetterFunc: Function) {

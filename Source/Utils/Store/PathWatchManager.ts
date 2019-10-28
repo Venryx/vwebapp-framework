@@ -4,7 +4,7 @@ import _ from "lodash";
 import {useEffect, useState} from "react";
 import {shallowEqual, useSelector} from "react-redux";
 import {BaseComponent} from "react-vextensions";
-import {SetListeners, SetListeners_Query} from "../..";
+import {SetListeners, SetListeners_Query, manager} from "../..";
 import {g} from "../../PrivateExports";
 import {accessedStorePaths} from "../Database/FirebaseConnect";
 
@@ -307,18 +307,26 @@ export function Watch<T>(accessor: (watcher: Watcher)=>T, dependencies: any[]): 
 class StoreAccessorProfileData {
 	constructor(name: string) {
 		this.name = name;
+		// make names the same length, for easier scanning in console listing // not needed for console.table
+		//this.name = _.padEnd(name, 50, " ");
 		this.totalRunTime = 0;
+		this.totalRunTime_asRoot = 0;
 	}
 	name: string;
 	totalRunTime: number;
+	totalRunTime_asRoot: number;
 	//origAccessors: Function[];
 }
 export const storeAccessorProfileData = {} as {[key: string]: StoreAccessorProfileData};
 export function LogStoreAccessorRunTimes() {
 	const accessorRunTimes_ordered = storeAccessorProfileData.VValues().OrderByDescending(a=>a.totalRunTime);
-	Log(`Store-accessor cumulative run-times: @TotalTimeInAccessors(${accessorRunTimes_ordered.map(a=>a.totalRunTime).Sum()})`);
-	Log({}, accessorRunTimes_ordered);
+	Log(`Store-accessor cumulative run-times: @TotalTimeInRootAccessors(${accessorRunTimes_ordered.map(a=>a.totalRunTime_asRoot).Sum()})`);
+	//Log({}, accessorRunTimes_ordered);
+	console.table(accessorRunTimes_ordered);
 }
+
+// for profiling
+export const accessorStack = [];
 
 export function StoreAccessor<Func extends Function>(accessor: Func): Func & {Watch: Func};
 export function StoreAccessor<Func extends Function>(name: string, accessor: Func): Func & {Watch: Func};
@@ -328,25 +336,34 @@ export function StoreAccessor(...args) {
 	else if (args.length == 2) [name, accessor] = args;
 
 	// add profiling to the accessor function
-	// if (DEV) {
-	const accessor_orig = accessor;
-	accessor = (...callArgs)=>{
-		const startTime = performance.now();
+	//if (manager.devEnv) { // manager isn't populated yet
+	if (g.DEV) {
+		const accessor_orig = accessor;
+		accessor = (...callArgs)=>{
+			accessorStack.push(name);
 
-		//return accessor.apply(this, callArgs);
-		const result = accessor_orig(...callArgs);
+			const startTime = performance.now();
+			//return accessor.apply(this, callArgs);
+			const result = accessor_orig(...callArgs);
+			const runTime = performance.now() - startTime;
 
-		const profileData = storeAccessorProfileData[name] || (storeAccessorProfileData[name] = new StoreAccessorProfileData(name));
-		profileData.totalRunTime += performance.now() - startTime;
-		// name should have been added by webpack transformer, but if not, give some info to help debugging
-		if (name == null) {
-			profileData["origAccessors"] = profileData["origAccessors"] || [];
-			if (!profileData["origAccessors"].Contains(accessor_orig)) {
-				profileData["origAccessors"].push(accessor_orig);
+			const profileData = storeAccessorProfileData[name] || (storeAccessorProfileData[name] = new StoreAccessorProfileData(name));
+			profileData.totalRunTime += runTime;
+			if (accessorStack.length == 1) {
+				profileData.totalRunTime_asRoot += runTime;
 			}
-		}
-		return result;
-	};
+			// name should have been added by webpack transformer, but if not, give some info to help debugging
+			if (name == null) {
+				profileData["origAccessors"] = profileData["origAccessors"] || [];
+				if (!profileData["origAccessors"].Contains(accessor_orig)) {
+					profileData["origAccessors"].push(accessor_orig);
+				}
+			}
+
+			accessorStack.RemoveAt(accessorStack.length - 1);
+			return result;
+		};
+	}
 
 	if (name) accessor["displayName"] = name;
 	accessor["Watch"] = function(...callArgs) {
