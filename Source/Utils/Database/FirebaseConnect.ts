@@ -7,7 +7,7 @@ import {manager, OnPopulated, RootState_Base} from "../../Manager";
 import {e, g} from "../../PrivateExports";
 import {MaybeLog_Base, ShouldLog_Base} from "../General/Logging";
 import {ActionSet, State_Base} from "../Store/StoreHelpers";
-import {activeStoreAccessCollectors, GetPathParts, NotifyPathsReceived, NotifyPathsReceiving, NotifyQueriesReceived, PathToListenerPath} from "./DatabaseHelpers";
+import {GetPathParts, NotifyPathsReceived, NotifyPathsReceiving, NotifyQueriesReceived, PathToListenerPath} from "./DatabaseHelpers";
 import {SplitStringBySlash_Cached} from "./StringSplitCache";
 
 // todo: rename to FirestoreConnect
@@ -384,11 +384,11 @@ export function OnAccessPath(path: string, value: any) {
 	// Log("Accessing-path Stage1: " + path);
 	// let path = pathSegments.join("/");
 	accessedStorePaths[path] = true;
-	if (activeStoreAccessCollectors) {
+	/*if (activeStoreAccessCollectors) {
 		for (const collector of activeStoreAccessCollectors) {
 			collector.storePathsRequested_withValues[path] = value;
 		}
-	}
+	}*/
 }
 /*export function OnAccessPaths(paths: string[]) {
 	for (let path of paths)

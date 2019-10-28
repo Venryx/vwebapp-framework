@@ -550,7 +550,7 @@ export function WaitTillQueryDataIsReceived(key: string): Promise<any> {
 	});
 }
 
-export const activeStoreAccessCollectors = [] as StoreRequestCollector[];
+/* export const activeStoreAccessCollectors = [] as StoreRequestCollector[];
 export class StoreRequestCollector {
 	//storePathsRequested = [] as string[];
 	storePathsRequested_withValues = {} as {[key: string]: any};
@@ -561,7 +561,7 @@ export class StoreRequestCollector {
 	Stop() {
 		activeStoreAccessCollectors.Remove(this);
 	}
-}
+} */
 
 /** Same as CachedTransform(), except it also includes all accessed store-data as dynamic-props.
 * This means that you can now "early return cache" for lots of cases, where dynamic-props is *only* the store-data, thus requiring *no recalculation*.
