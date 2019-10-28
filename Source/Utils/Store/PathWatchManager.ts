@@ -85,8 +85,19 @@ export const pathWatchManagerEnhancer = createStore=>(reducer, initialState)=>{
 	return store;
 };
 
+export let CheckPathWatchTreeForChanges_compUpdatesScheduled = [] as BaseComponent[];
 export function CheckPathWatchTreeForChanges(store) {
 	pathWatchTree.CheckForChanges(store.getState());
+	const compsToUpdate_copy = CheckPathWatchTreeForChanges_compUpdatesScheduled.slice(); // make copy of array, to make sure it doesn't get mutated during the comp-updates
+	compsToUpdate_copy.forEach(comp=>{
+		if (!comp.mounted) return; // parent may have been updated, and unmounted it's child (this comp)
+		comp.forceUpdate();
+	});
+	CheckPathWatchTreeForChanges_compUpdatesScheduled = [];
+}
+export function ScheduleCompUpdate(comp: BaseComponent) {
+	if (CheckPathWatchTreeForChanges_compUpdatesScheduled.Contains(comp)) return;
+	CheckPathWatchTreeForChanges_compUpdatesScheduled.push(comp);
 }
 
 export function GetStoreValue(storeState: any, pathSegments: (string | number)[]) {
@@ -146,6 +157,9 @@ export class Watcher {
 	needsRerun = true;
 	Run(dependencies: any[]) {
 		if (this.IsRootWatcher) Assert(watchStack.length == 0);
+		this.needsRerun = false; // reset flag
+		this.runCount++;
+
 		// clear old watcher<>pathWatchNode links (so the entries we're about to add are the only ones -- thus releasing watch-paths the watcher doesn't want/ask-for anymore)
 		this.ClearNodeWatches();
 		this.ClearSubWatcherWatches();
@@ -167,8 +181,6 @@ export class Watcher {
 		this.ApplyDBRequests();
 		this.lastDependencies = dependencies;
 		this.lastResult = result;
-		this.runCount++;
-		this.needsRerun = false; // reset flag
 		return result;
 	}
 
@@ -179,7 +191,8 @@ export class Watcher {
 			//this.needsRerun = true; // just set flag; the useSelector() is subscribed to store, so will automatically re-run the code within Watch
 			// approach 2
 			this.needsRerun = true;
-			this.comp.forceUpdate();
+			//this.comp.forceUpdate();
+			ScheduleCompUpdate(this.comp);
 		} else {
 			const oldResult = this.lastResult;
 			this.Run([]); // subwatchers never have (passed) dependencies, since their accessors are disallowed from accessing non-cell-id closure values
@@ -232,11 +245,10 @@ export class Watcher {
 	ApplyDBRequests() {
 		// we call setImmediate so that the UI doesn't freeze up (it does this during Cypress tests, anyway)
 		function RunImmediately(func: Function) {
-			// for cypress, we have to break the call-stack, else it processes way too much data between each UI refresh
+			//func();
+			// for cypress, we have to break the call-stack, else it processes way too much data between each UI refresh (and caused errors at one point)
 			if (g.Cypress) g.setImmediate(func);
 			else func();
-			// if using one of these delayed versions, you have to change the code below to make a local copy of this.requestedDBPaths and such, so the delayed callback has the same value as here
-			//if (!g.Cypress) func();
 			//g.setImmediate(func);
 			//g.setTimeout(func, 0);
 		}
@@ -273,15 +285,22 @@ export class Watcher {
 	watchersOfSelf = [] as Watcher[]; // ancestor watchers, for our result
 } */
 
+//export let watcherCount = 0;
 export function Watch<T>(accessor: (watcher: Watcher)=>T, dependencies: any[]): T {
 	Assert(watchStack.length == 0, "Cannot have calls to Watch within a Watch accessor. (try using SubWatch)");
 
 	const comp = BaseComponent.componentCurrentlyRendering as BaseComponent<any> & {watches_lastRenderID: number, watches_lastRunWatchID: number};
 	const [watcher, __] = useState(new Watcher({comp}));
+	/*if (watcher.runCount == 0) {
+		watcherCount++;
+		Log(`${watcherCount} (created)`);
+	}*/
 	Assert(watcher.comp == comp);
 	useEffect(()=>{
 		// cleanup function (runs when component is unmounted)
 		return ()=>{
+			/*watcherCount--;
+			Log(`${watcherCount} (destroyed)`);*/
 			//watcher.ClearNodeWatches();
 			watcher.Destroy();
 		};
@@ -448,7 +467,7 @@ export function SubWatch<Result>(cellID_base: string, cellID_params: SafeParam[]
 	const parentWatcher = watchStack.LastOrX();
 	if (parentWatcher) {
 		if (!parentWatcher.watchedSubWatchers.Contains(watcher)) {
-			watcher.watchedSubWatchers.push(watcher);
+			parentWatcher.watchedSubWatchers.push(watcher);
 			watcher.parentWatchers.push(parentWatcher);
 		}
 	}
