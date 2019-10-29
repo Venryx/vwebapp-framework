@@ -135,7 +135,8 @@ export class Watcher {
 			//this.InXSecondsIfStillNoParentWatchers_DisconnectAndMarkDisabled();
 			// destroying a sub-watcher potentially discards valuable cached data -- thus only proceed with it if, at the end of the current call stack, this sub-watcher remains without a parent watcher
 			WaitXThenRun(0, ()=>{
-				if (this.parentWatchers.length == 0) {
+				// since we're running asynchronously, this may get called multiple times, so check if already destroyed before destroying
+				if (this.parentWatchers.length == 0 && !this.destroyed) {
 					this.Destroy();
 				}
 			});
