@@ -315,7 +315,12 @@ export function Watch<T>(accessor: (watcher: Watcher)=>T, dependencies: any[]): 
 	comp.watches_lastRenderID = renderID;
 	comp.watches_lastRunWatchID = watchID;
 
-	// approach 1 uses this wrapper; approach 2 doesn't, instead calling forceUpdate() within NotifyThatSomethingWatchedHasChanged() [approach 2 is simpler, and slightly faster, so I'm now going with that]
+	// Approach 1 uses the "useSelector(...)" wrapper below; approach 2 doesn't, instead calling forceUpdate() within NotifyThatSomethingWatchedHasChanged()
+	// #1 is basically: When accessed store-data changes, re-run accessor-func but without updating the from-render-func closure values [maybe wrong about this, as should cause it to get stuck]. If result changes, then do a full comp re-render.
+	// #2 is basically: When accessed store-data changes, do a full comp re-render right away. (however, as for #1, any accessors that didn't have their store-data changed just quick-return the cached result)
+	// Which is faster theoretically? #1 should be faster if the accessor-functions (combined, but with cache-hits) have a run-time that is half (or less) than the non-accessor part of comp.render. Else, #2 should be faster.
+	// Which is faster in practice (in the CD project)? #2 is actually slightly faster -- 20s instead of 22s -- so I'm going with that for now.
+
 	//return useSelector(()=>{
 	if (watcher.needsRerun || !shallowEqual(dependencies, watcher.lastDependencies)) {
 		watcher.accessor = accessor; // we need to update this each time, due to the old closure being outdated
