@@ -20,3 +20,17 @@ export function LoadURL(url: VURL) {
 export function NotifyURLLoaded() {
 	loadingURL = false;
 }
+
+export function IsValidURL(str: string) {
+	const urlClassProps = ["hash", "host", "hostname", "href", "origin", "password", "pathname", "port", "protocol", "search", "username"];
+
+	const currentURL = window.location;
+	var linkEl = document.createElement("a");
+	linkEl.href = str;
+	if (linkEl.host == null) return false;
+
+	const linkElUrlPropsDiffer = urlClassProps.find(key=>linkEl[key] != currentURL[key]) != null;
+	if (!linkElUrlPropsDiffer) return false;
+
+	return true;
+}

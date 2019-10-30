@@ -1,6 +1,6 @@
-import {VURL} from "js-vextensions";
+import {VURL, Assert} from "js-vextensions";
 import React from "react";
-import {BaseComponent, FilterOutUnrecognizedProps} from "react-vextensions";
+import {BaseComponent, FilterOutUnrecognizedProps, BaseComponentPlus} from "react-vextensions";
 import {replace, push} from "connected-react-router";
 import {Connect} from "../Database/FirebaseConnect";
 import {GetCurrentURL} from "../URL/URLs";
@@ -33,32 +33,12 @@ export type Link_Props = {
 	actions?: Action<any>[],
 	//updateURLOnActions?: boolean, // action-based
 } & Omit<React.HTMLProps<HTMLAnchorElement>, "href">;
-//@Connect((state, {to, actions, updateURLOnActions}: Props)=> {
-@Connect((state, {to, actions}: Link_Props)=>{
-	if (actions) {
-		// if state-data-override is active from something else, just return our last result
-		if (State_overrides.state) return this.lastResult;
-
-		let newState = State_Base();
-		//let rootReducer = manager.MakeRootReducer();
-		//const rootReducer = manager.store.reducer;
-		for (const action of actions) {
-			newState = rootReducer(newState, action);
-		}
-		State_overrides.state = newState;
-		State_overrides.countAsAccess = false;
-		const newURL = manager.GetNewURL();
-		State_overrides.countAsAccess = null;
-		State_overrides.state = null;
-
-		to = newURL.toString();
+export class Link extends BaseComponentPlus({} as Link_Props, {}) {
+	static ValidateProps(props: Link_Props) {
+		const {actions, to} = props;
+		Assert(actions != null || to != null, `Must supply the Link component with either an "actions" or "to" property.`);
 	}
-	return {
-		//oldLocation: updateURLOnActions ? State(a=>a.router.location) : null,
-		to,
-	};
-})
-export class Link extends BaseComponent<Link_Props, {}> {
+
 	handleClick(event) {
 		const {onClick, to, target, replace: replaceURL, actions} = this.props;
 		if (onClick) onClick(event);
@@ -67,7 +47,7 @@ export class Link extends BaseComponent<Link_Props, {}> {
 		if (event.button !== 0) return; // ignore right clicks
 		if (isModifiedEvent(event)) return; // ignore clicks with modifier keys
 
-		if (actions) {
+		if (actions != null) {
 			event.preventDefault();
 			// apply actions
 			for (const action of actions) {
@@ -83,21 +63,41 @@ export class Link extends BaseComponent<Link_Props, {}> {
 	}
 
 	render() {
-		const {text, to, target, children, ...rest} = this.props;
+		let {text, actions, to, target, children, ...rest} = this.props;
+
+		if (actions) {
+			// if state-data-override is active from something else, just return our last result
+			//if (State_overrides.state) return this.lastResult;
+
+			let newState = State_Base.Watch();
+			//let rootReducer = manager.MakeRootReducer();
+			//const rootReducer = manager.store.reducer;
+			for (const action of actions) {
+				newState = rootReducer(newState, action);
+			}
+			/*State_overrides.state = newState;
+			State_overrides.countAsAccess = false;*/
+			const newURL = manager.GetNewURL["Watch"]();
+			/*State_overrides.countAsAccess = null;
+			State_overrides.state = null;*/
+
+			to = newURL.toString();
+		}
+
+
+		//if (manager.prodEnv && to == null) return; // defensive
 		//const href = this.context.router.history.createHref(typeof to === 'string' ? {pathname: to} : to)
 
 		// if external link (and target not specified), set target to "_blank", causing it to open in new tab
 		const isExternal = VURL.Parse(to, true).domain != GetCurrentURL().domain;
 		const target_final = isExternal && target === undefined ? "_blank" : target;
 
-		if (to) {
-			return (
-				<a {...FilterOutUnrecognizedProps(rest, "a")} onClick={this.handleClick} href={to} target={target_final}>
-					{text}
-					{children}
-				</a>
-			);
-		}
+		return (
+			<a {...FilterOutUnrecognizedProps(rest, "a")} onClick={this.handleClick} href={to} target={target_final}>
+				{text}
+				{children}
+			</a>
+		);
 	}
 
 	// add proxy, since using Radium
