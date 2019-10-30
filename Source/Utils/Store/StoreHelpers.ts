@@ -1,55 +1,9 @@
-import {DeepGet, Assert, nl, IsFunction} from "js-vextensions";
+import {DeepGet, Assert, nl, IsFunction, ConvertPathGetterFuncToPropChain} from "js-vextensions";
 import {manager, RootState_Base} from "../../Manager";
 import {State_Options, State_overrides} from "./StateOverrides";
 import {Action, IsACTSetFor} from "../General/Action";
 import {e, g} from "../../PrivateExports";
 import {GetStoreValue, StoreAccessor} from "./PathWatchManager";
-//import {reducer as formReducer} from "redux-form";
-
-/*declare global {
-	function State<T>(pathSegment: ((state: RootState)=>T) | string | number, state?: RootState, countAsAccess?: boolean): T;
-	function State<T>(pathSegments: (((state: RootState)=>T) | string | number)[], state?: RootState, countAsAccess?: boolean): any;
-}
-//function State<T>(pathSegmentOrSegments, state = State_extras.overrideState || store.getState(), countAsAccess = true) {
-function State<T>(pathOrPathSegments, state?: RootState, countAsAccess?: boolean) {
-	state = state || State_overrides.state || store.getState();
-	countAsAccess = countAsAccess != null ? countAsAccess : (State_overrides.countAsAccess != null ? State_overrides.countAsAccess : true);
-	if (pathOrPathSegments == null) return state;
-
-	let propChain: string[];
-	if (typeof pathOrPathSegments == "string") {
-		propChain = pathOrPathSegments.split("/");
-	} else if (typeof pathOrPathSegments == "function") {
-		propChain = ConvertPathGetterFuncToPropChain(pathOrPathSegments);
-	} else {
-		if (pathOrPathSegments.length == 0) return state;
-
-		propChain = pathOrPathSegments.SelectMany(segment=> {
-			if (segment instanceof Function) {
-				return ConvertPathGetterFuncToPropChain(segment);
-			}
-			Assert(typeof segment == "number" || !segment.Contains("/"),
-				`Each string path-segment must be a plain prop-name. (ie. contain no "/" separators) @segment(${segment})`);
-			return [segment];
-		});
-	}
-
-	let selectedData = DeepGet(state, propChain);
-	if (countAsAccess) {
-		let path = propChain.join("/");
-		//Assert(g.inConnectFunc, "State(), with countAsAccess:true, must be called from within a Connect() func.");
-		OnAccessPath(path);
-	}
-	return selectedData;
-}*/
-
-// for substantially better perf, we now only accept string-or-number arrays
-/*declare global {
-	function State<T>(): RootState;
-	function State<T>(pathGetterFunc: (state: RootState)=>T): T;
-	function State<T>(...pathSegments: (string | number)[]);
-	function State<T>(options: State_Options, ...pathSegments: (string | number)[]);
-}*/
 
 interface StateFunc<RootState> {
 	<T>(): RootState;
@@ -114,14 +68,6 @@ export function CreateState<RootState>() {
 	return State_Base as StateFunc_WithWatch<RootState>;
 }
 
-function ConvertPathGetterFuncToPropChain(pathGetterFunc: Function) {
-	const pathStr = pathGetterFunc.toString().match(/return a\.(.+?);/)[1] as string;
-	Assert(!pathStr.includes("["), `State-getter-func cannot contain bracket-based property-access.\n${nl
-		}For variable inclusion, use multiple segments as in "State("main", "mapViews", mapID)".`);
-	//let result = pathStr.replace(/\./g, "/");
-	const result = pathStr.split(".");
-	return result;
-}
 export function StorePath(pathGetterFunc: (state: RootState_Base)=>any) {
 	return ConvertPathGetterFuncToPropChain(pathGetterFunc).join("/");
 }
