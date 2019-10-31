@@ -63,22 +63,24 @@ export function UseSize(options?: Partial<UseSize_Options>): [(node: Component |
 	options = E(new UseSize_Options(), options);
 	const [size, setSize] = UseState({width: null, height: null} as Size, shallowEqual);
 
-	//const ref = useRef<HTMLElement>();
-	const [node, setNode] = UseState(null);
+	//const [node, setNode] = UseState(null);
+	const nodeRef = useRef<Element>(); // use ref, so that we don't trigger render just by storing newNode (setSize runs later than it anyway)
 	const ref = useCallback(compOrNode=>{
 		if (compOrNode == null) return; // if element was unmounted, just ignore (ie. wait till remounted to call setSize)
 		let newNode: Element = compOrNode;
-		if (compOrNode instanceof Component) newNode = ReactDOM.findDOMNode(compOrNode) as Element;
-		setNode(newNode);
+		if (compOrNode instanceof Component) newNode = ReactDOM.findDOMNode(compOrNode) as Element; // eslint-disable-line
+		//setNode(newNode);
+		nodeRef.current = newNode;
 	}, []);
 
 	useLayoutEffect(()=>{
-		if (node == null) return;
+		if (nodeRef.current == null) return;
 		window.requestAnimationFrame(()=>{
 			//const el = ref.current as HTMLElement;
-			const newSize = GetSize(node, options.method);
+			const newSize = GetSize(nodeRef.current as any, options.method);
 			setSize(newSize);
 		});
-	}, [node]);
+	//}, [nodeRef.current]);
+	});
 	return [ref, size];
 }
