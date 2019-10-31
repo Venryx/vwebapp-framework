@@ -1,7 +1,8 @@
 import {UseState} from "react-vextensions";
 import {VRect, ToJSON} from "js-vextensions";
-import {useRef, useLayoutEffect, MutableRefObject, useState, useCallback} from "react";
+import {useRef, useLayoutEffect, MutableRefObject, useState, useCallback, Component} from "react";
 import {shallowEqual} from "react-redux";
+import ReactDOM from "react-dom";
 
 // general
 // ==========
@@ -58,13 +59,16 @@ export function GetSize(el: HTMLElement, method: UseSize_Method) {
 	}
 	return size;
 }
-export function UseSize(options?: Partial<UseSize_Options>): [(node: Element)=>any, Size] {
+export function UseSize(options?: Partial<UseSize_Options>): [(node: Component | Element)=>any, Size] {
 	options = E(new UseSize_Options(), options);
 	const [size, setSize] = UseState({width: null, height: null} as Size, shallowEqual);
 
 	//const ref = useRef<HTMLElement>();
 	const [node, setNode] = UseState(null);
-	const ref = useCallback(newNode=>{
+	const ref = useCallback(compOrNode=>{
+		if (compOrNode == null) return; // if element was unmounted, just ignore (ie. wait till remounted to call setSize)
+		let newNode: Element = compOrNode;
+		if (compOrNode instanceof Component) newNode = ReactDOM.findDOMNode(compOrNode) as Element;
 		setNode(newNode);
 	}, []);
 
