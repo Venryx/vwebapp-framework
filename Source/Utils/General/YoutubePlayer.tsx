@@ -152,11 +152,13 @@ export class YoutubePlayer {
 	}
 
 	currentPosition = 0;
+	onPositionChanged: (position: number)=>any;
 	positionUpdateTimer = new Timer(100, ()=>{
 		if (!this.ready) return;
 		//if (this.state != YoutubePlayerState.PLAYING) return; // this is needed, since getCurrentTime() thinks time progresses even while video is paused (thus, we need to wait for next play to begin, resetting current-time)
 
 		this.currentPosition = this.internalPlayer.getCurrentTime();
+		if (this.onPositionChanged) this.onPositionChanged(this.currentPosition);
 		if (this.loadedClipInfo && this.loadedClipInfo.endTime && this.currentPosition >= this.loadedClipInfo.endTime) {
 			this.OnEndReached();
 		}
