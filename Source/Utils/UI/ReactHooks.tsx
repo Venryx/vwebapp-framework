@@ -59,6 +59,11 @@ export function GetSize(el: HTMLElement, method: UseSize_Method) {
 	}
 	return size;
 }
+
+/**
+ * Note that this does not update on window/css-only resizes; to detect a resize, the component calling UseSize must get re-rendered.
+ * To detect resizes of any sort, try using/wrapping: https://github.com/rehooks/component-size
+ */
 export function UseSize(options?: Partial<UseSize_Options>): [(node: Component | Element)=>any, Size] {
 	options = E(new UseSize_Options(), options);
 	const [size, setSize] = UseState({width: null, height: null} as Size, shallowEqual);
