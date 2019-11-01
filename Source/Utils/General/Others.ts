@@ -20,10 +20,10 @@ export function GetUpdates(oldData, newData, useJSONCompare = false, useNullInst
 	return RemoveHelpers(result);
 }
 
-export function GetOffsetRect(el: HTMLElement) {
+export function GetOffsetRect(el: Element) {
 	return new VRect(el.clientLeft, el.clientTop, el.clientWidth, el.clientHeight, false);
 }
-export function GetScreenRect(el: HTMLElement) {
+export function GetScreenRect(el: Element) {
 	var clientRect = el.getBoundingClientRect();
 	return new VRect(clientRect.left, clientRect.top, clientRect.width, clientRect.height, false);
 }
