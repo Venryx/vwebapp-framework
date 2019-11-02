@@ -154,8 +154,8 @@ export class YoutubePlayer {
 
 	currentPosition = 0;
 	onPositionChanged: (position: number)=>any;
-	UpdateCurrentPos() {
-		this.currentPosition = this.internalPlayer.getCurrentTime();
+	UpdateCurrentPos(actualNewPos?: number) {
+		this.currentPosition = actualNewPos != null ? actualNewPos : this.internalPlayer.getCurrentTime();
 		if (this.onPositionChanged) this.onPositionChanged(this.currentPosition);
 		if (this.loadedClipInfo && this.loadedClipInfo.endTime && this.currentPosition >= this.loadedClipInfo.endTime) {
 			this.OnEndReached();
@@ -236,7 +236,7 @@ export class YoutubePlayer {
 	SetPosition(timeInSec: number) {
 		this.AssertReady();
 		this.internalPlayer.seekTo(timeInSec);
-		this.UpdateCurrentPos();
+		this.UpdateCurrentPos(timeInSec); // we need to just tell it the new time, because the seekTo command does not apply instantly
 	}
 
 	lastPlayTime: number;
