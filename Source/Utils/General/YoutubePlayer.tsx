@@ -143,6 +143,7 @@ export class YoutubePlayer {
 			this.positionUpdateTimer.Start();
 		} else {
 			this.positionUpdateTimer.Stop();
+			this.UpdateCurrentPos(); // update one last time
 
 			// if ended naturally (reached end of video), possibly clear buffer (depending on youtube-buffered-players setting)
 			if (state == YoutubePlayerState.ENDED) {
@@ -153,15 +154,17 @@ export class YoutubePlayer {
 
 	currentPosition = 0;
 	onPositionChanged: (position: number)=>any;
-	positionUpdateTimer = new Timer(100, ()=>{
-		if (!this.ready) return;
-		//if (this.state != YoutubePlayerState.PLAYING) return; // this is needed, since getCurrentTime() thinks time progresses even while video is paused (thus, we need to wait for next play to begin, resetting current-time)
-
+	UpdateCurrentPos() {
 		this.currentPosition = this.internalPlayer.getCurrentTime();
 		if (this.onPositionChanged) this.onPositionChanged(this.currentPosition);
 		if (this.loadedClipInfo && this.loadedClipInfo.endTime && this.currentPosition >= this.loadedClipInfo.endTime) {
 			this.OnEndReached();
 		}
+	}
+	positionUpdateTimer = new Timer(100, ()=>{
+		if (!this.ready) return;
+		//if (this.state != YoutubePlayerState.PLAYING) return; // this is needed, since getCurrentTime() thinks time progresses even while video is paused (thus, we need to wait for next play to begin, resetting current-time)
+		this.UpdateCurrentPos();
 	});
 
 	loop = false; // must be manually set, after LoadVideo() is called, but before Play() is called (well, if you want it to work reliably)
@@ -233,6 +236,7 @@ export class YoutubePlayer {
 	SetPosition(timeInSec: number) {
 		this.AssertReady();
 		this.internalPlayer.seekTo(timeInSec);
+		this.UpdateCurrentPos();
 	}
 
 	lastPlayTime: number;
@@ -251,6 +255,7 @@ export class YoutubePlayer {
 	StopAndClearBuffer() {
 		this.AssertReady();
 		this.internalPlayer.stopVideo();
+		//this.UpdateCurrentPos();
 		this.loadedClipInfo = null; // clear loaded-clip-info, since it doesn't reflect the (empty) buffered state anymore
 	}
 
