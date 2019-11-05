@@ -90,6 +90,9 @@ export function CreateStore(initialState = {}) {
 	const reduxDevToolsConfig = {
 		maxAge: 70,
 		trace: true,
+		actionsBlacklist: [
+			"@@reduxFirestore/LISTENER_RESPONSE",
+		],
 	};
 
 	// store instantiation and HMR setup
