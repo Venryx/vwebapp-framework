@@ -5,8 +5,12 @@
 		"paths": { // ("paths" is relative to "baseUrl")
 			"*": [
 				"../node_modules/@types/*", // prefer "/node_modules/@types" over "/node_modules/[something]/node_modules/@types" (eg, when using npm link)
-				"*",
+				"*"
 			],
+			// remove @types/react/global.d.ts, as it breaks the auto-import-finder for react-vcomponents/Text
+			"react/global.d.ts": ["Source/empty.d.ts"],
+			"react-vextensions/node_modules/react/global.d.ts": ["Source/empty.d.ts"],
+			"react-vcomponents/node_modules/react/global.d.ts": ["Source/empty.d.ts"]
 		},
 
 		// general
@@ -21,7 +25,7 @@
 		"jsx": "react",
 		"noImplicitAny": false,
 		"experimentalDecorators": true,
-		"allowSyntheticDefaultImports": true,
+		"allowSyntheticDefaultImports": true
 		//"declaration": true,
 		//"declarationDir": "Dist",
 	},
@@ -29,11 +33,11 @@
 	"include": [
 		"Typings/**/*.d.ts",
 		"Source/**/*.ts",
-		"Source/**/*.tsx",
+		"Source/**/*.tsx"
 	],
 	"exclude": [
 		"Dist",
-		"node_modules",
+		"node_modules"
 	],
-	"compileOnSave": true,
+	"compileOnSave": true
 }
