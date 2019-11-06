@@ -8,6 +8,9 @@ import {SetListeners, SetListeners_Query, manager} from "../..";
 import {g} from "../../PrivateExports";
 import {accessedStorePaths} from "../Database/FirebaseConnect";
 
+// can use approach-1 or approach-2
+const approach: number = 1;
+
 export class PathWatchNode {
 	constructor(parent: PathWatchNode, key: string, initialValue: any) {
 		this.parent = parent;
@@ -225,12 +228,13 @@ export class Watcher {
 		}
 
 		if (this.IsRootWatcher) {
-			// approach 1
-			//this.needsRerun = true; // just set flag; the useSelector() is subscribed to store, so will automatically re-run the code within Watch
-			// approach 2
-			this.needsRerun = true;
-			//this.comp.forceUpdate();
-			ScheduleCompUpdate(this.comp, this);
+			if (approach == 1) {
+				this.needsRerun = true; // just set flag; the useSelector() is subscribed to store, so will automatically re-run the code within Watch
+			} else if (approach == 2) {
+				this.needsRerun = true;
+				//this.comp.forceUpdate();
+				ScheduleCompUpdate(this.comp, this);
+			}
 		} else {
 			const oldResult = this.lastResult;
 			this.Run([]); // subwatchers never have (passed) dependencies, since their accessors are disallowed from accessing non-cell-id closure values
@@ -384,13 +388,15 @@ export function Watch<T>(accessor: (watcher: Watcher)=>T, dependencies: any[]): 
 	// Which is faster theoretically? #1 should be faster if the accessor-functions (combined, but with cache-hits) have a run-time that is half (or less) than the non-accessor part of comp.render. Else, #2 should be faster.
 	// Which is faster in practice (in the CD project)? #2 is actually slightly faster -- 20s instead of 22s -- so I'm going with that for now.
 
-	//return useSelector(()=>{
-	if (watcher.needsRerun || !shallowEqual(dependencies, watcher.lastDependencies)) {
-		watcher.accessor = accessor; // we need to update this each time, due to the old closure being outdated
-		watcher.Run(dependencies);
-	}
-	return watcher.lastResult;
-	//});
+	const proceed = ()=>{
+		if (watcher.needsRerun || !shallowEqual(dependencies, watcher.lastDependencies)) {
+			watcher.accessor = accessor; // we need to update this each time, due to the old closure being outdated
+			watcher.Run(dependencies);
+		}
+		return watcher.lastResult;
+	};
+	if (approach == 1) return useSelector(proceed);
+	if (approach == 2) return proceed();
 }
 
 // for profiling
@@ -420,12 +426,14 @@ export function LogStoreAccessorRunTimes() {
 // for profiling
 export const accessorStack = [];
 
-export function StoreAccessor<Func extends Function>(accessor: Func): Func & {Watch: Func};
-export function StoreAccessor<Func extends Function>(name: string, accessor: Func): Func & {Watch: Func};
+export type CallArgToDependencyConvertorFunc = (callArgs: any[])=>any[];
+
+export function StoreAccessor<Func extends Function>(accessor: Func, callArgToDependencyConvertorFunc?: CallArgToDependencyConvertorFunc): Func & {Watch: Func};
+export function StoreAccessor<Func extends Function>(name: string, accessor: Func, callArgToDependencyConvertorFunc?: CallArgToDependencyConvertorFunc): Func & {Watch: Func};
 export function StoreAccessor(...args) {
-	let name: string, accessor: Function;
-	if (args.length == 1) [accessor] = args;
-	else if (args.length == 2) [name, accessor] = args;
+	let name: string, accessor: Function, callArgToDependencyConvertorFunc: CallArgToDependencyConvertorFunc;
+	if (typeof args[0] == "function") [accessor, callArgToDependencyConvertorFunc] = args;
+	else [name, accessor, callArgToDependencyConvertorFunc] = args;
 
 	// add profiling to the accessor function
 	//if (manager.devEnv) { // manager isn't populated yet
@@ -460,6 +468,8 @@ export function StoreAccessor(...args) {
 
 	if (name) accessor["displayName"] = name;
 	accessor["Watch"] = function(...callArgs) {
+		const dependencies = callArgToDependencyConvertorFunc ? callArgToDependencyConvertorFunc(callArgs) : callArgs;
+
 		//const accessor_withCallArgsBound = accessor.bind(null, ...callArgs); // bind is bad, because it doesn't "gobble" the "watcher" arg
 		const accessor_withCallArgsBound = ()=>{
 			//return accessor.apply(this, callArgs);
@@ -469,7 +479,7 @@ export function StoreAccessor(...args) {
 		if (name) accessor_withCallArgsBound["displayName"] = name;
 		//outerAccessor["callArgs"] = callArgs;
 		//outerAccessor["displayName"] = `${name || "Unknown"}(${callArgs.join(", ")})`;
-		return Watch(accessor_withCallArgsBound, callArgs);
+		return Watch(accessor_withCallArgsBound, dependencies);
 	};
 	return accessor as any;
 }
@@ -505,6 +515,13 @@ export function GetSubWatcherForAccessorID(accessorID_base: string, accessorID_p
 	//const storageKey = QuickJoinByPipe(arguments as any);
 	const storage = subWatchers[storageKey] as Watcher || (subWatchers[storageKey] = new Watcher());
 	return storage;
+}
+
+// for debugging (run RR.GetChangedSubWatchers() in console)
+export let lastSubWatcherRunCounts = {};
+export function GetChangedSubWatchers() {
+	console.log("Changed sub-watchers:", subWatchers.Pairs().filter(a=>a.value.runCount != lastSubWatcherRunCounts[a.key]).map(a=>a.value));
+	lastSubWatcherRunCounts = subWatchers.Pairs().ToMap(a=>a.key, a=>a.value.runCount);
 }
 
 /** ```markdown

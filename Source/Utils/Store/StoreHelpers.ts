@@ -53,6 +53,12 @@ export const State_Base: StateFunc_WithWatch<RootState_Base> = StoreAccessor("St
 		e.OnAccessPath(path, selectedData);
 	}
 	return selectedData;
+}, callArgs=>{
+	const result = callArgs.slice();
+	if (IsFunction(result[0])) {
+		result[0] = ConvertPathGetterFuncToPropChain(result[0]).join("/");
+	}
+	return result;
 });
 
 export function CreateState<RootState>() {

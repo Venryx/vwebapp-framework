@@ -110,6 +110,7 @@ export function SlicePath(path: string, removeFromEndCount: number, ...itemsToAd
 	//let parts = path.split("/");
 	const parts = SplitStringBySlash_Cached(path).slice();
 	parts.splice(parts.length - removeFromEndCount, removeFromEndCount, ...itemsToAdd);
+	if (parts.length == 0) return null;
 	return parts.join("/");
 }
 
