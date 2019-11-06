@@ -62,7 +62,7 @@ export class PathWatchNode {
 			if (watcher.destroyed) return;
 			// if watcher is a "root watcher" (ie. under comp render-func, but NOT within a SubWatch call), and current processing IS within a SubWatch call, don't notify this watcher (it should only watch for when SubWatch returns a new result)
 			//if (watcher.IsRootWatcher && watchStack.length >= 2) return;
-			watcher.NotifyThatSomethingWatchedHasChanged();
+			watcher.NotifyDependencyChanged(this);
 		});
 
 		// process for children
@@ -214,8 +214,16 @@ export class Watcher {
 		return result;
 	}
 
-	NotifyThatSomethingWatchedHasChanged() {
+	NotifyDependencyChanged(changedDependency: PathWatchNode | Watcher) {
 		Assert(!this.destroyed);
+
+		// todo: add a similar thing for watched sub-watchers
+		if (changedDependency instanceof PathWatchNode) {
+			/* let oldEntry = this.watchedNodes_lastChangeRunIndexes.find(a=>a.node == changedDependency);
+			if (watchedNodes_lastChangeRunIndexes) */
+			this.watchedNodes_lastChangeRunIndexes[changedDependency.path_cached] = this.runCount - 1;
+		}
+
 		if (this.IsRootWatcher) {
 			// approach 1
 			//this.needsRerun = true; // just set flag; the useSelector() is subscribed to store, so will automatically re-run the code within Watch
@@ -231,13 +239,15 @@ export class Watcher {
 				const parentWatchers_copy = this.parentWatchers.slice(); // make copy of the watchers array, since calling NotifyThatSomethingWatchedHasChanged() may mutate it (delete destroyed watchers, or reorder persistent watchers)
 				parentWatchers_copy.forEach(parentWatcher=>{
 					if (parentWatcher.destroyed) return;
-					parentWatcher.NotifyThatSomethingWatchedHasChanged();
+					parentWatcher.NotifyDependencyChanged(this);
 				});
 			}
 		}
 	}
 
 	watchedNodes = [] as PathWatchNode[];
+	//watchedNodes_lastChangeRunIndexes = [] as {node: PathWatchNode, lastChange_runIndex: number}[];
+	watchedNodes_lastChangeRunIndexes = {} as {[key: string]: number};
 	ClearNodeWatches() {
 		for (const node of this.watchedNodes) {
 			node.watchers.Remove(this);
@@ -297,7 +307,7 @@ export class Watcher {
 			});
 		}
 
-		// query requests // todo: clean this up
+		// query requests
 		// if (firebase._ && ShallowChanged(requestedPaths, oldRequestedPaths)) {
 		if (!shallowEqual(requestedDBQueries, requestedDBQueries_previous)) {
 			RunImmediately(()=>{
@@ -316,12 +326,16 @@ export class Watcher {
 		const accessorDisplayStr = `@${this.accessor["displayName"] || ""}(${(this.lastDependencies || []).map(()=>"X").join(",")})`;
 		const debugKey = [debugKey_base, `@changedAt(${this.comp.renderCount - 1}) @store(${this.watchedNodes.length})`, `@db(${this.requestedDBPaths.length})`, accessorDisplayStr].filter(a=>a).join(" ");
 		const zws = String.fromCharCode(65279); // zero width space (used to force ordering of object keys)
-		const watchedNodes_pathsAndValues = this.watchedNodes.ToMap((a, index)=>`${_.padStart(index.toString(), 3, " ")}: ${a.GetPath()}`, a=>a.lastValue);
+		const watchedNode_debugInfos = this.watchedNodes.ToMap((node: PathWatchNode, index)=>{
+			//const changedAt = this.watchedNodes_lastChangeRunIndexes.find(a=>a.node == node.path).lastChange_runIndex;
+			const changedAt = this.watchedNodes_lastChangeRunIndexes[node.path_cached];
+			return `${_.padStart(index.toString(), 3, " ")} @changedAt(${changedAt}) @path: ${node.GetPath()}`;
+		}, a=>a.lastValue);
 		const debugData = {
 			[`${zws.repeat(0)}${accessorDisplayStr}`]: this.lastDependencies,
 			[`${zws.repeat(1)}Result`]: this.lastResult,
-			[`${zws.repeat(2)}RunCount`]: this.runCount,
-			[`${zws.repeat(3)}ReadsFromStore @length(${this.watchedNodes.length})`]: watchedNodes_pathsAndValues,
+			[`${zws.repeat(2)}RunIndex`]: this.runCount - 1,
+			[`${zws.repeat(3)}ReadsFromStore @length(${this.watchedNodes.length})`]: watchedNode_debugInfos,
 			[`${zws.repeat(4)}RequestsFromDB @length(${this.requestedDBPaths.length})`]: this.requestedDBPaths,
 			[`${zws.repeat(5)}OtherData`]: this,
 		};
