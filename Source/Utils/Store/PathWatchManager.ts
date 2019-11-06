@@ -85,19 +85,39 @@ export const pathWatchManagerEnhancer = createStore=>(reducer, initialState)=>{
 	return store;
 };
 
-export let CheckPathWatchTreeForChanges_compUpdatesScheduled = [] as BaseComponent[];
+export class CompUpdateCommand {
+	constructor(comp: BaseComponent) {
+		this.comp = comp;
+	}
+	comp: BaseComponent;
+	triggeringWatchers = [] as Watcher[];
+}
+
+export let CheckPathWatchTreeForChanges_compUpdatesScheduled = [] as CompUpdateCommand[];
 export function CheckPathWatchTreeForChanges(store) {
 	pathWatchTree.CheckForChanges(store.getState());
-	const compsToUpdate_copy = CheckPathWatchTreeForChanges_compUpdatesScheduled.slice(); // make copy of array, to make sure it doesn't get mutated during the comp-updates
-	compsToUpdate_copy.forEach(comp=>{
-		if (!comp.mounted) return; // parent may have been updated, and unmounted it's child (this comp)
-		comp.forceUpdate();
+	const compUpdates_copy = CheckPathWatchTreeForChanges_compUpdatesScheduled.slice(); // make copy of array, to make sure it doesn't get mutated during the comp-updates
+	compUpdates_copy.forEach(update=>{
+		if (!update.comp.mounted) return; // parent may have been updated, and unmounted it's child (this comp)
+		update.comp.forceUpdate();
+		const lastWatcherTriggeredRender_info = {"@RenderIndexAtPoint": update.comp.renderCount - 1};
+		for (const watcher of update.triggeringWatchers) {
+			const debugInfo = watcher.GetDebugInfo();
+			lastWatcherTriggeredRender_info[debugInfo.debugKey] = debugInfo.debugData;
+		}
+		update.comp.Debug({"@LastChangedWatchers": lastWatcherTriggeredRender_info});
 	});
 	CheckPathWatchTreeForChanges_compUpdatesScheduled = [];
 }
-export function ScheduleCompUpdate(comp: BaseComponent) {
-	if (CheckPathWatchTreeForChanges_compUpdatesScheduled.Contains(comp)) return;
-	CheckPathWatchTreeForChanges_compUpdatesScheduled.push(comp);
+export function ScheduleCompUpdate(comp: BaseComponent, triggeringWatcher: Watcher) {
+	let update = CheckPathWatchTreeForChanges_compUpdatesScheduled.find(a=>a.comp == comp);
+	if (update == null) {
+		update = new CompUpdateCommand(comp);
+		CheckPathWatchTreeForChanges_compUpdatesScheduled.push(update);
+	}
+	if (!update.triggeringWatchers.Contains(triggeringWatcher)) {
+		update.triggeringWatchers.push(triggeringWatcher);
+	}
 }
 
 export function GetStoreValue(storeState: any, pathSegments: (string | number)[]) {
@@ -182,6 +202,15 @@ export class Watcher {
 		this.ApplyDBRequests();
 		this.lastDependencies = dependencies;
 		this.lastResult = result;
+
+		// add some debug info to the component's debug object, for viewing in react-devtools
+		if (this.comp) {
+			const debugInfo = this.GetDebugInfo();
+			this.debugDataHistory.Insert(0, debugInfo);
+			this.comp.debug.VKeys().filter(a=>a.startsWith(debugInfo.debugKey_base)).forEach(key=>Reflect.deleteProperty(this.comp.debug, key)); // delete old versions of entry
+			this.comp.Debug({[debugInfo.debugKey]: debugInfo.debugData}); // store new version
+		}
+
 		return result;
 	}
 
@@ -193,7 +222,7 @@ export class Watcher {
 			// approach 2
 			this.needsRerun = true;
 			//this.comp.forceUpdate();
-			ScheduleCompUpdate(this.comp);
+			ScheduleCompUpdate(this.comp, this);
 		} else {
 			const oldResult = this.lastResult;
 			this.Run([]); // subwatchers never have (passed) dependencies, since their accessors are disallowed from accessing non-cell-id closure values
@@ -230,6 +259,7 @@ export class Watcher {
 
 	// extra
 	comp: BaseComponent<any>;
+	comp_watcherIndex: number;
 	get IsRootWatcher() { return this.comp != null; }
 	get IsSubWatcher() { return this.comp == null; }
 
@@ -280,7 +310,23 @@ export class Watcher {
 		}
 	}
 
-	debugDataHistory = [] as any[];
+	debugDataHistory = [] as {debugKey: string, debugData: any}[];
+	GetDebugInfo() {
+		const debugKey_base = `Watcher${_.padStart((this.comp_watcherIndex + 1).toString(), 2, "0")} `;
+		const accessorDisplayStr = `@${this.accessor["displayName"] || ""}(${(this.lastDependencies || []).map(()=>"X").join(",")})`;
+		const debugKey = [debugKey_base, `@changedAt(${this.comp.renderCount - 1}) @store(${this.watchedNodes.length})`, `@db(${this.requestedDBPaths.length})`, accessorDisplayStr].filter(a=>a).join(" ");
+		const zws = String.fromCharCode(65279); // zero width space (used to force ordering of object keys)
+		const watchedNodes_pathsAndValues = this.watchedNodes.ToMap((a, index)=>`${_.padStart(index.toString(), 3, " ")}: ${a.GetPath()}`, a=>a.lastValue);
+		const debugData = {
+			[`${zws.repeat(0)}${accessorDisplayStr}`]: this.lastDependencies,
+			[`${zws.repeat(1)}Result`]: this.lastResult,
+			[`${zws.repeat(2)}RunCount`]: this.runCount,
+			[`${zws.repeat(3)}ReadsFromStore @length(${this.watchedNodes.length})`]: watchedNodes_pathsAndValues,
+			[`${zws.repeat(4)}RequestsFromDB @length(${this.requestedDBPaths.length})`]: this.requestedDBPaths,
+			[`${zws.repeat(5)}OtherData`]: this,
+		};
+		return {debugKey_base, debugKey, debugData};
+	}
 }
 /* export class SubWatcher {
 	watchersOfSelf = [] as Watcher[]; // ancestor watchers, for our result
@@ -290,7 +336,7 @@ export class Watcher {
 export function Watch<T>(accessor: (watcher: Watcher)=>T, dependencies: any[]): T {
 	Assert(watchStack.length == 0, "Cannot have calls to Watch within a Watch accessor. (try using SubWatch)");
 
-	const comp = BaseComponent.componentCurrentlyRendering as BaseComponent<any> & {watches_lastRenderID: number, watches_lastRunWatchID: number};
+	const comp = BaseComponent.componentCurrentlyRendering as BaseComponent<any> & {watches_lastRenderIndex: number, watches_lastRunWatcherIndex: number};
 	const [watcher, __] = useState(new Watcher({comp}));
 	/*if (watcher.runCount == 0) {
 		watcherCount++;
@@ -307,13 +353,16 @@ export function Watch<T>(accessor: (watcher: Watcher)=>T, dependencies: any[]): 
 		};
 	}, []);
 
-	// figure out render-id (index) and watcher-id (index)
-	const renderID = comp.renderCount - 1;
-	const isFirstWatchOfRender = renderID != comp.watches_lastRenderID;
-	if (isFirstWatchOfRender) comp.watches_lastRunWatchID = -1;
-	const watchID = comp.watches_lastRunWatchID + 1;
-	comp.watches_lastRenderID = renderID;
-	comp.watches_lastRunWatchID = watchID;
+	// figure out render-index and watcher-index
+	const renderIndex = comp.renderCount - 1;
+	const isFirstWatchOfRender = renderIndex != comp.watches_lastRenderIndex;
+	if (isFirstWatchOfRender) comp.watches_lastRunWatcherIndex = -1;
+	const watcherIndex = comp.watches_lastRunWatcherIndex + 1;
+	comp.watches_lastRenderIndex = renderIndex;
+	comp.watches_lastRunWatcherIndex = watcherIndex;
+	if (watcher.comp_watcherIndex == null) {
+		watcher.comp_watcherIndex = watcherIndex;
+	}
 
 	// Approach 1 uses the "useSelector(...)" wrapper below; approach 2 doesn't, instead calling forceUpdate() within NotifyThatSomethingWatchedHasChanged()
 	// #1 is basically: When accessed store-data changes, re-run accessor-func but without updating the from-render-func closure values [maybe wrong about this, as should cause it to get stuck]. If result changes, then do a full comp re-render.
@@ -325,23 +374,6 @@ export function Watch<T>(accessor: (watcher: Watcher)=>T, dependencies: any[]): 
 	if (watcher.needsRerun || !shallowEqual(dependencies, watcher.lastDependencies)) {
 		watcher.accessor = accessor; // we need to update this each time, due to the old closure being outdated
 		watcher.Run(dependencies);
-
-		// add some debug info to the component's debug object, for viewing in react-devtools
-		const debugKey_base = `Watcher${_.padStart((watchID + 1).toString(), 2, "0")} `;
-		const accessorDisplayStr = `@${accessor["displayName"] || ""}(${(dependencies || []).map(()=>"X").join(",")})`;
-		const debugKey = [debugKey_base, `@store(${watcher.watchedNodes.length})`, `@db(${watcher.requestedDBPaths.length})`, accessorDisplayStr].filter(a=>a).join(" ");
-		const zws = String.fromCharCode(65279); // zero width space (used to force ordering of object keys)
-		const watchedNodes_pathsAndValues = watcher.watchedNodes.ToMap((a, index)=>`${_.padStart(index.toString(), 3, " ")}: ${a.GetPath()}`, a=>a.lastValue);
-		const debugData = {
-			[`${zws.repeat(0)}${accessorDisplayStr}`]: dependencies,
-			[`${zws.repeat(1)}Result`]: watcher.lastResult,
-			[`${zws.repeat(2)}ReadsFromStore @length(${watcher.watchedNodes.length})`]: watchedNodes_pathsAndValues,
-			[`${zws.repeat(3)}RequestsFromDB @length(${watcher.requestedDBPaths.length})`]: watcher.requestedDBPaths,
-			[`${zws.repeat(4)}OtherData`]: watcher,
-		};
-		watcher.debugDataHistory.Insert(0, debugData);
-		comp.debug.VKeys().filter(a=>a.startsWith(debugKey_base)).forEach(key=>Reflect.deleteProperty(comp.debug, key)); // delete old versions of entry
-		comp.Debug({[debugKey]: debugData}); // store new version
 	}
 	return watcher.lastResult;
 	//});
