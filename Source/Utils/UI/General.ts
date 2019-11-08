@@ -1,6 +1,7 @@
 import React from "react";
-import {Assert} from "js-vextensions";
+import {WrapWithGo} from "js-vextensions";
 import {SimpleShouldUpdate, WarnOfTransientObjectProps, SimpleShouldUpdate_Options, WarnOfTransientObjectProps_Options} from "react-vextensions";
+import ReactDOM from "react-dom";
 import {OnPopulated} from "../../Manager";
 
 export function StandardCompProps() {
@@ -50,6 +51,10 @@ OnPopulated(()=>{
 		}
 		return createElement_old.apply(this, arguments);
 	};
+});
+
+export const RunWithRenderingBatched = WrapWithGo((func: Function)=>{
+	ReactDOM.unstable_batchedUpdates(func as any);
 });
 
 export class ExpensiveComponent_Options {
