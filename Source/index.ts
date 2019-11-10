@@ -4,7 +4,9 @@
 // import own exports; thus we gain access to the exports object, letting us modify it
 import * as frameworkExportsObject from ".";
 
-export * from "./ExportOverwriteEnabler";
+export * from "./@EnableExportOverwrites";
+// special key, marking this module's exports object, which allows the patch in ExportOverwriteEnabler.ts to make the remaining exports overwriteable
+//export const __EnableExportOverwrites__ = true;
 
 export * from "./Manager";
 
@@ -51,6 +53,7 @@ export * from "./Utils/ReactComponents/YoutubePlayerUI";
 
 export * from "./Utils/Store/ActionProcessor";
 export * from "./Utils/Store/CreateStore";
+export * from "./Utils/Store/MobX";
 export * from "./Utils/Store/PathWatchManager";
 export * from "./Utils/Store/ReducerUtils";
 export * from "./Utils/Store/StateOverrides";
@@ -62,6 +65,9 @@ export * from "./Utils/UI/ReactHooks";
 
 export * from "./Utils/URL/History";
 export * from "./Utils/URL/URLs";
+
+//export * from "./__DisableExportOverwrites__";
+export const __DisableExportOverwrites__ = true;
 
 // override system
 // ==========
