@@ -6,6 +6,7 @@ import React from "react";
 
 //export function Observer(targetClass: ()=>ReactElement) {
 export function Observer(targetClass: Function) {
+	ClassHooks(targetClass);
 	//if (targetClass instanceof (BaseComponent.prototype as any)) {
 	if (targetClass.prototype.PreRender) {
 		EnsureClassProtoRenderFunctionIsWrapped(targetClass.prototype);
@@ -28,10 +29,12 @@ export function ClassHooks(targetClass: Function) {
 	// note our patching Class.render, not instance.render -- this is compatible with mobx-react
 	targetClass.prototype.render = function() {
 		const MAGIC_STACKS = GetMagicStackSymbol(this);
-		// apply the stack-resetting functionality normally done in the on-instance patched this.render
-		Object.getOwnPropertySymbols(this[MAGIC_STACKS]).forEach(k=>{
-			this[MAGIC_STACKS][k] = 0;
-		});
+		if (this[MAGIC_STACKS]) {
+			// apply the stack-resetting functionality normally done in the on-instance patched this.render
+			Object.getOwnPropertySymbols(this[MAGIC_STACKS]).forEach(k=>{
+				this[MAGIC_STACKS][k] = 0;
+			});
+		}
 		return render_orig.apply(this, arguments);
 	};
 }
