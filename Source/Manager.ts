@@ -45,6 +45,8 @@ export class Manager {
 	dbVersion: number;
 	HasHotReloaded: ()=>boolean;
 	logTypes: any;
+	/** Changes path-watch-manager to be compatible with mobx. (removes optimizations!) */
+	mobxCompatMode: boolean;
 
 	startURL: VURL;
 	routerLocationPathInStore: string[];

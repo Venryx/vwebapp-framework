@@ -389,9 +389,8 @@ export function Watch<T>(accessor: (watcher: Watcher)=>T, dependencies: any[]): 
 	// Which is faster in practice (in the CD project)? #2 is actually slightly faster -- 20s instead of 22s -- so I'm going with that for now.
 
 	const proceed = ()=>{
-		//if (watcher.needsRerun || !shallowEqual(dependencies, watcher.lastDependencies)) {
-		// since we're transitioning from Redux to MobX, remove dependency-changed checking (otherwise the MobX accesses don't always go through, breaking its dependency tracking)
-		if (true) {
+		// if mobx-compat-mode enabled, remove dependency-changed checking (otherwise the MobX accesses don't always go through, breaking its dependency tracking)
+		if (manager.mobxCompatMode || watcher.needsRerun || !shallowEqual(dependencies, watcher.lastDependencies)) {
 			watcher.accessor = accessor; // we need to update this each time, due to the old closure being outdated
 			watcher.Run(dependencies);
 		}
