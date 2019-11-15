@@ -6,7 +6,6 @@ import {Action} from "./Utils/General/Action";
 
 export type RootState_Base = any; // temp
 
-export type Omit<T, K extends keyof T> = Pick<T, ({ [P in keyof T]: P } & { [P in K]: never })[keyof T]>;
 export class Manager {
 	GetExtraReducers() {
 		//let { routerReducer } = require("./Utils/Store/CreateStore");
