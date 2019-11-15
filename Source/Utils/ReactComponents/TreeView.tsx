@@ -1,7 +1,6 @@
 import {BaseComponent} from "react-vextensions";
-import {Icon} from "./Icon";
 import React from "react";
-import {Omit} from "../../Manager";
+import {Icon} from "./Icon";
 
 type Props = {
 	collapsable?: boolean, className?: string, itemClassName?: string, title: (JSX.Element | string), selected?: boolean, defaultCollapsed?: boolean, style?, titleStyle?: any,
@@ -51,7 +50,7 @@ export class TreeView extends BaseComponent<Props, {collapsed: boolean}> {
 					style={E(
 						titleStyle,
 						{display: "inline-block", width: "calc(100% - 12px)",
-							backgroundColor: selected ? "rgba(44, 79, 122, .5)" : null}
+							backgroundColor: selected ? "rgba(44, 79, 122, .5)" : null},
 					)}>
 					{title}
 				</div>

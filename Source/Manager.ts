@@ -20,10 +20,7 @@ export class Manager {
 	//Populate(data: Omit<Manager, "onPopulated" | "onPopulated_resolve" | "Populate">) {
 	Populate(data: Omit<Manager, "Populate" | "GetExtraReducers" | "store" | "firestoreDB">) {
 		this.Extend(data);
-
-		// set globals
-		G({Log: require("./Utils/General/Logging").Log});
-
+		//G({Log: Log}); // set globals
 		//this.onPopulated_resolve();
 		OnPopulated_listeners.forEach(a=>a());
 	}

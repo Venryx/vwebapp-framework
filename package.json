@@ -1,6 +1,6 @@
 {
 	"name": "vwebapp-framework",
-	"version": "1.0.0",
+	"version": "1.0.2",
 	"description": "The framework code for my web-apps, collected into a library for easy reuse.",
 	"module_disabled": "Source/index.ts",
 	"main_disabled": "dist/index.js",
@@ -42,6 +42,7 @@
 		"react-redux-firebase": "^2.2.4",
 		"redux-firestore": "^0.6.0",
 		"react-vcomponents": "0.0.4",
+		"react-markdown": "^4.0.4",
 		"raven-js": "^3.27.0",
 		"connected-react-router": "^6.0.0",
 		"react-router": "^4.3.1",
