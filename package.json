@@ -1,6 +1,6 @@
 {
 	"name": "vwebapp-framework",
-	"version": "0.1.0",
+	"version": "1.0.0",
 	"description": "The framework code for my web-apps, collected into a library for easy reuse.",
 	"module_disabled": "Source/index.ts",
 	"main_disabled": "dist/index.js",
@@ -49,8 +49,8 @@
 		"remarkable-react": "^1.4.1",
 		"react-beautiful-dnd": "^10.0.4",
 		"react-ga": "^2.5.6",
+		"react-vscrollview": "0.0.3",
 		"redux-persist": "^5.10.0",
-		"updeep": "^1.1.0",
 		"lodash": "^4.17.15"
 	},
 	"devDependencies": {
@@ -63,7 +63,6 @@
 		"@types/react-redux": "^7.1.5",
 		"@types/react-router": "^4.4.3",
 		"@types/webpack": "^4.39.8",
-		"@typescript-eslint/parser": "^1.4.2",
 		"ajv": "^6.10.0",
 		"ajv-keywords": "^3.4.0",
 		"babel-cli": "^6.4.5",
@@ -73,7 +72,7 @@
 		"eslint-config-airbnb-base": "^13.1.0",
 		"eslint-config-standard": "^12.0.0",
 		"eslint-config-standard-react": "^7.0.2",
-		"eslint-config-vbase": "0.0.1",
+		"eslint-config-vbase": "0.0.2",
 		"eslint-plugin-babel": "^5.3.0",
 		"eslint-plugin-import": "^2.16.0",
 		"eslint-plugin-only-warn": "^1.0.1",
@@ -84,7 +83,7 @@
 		"firebase-feedback": "0.0.4",
 		"firebase-forum": "0.0.4",
 		"firebase-mock": "github:BrianChapman/firebase-mock#issue-81-onsnapshot",
-		"js-vextensions": "0.0.8",
+		"js-vextensions": "0.0.11",
 		"lodash": "^4.17.15",
 		"mobx": "^5.15.0",
 		"mobx-react": "^6.1.4",
@@ -99,8 +98,9 @@
 		"react-redux": "^7.1.1",
 		"react-redux-firebase": "^2.2.4",
 		"react-router": "^4.3.1",
-		"react-vcomponents": "0.0.4",
-		"react-vextensions": "0.0.6",
+		"react-vcomponents": "0.0.5",
+		"react-vextensions": "0.0.7",
+		"react-vscrollview": "0.0.4",
 		"redux": "^4.0.1",
 		"redux-firestore": "^0.6.0",
 		"redux-persist": "^5.10.0",
@@ -108,7 +108,6 @@
 		"remarkable-react": "^1.4.1",
 		"ts-loader": "^5.3.1",
 		"typescript": "^3.7.2",
-		"updeep": "^1.1.0",
 		"webpack": "^4.6.0",
 		"webpack-cli": "^3.1.2",
 		"webpack-runtime-require": "^0.3.1"
@@ -116,6 +115,7 @@
 	"dependencies": {
 		"rc-tooltip": "^3.7.3",
 		"rc-slider": "^8.6.4",
-		"react-datetime": "^2.16.3"
+		"react-datetime": "^2.16.3",
+		"updeep": "^1.1.0"
 	}
 }
