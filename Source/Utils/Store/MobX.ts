@@ -1,17 +1,32 @@
 import {runInAction} from "mobx";
 import {observer} from "mobx-react";
 import {EnsureClassProtoRenderFunctionIsWrapped, BaseComponent} from "react-vextensions";
-import {Component, useRef} from "react";
-import React from "react";
+import React, {Component, useRef} from "react";
 
-//export function Observer(targetClass: ()=>ReactElement) {
-export function Observer(targetClass: Function) {
-	ClassHooks(targetClass);
-	//if (targetClass instanceof (BaseComponent.prototype as any)) {
-	if (targetClass.prototype.PreRender) {
-		EnsureClassProtoRenderFunctionIsWrapped(targetClass.prototype);
+export type ActionFunc<StoreType> = (store: StoreType)=>void;
+
+export class Observer_Options {
+	classHooks = true;
+}
+export function Observer(target: Function);
+export function Observer(options: Partial<Observer_Options>);
+export function Observer(...args) {
+	let options = new Observer_Options();
+	if (typeof args[0] == "function") {
+		ApplyToClass(args[0]);
+	} else {
+		options = E(options, args[0]);
+		return ApplyToClass;
 	}
-	observer(targetClass as any);
+
+	function ApplyToClass(targetClass: Function) {
+		if (options.classHooks) ClassHooks(targetClass);
+		//if (targetClass instanceof (BaseComponent.prototype as any)) {
+		if (targetClass.prototype.PreRender) {
+			EnsureClassProtoRenderFunctionIsWrapped(targetClass.prototype);
+		}
+		observer(targetClass as any);
+	}
 }
 
 export function ClassHooks(targetClass: Function) {

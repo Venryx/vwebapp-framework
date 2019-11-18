@@ -3,7 +3,7 @@ import {manager, RootState_Base} from "../../Manager";
 import {State_Options, State_overrides} from "./StateOverrides";
 import {Action, IsACTSetFor} from "../General/Action";
 import {e, g} from "../../PrivateExports";
-import {GetStoreValue, StoreAccessor} from "./PathWatchManager";
+import {GetStoreValue, StoreAccessor_Base} from "./PathWatchManager";
 
 interface StateFunc<RootState> {
 	<T>(): RootState;
@@ -14,7 +14,7 @@ interface StateFunc<RootState> {
 interface StateFunc_WithWatch<RootState> extends StateFunc<RootState> {
 	Watch: StateFunc<RootState>;
 }
-export const State_Base: StateFunc_WithWatch<RootState_Base> = StoreAccessor("State", (...args)=>{
+export const State_Base: StateFunc_WithWatch<RootState_Base> = StoreAccessor_Base("State", s=>(...args)=>{
 	let pathSegments: (string | number)[], options = new State_Options();
 	if (args.length == 0) return State_overrides.state || manager.store.getState();
 	if (typeof args[0] == "function") pathSegments = ConvertPathGetterFuncToPropChain(args[0]);

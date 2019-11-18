@@ -2,12 +2,14 @@ import {VURL, Assert} from "js-vextensions";
 import React from "react";
 import {BaseComponent, FilterOutUnrecognizedProps, BaseComponentPlus} from "react-vextensions";
 import {replace, push} from "connected-react-router";
+import produce from "immer";
 import {Connect} from "../Database/FirebaseConnect";
 import {GetCurrentURL} from "../URL/URLs";
 import {State_Base} from "../Store/StoreHelpers";
 import {manager, OnPopulated} from "../../Manager";
 import {State_overrides} from "../Store/StateOverrides";
 import {Action} from "../General/Action";
+import {ActionFunc} from "../Store/MobX";
 
 /*@Radium
 export class Link extends BaseComponent<{to, target?: string, replace?: boolean, style?, onClick?}, {}> {
@@ -31,6 +33,7 @@ export type Link_Props = {
 	text?: string, to?: string, target?: string, replace?: boolean, // url-based
 	//actions?: (dispatch: Function)=>void,
 	actions?: Action<any>[],
+	actionFunc?: ActionFunc<any>, // new approach, for mobx/mst store
 	//updateURLOnActions?: boolean, // action-based
 } & Omit<React.HTMLProps<HTMLAnchorElement>, "href">;
 export class Link extends BaseComponentPlus({} as Link_Props, {}) {
@@ -40,7 +43,7 @@ export class Link extends BaseComponentPlus({} as Link_Props, {}) {
 	}
 
 	handleClick(event) {
-		const {onClick, to, target, replace: replaceURL, actions} = this.props;
+		const {onClick, to, target, replace: replaceURL, actions, actionFunc} = this.props;
 		if (onClick) onClick(event);
 
 		if (event.defaultPrevented) return; // onClick prevented default
@@ -53,6 +56,9 @@ export class Link extends BaseComponentPlus({} as Link_Props, {}) {
 			for (const action of actions) {
 				manager.store.dispatch(action);
 			}
+		} else if (actionFunc != null) {
+			event.preventDefault();
+			actionFunc(manager.rootState);
 		} else {
 			const isExternal = VURL.Parse(to, true).domain != GetCurrentURL().domain;
 			if (isExternal || target) return; // let browser handle external links, and "target=_blank"
@@ -63,7 +69,7 @@ export class Link extends BaseComponentPlus({} as Link_Props, {}) {
 	}
 
 	render() {
-		let {text, actions, to, target, children, ...rest} = this.props;
+		let {text, actions, actionFunc, to, target, children, ...rest} = this.props;
 
 		if (actions) {
 			// if state-data-override is active from something else, just return our last result
@@ -82,8 +88,15 @@ export class Link extends BaseComponentPlus({} as Link_Props, {}) {
 			State_overrides.state = null;*/
 
 			to = newURL.toString();
+		} else if (actionFunc) {
+			const newState = produce(manager.rootState, draft=>{
+				actionFunc(draft);
+			});
+			//let newURL = UsingRootState(newState, ()=>manager.GetNewURL());
+			//let newURL = WithStore(newState, ()=>manager.GetNewURL());
+			const newURL = manager.GetNewURL.WS(newState)();
+			to = newURL.toString();
 		}
-
 
 		//if (manager.prodEnv && to == null) return; // defensive
 		//const href = this.context.router.history.createHref(typeof to === 'string' ? {pathname: to} : to)

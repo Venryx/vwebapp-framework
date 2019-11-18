@@ -12,8 +12,11 @@ export function LoadURL(url: VURL) {
 	loadingURL = true;
 
 	//if (!GetPath(GetUrlPath(url)).startsWith("global/map")) return;
-	const syncActions = manager.GetLoadActionsForURL(url);
-	manager.store.dispatch(new e.ActionSet(...syncActions));
+	/*const syncActions = manager.GetLoadActionsForURL(url);
+	manager.store.dispatch(new e.ActionSet(...syncActions));*/
+
+	const actionFunc = manager.GetLoadActionFuncForURL(url);
+	actionFunc(manager.rootState);
 
 	//loadingURL = false;
 }

@@ -7,6 +7,7 @@ import {BaseComponent} from "react-vextensions";
 import {SetListeners, SetListeners_Query, manager} from "../..";
 import {g} from "../../PrivateExports";
 import {accessedStorePaths} from "../Database/FirebaseConnect";
+import {RootState_Base} from "../../Manager";
 
 // can use approach-1 or approach-2
 const approach: number = 1;
@@ -429,9 +430,18 @@ export const accessorStack = [];
 
 export type CallArgToDependencyConvertorFunc = (callArgs: any[])=>any[];
 
-export function StoreAccessor<Func extends Function>(accessor: Func, callArgToDependencyConvertorFunc?: CallArgToDependencyConvertorFunc): Func & {Watch: Func};
-export function StoreAccessor<Func extends Function>(name: string, accessor: Func, callArgToDependencyConvertorFunc?: CallArgToDependencyConvertorFunc): Func & {Watch: Func};
-export function StoreAccessor(...args) {
+interface StoreAccessorFunc<RootState> {
+	<Func extends Function>(accessor: (s: RootState)=>Func, callArgToDependencyConvertorFunc?: CallArgToDependencyConvertorFunc): Func & {Watch: Func};
+	<Func extends Function>(name: string, accessor: (s: RootState)=>Func, callArgToDependencyConvertorFunc?: CallArgToDependencyConvertorFunc): Func & {Watch: Func};
+}
+
+export function CreateStoreAccessor<RootState>() {
+	//return State_Base as typeof State_Base<RootStateType, any>;
+	//return State_Base as StateFunc_WithWatch<RootState>;
+	return StoreAccessor_Base as StoreAccessorFunc<RootState>;
+}
+
+export const StoreAccessor_Base: StoreAccessorFunc<RootState_Base> = (...args)=>{
 	let name: string, accessor: Function, callArgToDependencyConvertorFunc: CallArgToDependencyConvertorFunc;
 	if (typeof args[0] == "function") [accessor, callArgToDependencyConvertorFunc] = args;
 	else [name, accessor, callArgToDependencyConvertorFunc] = args;
@@ -483,7 +493,7 @@ export function StoreAccessor(...args) {
 		return Watch(accessor_withCallArgsBound, dependencies);
 	};
 	return accessor as any;
-}
+};
 
 // sub-watch system
 // ==========
