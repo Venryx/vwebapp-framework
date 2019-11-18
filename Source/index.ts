@@ -18,7 +18,6 @@ export * from "./Utils/Audio/SoundRecorder";
 export * from "./Utils/Audio/SpeechToText";
 
 export * from "./Utils/Database/DatabaseHelpers";
-export * from "./Utils/Database/FirebaseConnect";
 //export * from "./Utils/Database/QuickJoin";
 export * from "./Utils/Database/SchemaHelpers";
 export * from "./Utils/Database/StringSplitCache";
@@ -51,13 +50,8 @@ export * from "./Utils/ReactComponents/VReactMarkdown_Remarkable";
 export * from "./Utils/ReactComponents/VReactMarkdown";
 export * from "./Utils/ReactComponents/YoutubePlayerUI";
 
-export * from "./Utils/Store/ActionProcessor";
-export * from "./Utils/Store/CreateStore";
+export * from "./Utils/Store/StoreAccessor";
 export * from "./Utils/Store/MobX";
-export * from "./Utils/Store/PathWatchManager";
-export * from "./Utils/Store/ReducerUtils";
-export * from "./Utils/Store/StateOverrides";
-export * from "./Utils/Store/StoreHelpers";
 
 export * from "./Utils/UI/DNDHelpers";
 export * from "./Utils/UI/General";

@@ -1,4 +1,4 @@
-import {runInAction} from "mobx";
+import {runInAction, observable} from "mobx";
 import {observer} from "mobx-react";
 import {EnsureClassProtoRenderFunctionIsWrapped, BaseComponent} from "react-vextensions";
 import React, {Component, useRef} from "react";
@@ -103,3 +103,5 @@ export function StoreAction(...args) {
 	// result["isStoreAction"] = true; // mark export as store-action (for copying into mobx-state-tree actions collection)
 	return result;
 }
+
+export const O = observable;
