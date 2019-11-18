@@ -783,25 +783,4 @@ function isPlainObject(input) {
 }*/
 
 //export interface FirebaseApp extends firebase.app.App {
-export type FirebaseApp = firebase.app.App & {
-	// added by react-redux-firebase
-	_,
-	helpers: {
-		ref(path: string), //: firebase.DatabaseReference,
-		set,
-		uniqueSet,
-		push,
-		remove,
-		update,
-		login(options: {provider: "email?" | "google" | "facebook" | "twitter" | "github" | "anonymous?" | "?", type: "popup" | "?"}),
-		logout(),
-		uploadFile,
-		uploadFiles,
-		deleteFile,
-		createUser,
-		resetPassword,
-		watchEvent,
-		unWatchEvent,
-		storage(), //: firebase.FirebaseStorage,
-	},
-};
+export type FirebaseApp = firebase.app.App;

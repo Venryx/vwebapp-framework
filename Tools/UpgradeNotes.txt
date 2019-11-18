@@ -5,4 +5,3 @@ Main upgrade notes (in sequence, newest are first)
 
 Extra troubleshooting
 ==========
-* "Passing redux store in props has been removed and does not do anything.": [...]

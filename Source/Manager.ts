@@ -27,7 +27,6 @@ export class Manager {
 	}
 	// shortcuts
 	get store() { return this.GetStore(); }
-	get rootState() { return this.GetRootState(); }
 	get firestoreDB() { return this.store.firebase.firestore(); }
 	/* get firestoreDB() {
 		//return this.store.firebase.firestore();
@@ -52,8 +51,7 @@ export class Manager {
 	GetNewURL: ()=>VURL;
 	DoesURLChangeCountAsPageChange: (oldURL: VURL, newURL: VURL)=>boolean;
 
-	GetStore: ()=>any; // redux
-	GetRootState: ()=>any; // mst
+	GetStore: ()=>any;
 	firebaseConfig: any;
 	MakeRootReducer: (pureOnly?: boolean)=>((state, action)=>any);
 	PreDispatchAction?: (action: Action<any>)=>void;

@@ -1,5 +1,5 @@
 import Moment from "moment";
-import {Assert} from "js-vextensions";
+import {Assert, emptyArray, emptyArray_forLoading} from "js-vextensions";
 
 G({Moment});
 
@@ -130,4 +130,9 @@ export function ConvertGetterFuncToPropChain(pathGetterFunc: Function) {
 	//let result = pathStr.replace(/\./g, "/");
 	const result = pathStr.split(".");
 	return result;
+}
+
+// use a singleton for empty-obj and empty-array (that way VCache and other shallow-compare systems work with them)
+export function IsSpecialEmptyArray<T>(array: Array<T>) {
+	return array == emptyArray || array == emptyArray_forLoading;
 }

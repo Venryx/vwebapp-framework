@@ -1,7 +1,6 @@
-import {UseState} from "react-vextensions";
+import {UseState, ShallowEquals} from "react-vextensions";
 import {VRect, ToJSON} from "js-vextensions";
 import {useRef, useLayoutEffect, MutableRefObject, useState, useCallback, Component} from "react";
-import {shallowEqual} from "react-redux";
 import ReactDOM from "react-dom";
 
 // general
@@ -66,7 +65,7 @@ export function GetSize(el: HTMLElement, method: UseSize_Method) {
  */
 export function UseSize(options?: Partial<UseSize_Options>): [(node: Component | Element)=>any, Size] {
 	options = E(new UseSize_Options(), options);
-	const [size, setSize] = UseState({width: null, height: null} as Size, shallowEqual);
+	const [size, setSize] = UseState({width: null, height: null} as Size, ShallowEquals);
 
 	//const [node, setNode] = UseState(null);
 	const nodeRef = useRef<Element>(); // use ref, so that we don't trigger render just by storing newNode (setSize runs later than it anyway)
