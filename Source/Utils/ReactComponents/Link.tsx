@@ -3,11 +3,8 @@ import React from "react";
 import {BaseComponent, FilterOutUnrecognizedProps, BaseComponentPlus} from "react-vextensions";
 import {replace, push} from "connected-react-router";
 import produce from "immer";
-import {Connect} from "../Database/FirebaseConnect";
 import {GetCurrentURL} from "../URL/URLs";
-import {State_Base} from "../Store/StoreHelpers";
 import {manager, OnPopulated} from "../../Manager";
-import {State_overrides} from "../Store/StateOverrides";
 import {Action} from "../General/Action";
 import {ActionFunc} from "../Store/MobX";
 
@@ -23,42 +20,30 @@ function isModifiedEvent(event) {
 	return !!(event.metaKey || event.altKey || event.ctrlKey || event.shiftKey);
 }
 
-let rootReducer;
-OnPopulated(()=>{
-	rootReducer = manager.MakeRootReducer(true);
-});
-
 export type Link_Props = {
 	onClick?, style?,
 	text?: string, to?: string, target?: string, replace?: boolean, // url-based
 	//actions?: (dispatch: Function)=>void,
-	actions?: Action<any>[],
 	actionFunc?: ActionFunc<any>, // new approach, for mobx/mst store
 	//updateURLOnActions?: boolean, // action-based
 } & Omit<React.HTMLProps<HTMLAnchorElement>, "href">;
 export class Link extends BaseComponentPlus({} as Link_Props, {}) {
 	static ValidateProps(props: Link_Props) {
-		const {actions, to} = props;
-		Assert(actions != null || to != null, `Must supply the Link component with either an "actions" or "to" property.`);
+		const {actionFunc, to} = props;
+		Assert(actionFunc != null || to != null, `Must supply the Link component with either an "actionFunc" or "to" property.`);
 	}
 
 	handleClick(event) {
-		const {onClick, to, target, replace: replaceURL, actions, actionFunc} = this.props;
+		const {onClick, to, target, replace: replaceURL, actionFunc} = this.props;
 		if (onClick) onClick(event);
 
 		if (event.defaultPrevented) return; // onClick prevented default
 		if (event.button !== 0) return; // ignore right clicks
 		if (isModifiedEvent(event)) return; // ignore clicks with modifier keys
 
-		if (actions != null) {
+		if (actionFunc != null) {
 			event.preventDefault();
-			// apply actions
-			for (const action of actions) {
-				manager.store.dispatch(action);
-			}
-		} else if (actionFunc != null) {
-			event.preventDefault();
-			actionFunc(manager.rootState);
+			actionFunc(manager.store);
 		} else {
 			const isExternal = VURL.Parse(to, true).domain != GetCurrentURL().domain;
 			if (isExternal || target) return; // let browser handle external links, and "target=_blank"
@@ -69,32 +54,15 @@ export class Link extends BaseComponentPlus({} as Link_Props, {}) {
 	}
 
 	render() {
-		let {text, actions, actionFunc, to, target, children, ...rest} = this.props;
+		let {text, actionFunc, to, target, children, ...rest} = this.props;
 
-		if (actions) {
-			// if state-data-override is active from something else, just return our last result
-			//if (State_overrides.state) return this.lastResult;
-
-			let newState = State_Base.Watch();
-			//let rootReducer = manager.MakeRootReducer();
-			//const rootReducer = manager.store.reducer;
-			for (const action of actions) {
-				newState = rootReducer(newState, action);
-			}
-			/*State_overrides.state = newState;
-			State_overrides.countAsAccess = false;*/
-			const newURL = manager.GetNewURL["Watch"]();
-			/*State_overrides.countAsAccess = null;
-			State_overrides.state = null;*/
-
-			to = newURL.toString();
-		} else if (actionFunc) {
-			const newState = produce(manager.rootState, draft=>{
+		if (actionFunc) {
+			const newState = produce(manager.store, draft=>{
 				actionFunc(draft);
 			});
 			//let newURL = UsingRootState(newState, ()=>manager.GetNewURL());
-			//let newURL = WithStore(newState, ()=>manager.GetNewURL());
-			const newURL = manager.GetNewURL.WS(newState)();
+			const newURL = WithStore(newState, ()=>manager.GetNewURL());
+			//const newURL = manager.GetNewURL.WS(newState)();
 			to = newURL.toString();
 		}
 

@@ -111,10 +111,10 @@ export function SlicePath(path: string, removeFromEndCount: number, ...itemsToAd
 	return parts.join("/");
 }
 
-Object.prototype._AddFunction_Inline = function DBRef(path = "", inVersionRoot = true) {
+/*Object.prototype._AddFunction_Inline = function DBRef(path = "", inVersionRoot = true) {
 	const finalPath = DBPath(path, inVersionRoot);
 	return this.ref(finalPath);
-};
+};*/
 
 export function ProcessDBData(data, standardizeForm: boolean, addHelpers: boolean, rootKey: string) {
 	var treeNodes = GetTreeNodesInObjTree(data, true);
@@ -639,7 +639,7 @@ export function ConvertDataToValidDBUpdates(rootPath: string, rootData: any, dbU
 export async function ApplyDBUpdates(rootPath: string, dbUpdates: Object) {
 	dbUpdates = Clone(dbUpdates);
 	if (rootPath != null) {
-		for (const {name: localPath, value} of dbUpdates.Props()) {
+		for (const {key: localPath, value} of dbUpdates.Pairs()) {
 			dbUpdates[`${rootPath}/${localPath}`] = value;
 			delete dbUpdates[localPath];
 		}
@@ -725,7 +725,7 @@ export async function ApplyDBUpdates_InChunks(rootPath: string, dbUpdates: Objec
 
 export function ApplyDBUpdates_Local(dbData: any, dbUpdates: Object) {
 	let result = dbData;
-	for (const {name: path, value} of Clone(dbUpdates).Props()) {
+	for (const {key: path, value} of Clone(dbUpdates).Pairs()) {
 		if (value != null) {
 			result = u.updateIn(path.replace(/\//g, "."), u.constant(value), result);
 		} else {

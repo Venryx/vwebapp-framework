@@ -1,9 +1,11 @@
-import {GetCurrentURLString, VURL} from "js-vextensions";
+import {GetCurrentURLString, VURL, DeepGet} from "js-vextensions";
 import {manager} from "../../Manager";
 import {e} from "../../PrivateExports";
 
 export function GetCurrentURL(fromAddressBar = false) {
-	return fromAddressBar ? VURL.Parse(GetCurrentURLString()) : VURL.FromLocationObject(e.State_Base(...manager.routerLocationPathInStore));
+	if (fromAddressBar) return VURL.Parse(GetCurrentURLString());
+	const locationObj = DeepGet(manager.store, manager.routerLocationPathInStore);
+	return VURL.FromLocationObject(locationObj);
 }
 
 export let loadingURL = false;
@@ -16,7 +18,7 @@ export function LoadURL(url: VURL) {
 	manager.store.dispatch(new e.ActionSet(...syncActions));*/
 
 	const actionFunc = manager.GetLoadActionFuncForURL(url);
-	actionFunc(manager.rootState);
+	actionFunc(manager.store);
 
 	//loadingURL = false;
 }

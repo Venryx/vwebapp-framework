@@ -1,6 +1,6 @@
-import "js-vextensions";
-import {ParseModuleData, Require, GetModuleNameFromPath} from "webpack-runtime-require";
 import {Assert, IsString} from "js-vextensions";
+import {ParseModuleData, Require, GetModuleNameFromPath} from "webpack-runtime-require";
+
 
 export function ExposeModuleExports(addFromVendorDLL = false) {
 	ParseModuleData(true);
@@ -8,19 +8,19 @@ export function ExposeModuleExports(addFromVendorDLL = false) {
 	const RR = function() { return RR; };
 	RR.all = {}; // holds same values as on RR, except in an object (so you can log RR.all and easily observe the data)
 
-	const moduleEntries = (Require as any).Props();
+	const moduleEntries = (Require as any).Pairs();
 
 	// add modules from dll-bundle as well
 	if (addFromVendorDLL) {
 		Assert(Require["dll_reference vendor"] != null, "Could not find webpack-data for vendor chunk.");
-		for (const dllEntry of Require["dll_reference vendor"].c.Props()) {
-			const moduleName = GetModuleNameFromPath(dllEntry.name);
+		for (const dllEntry of Require["dll_reference vendor"].c.Pairs()) {
+			const moduleName = GetModuleNameFromPath(dllEntry.key);
 			Require[moduleName] = dllEntry.value.exports;
-			moduleEntries.push({name: moduleName, value: dllEntry.value.exports});
+			moduleEntries.push({key: moduleName, value: dllEntry.value.exports});
 		}
 	}
 
-	for (const {name: moduleName, value: moduleExports} of moduleEntries) {
+	for (const {key: moduleName, value: moduleExports} of moduleEntries) {
 		//if (moduleExports == null) continue;
 		if (moduleExports == null || (IsString(moduleExports) && moduleExports == "[failed to retrieve module exports]")) continue;
 

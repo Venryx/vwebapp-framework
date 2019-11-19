@@ -1,5 +1,5 @@
 import u from "updeep";
-import {Clone, Assert} from "js-vextensions";
+import {Clone, Assert, DeepGet} from "js-vextensions";
 import {e} from "../PrivateExports";
 import {manager} from "..";
 
@@ -80,7 +80,6 @@ export abstract class Command<Payload, ReturnData = void> {
 		e.MaybeLog_Base(a=>a.commands, l=>l("Running command. @type:", this.constructor.name, " @payload(", this.payload, ")"));
 
 		try {
-			e.FreezeConnectComps();
 			//this.runStartTime = Date.now();
 			await this.PreRun();
 
@@ -95,12 +94,9 @@ export abstract class Command<Payload, ReturnData = void> {
 			// MaybeLog(a=>a.commands, ()=>`Finishing command. @type:${this.constructor.name} @payload(${ToJSON(this.payload)}) @dbUpdates(${ToJSON(dbUpdates)})`);
 			e.MaybeLog_Base(a=>a.commands, l=>l("Finishing command. @type:", this.constructor.name, " @command(", this, ") @dbUpdates(", dbUpdates, ")"));
 		} finally {
-			const areOtherCommandsBuffered = currentCommandRun_listeners.length > 0;
+			//const areOtherCommandsBuffered = currentCommandRun_listeners.length > 0;
 			commandsWaitingToComplete.Remove(this);
 			NotifyListenersThatCurrentCommandFinished();
-			if (!areOtherCommandsBuffered) {
-				e.UnfreezeConnectComps();
-			}
 		}
 
 		// later on (once set up on server), this will send the data back to the client, rather than return it
@@ -128,7 +124,7 @@ export abstract class Command<Payload, ReturnData = void> {
 		} */
 
 		// locally-apply db-updates, then validate the result (for now, only works for already-loaded data paths)
-		const oldData = e.WithoutHelpers(e.State_Base(`firestore/data/${e.DBPath()}`));
+		const oldData = e.WithoutHelpers(DeepGet(manager.store, `firestore/data/${e.DBPath()}`));
 		const newData = e.ApplyDBUpdates_Local(oldData, dbUpdates);
 		manager.ValidateDBData(newData);
 	}

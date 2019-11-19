@@ -29,9 +29,13 @@ export const accessorStack = [];
 
 export type CallArgToDependencyConvertorFunc = (callArgs: any[])=>any[];
 
-interface StoreAccessorFunc<RootState> {
+/*interface StoreAccessorFunc<RootState> {
 	<Func extends Function>(accessor: (s: RootState)=>Func, callArgToDependencyConvertorFunc?: CallArgToDependencyConvertorFunc): Func & {WS: (state: RootState)=>Func};
 	<Func extends Function>(name: string, accessor: (s: RootState)=>Func, callArgToDependencyConvertorFunc?: CallArgToDependencyConvertorFunc): Func & {WS: (state: RootState)=>Func};
+}*/
+interface StoreAccessorFunc<RootState> {
+	<Func extends Function>(accessor: (s: RootState)=>Func, callArgToDependencyConvertorFunc?: CallArgToDependencyConvertorFunc): Func;
+	<Func extends Function>(name: string, accessor: (s: RootState)=>Func, callArgToDependencyConvertorFunc?: CallArgToDependencyConvertorFunc): Func;
 }
 
 export function CreateStoreAccessor<RootState>() {
@@ -40,6 +44,12 @@ export function CreateStoreAccessor<RootState>() {
 	return StoreAccessor_Base as StoreAccessorFunc<RootState>;
 }
 
+/**
+Wrap a function with StoreAccessor if it's under the "Store/" path, and one of the following:
+1) It accesses the store directly (ie. store.main.page). (thus, "WithStore(testStoreContents, ()=>GetThingFromStore())" works, without hacky overriding of project-wide "store" export)
+2) It involves "heavy" processing, such that it's worth caching that processing. (rather than use computedFn directly, just standardize on StoreAccessor)
+3) It involves a transformation of data into a new wrapper (ie. breaking reference equality), such that it's worth caching the processing. (to not trigger unnecessary child-ui re-renders)
+*/
 export const StoreAccessor_Base: StoreAccessorFunc<RootState_Base> = (...args)=>{
 	let name: string, accessor: Function, callArgToDependencyConvertorFunc: CallArgToDependencyConvertorFunc;
 	if (typeof args[0] == "function") [accessor, callArgToDependencyConvertorFunc] = args;
@@ -77,7 +87,7 @@ export const StoreAccessor_Base: StoreAccessorFunc<RootState_Base> = (...args)=>
 	}
 
 	if (name) accessor["displayName"] = name;
-	accessor["Watch"] = function(...callArgs) {
+	/*accessor["Watch"] = function(...callArgs) {
 		const dependencies = callArgToDependencyConvertorFunc ? callArgToDependencyConvertorFunc(callArgs) : callArgs;
 
 		//const accessor_withCallArgsBound = accessor.bind(null, ...callArgs); // bind is bad, because it doesn't "gobble" the "watcher" arg
@@ -90,6 +100,6 @@ export const StoreAccessor_Base: StoreAccessorFunc<RootState_Base> = (...args)=>
 		//outerAccessor["callArgs"] = callArgs;
 		//outerAccessor["displayName"] = `${name || "Unknown"}(${callArgs.join(", ")})`;
 		return Watch(accessor_withCallArgsBound, dependencies);
-	};
+	};*/
 	return accessor as any;
 };
