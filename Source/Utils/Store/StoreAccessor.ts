@@ -1,4 +1,6 @@
-import {RootState_Base} from "../..";
+import {Assert} from "js-vextensions";
+import {computedFn} from "mobx-utils";
+import {RootState_Base, manager} from "../..";
 
 // for profiling
 class StoreAccessorProfileData {
@@ -27,6 +29,13 @@ export function LogStoreAccessorRunTimes() {
 // for profiling
 export const accessorStack = [];
 
+export class StoreAccessorOptions {
+	cache? = true;
+	cache_keepAlive? = false;
+	//cache_unwrapArgs?: {[key: number]: boolean};
+	cache_unwrapArgs?: number[];
+	//callArgToDependencyConvertorFunc?: CallArgToDependencyConvertorFunc;
+}
 export type CallArgToDependencyConvertorFunc = (callArgs: any[])=>any[];
 
 /*interface StoreAccessorFunc<RootState> {
@@ -34,8 +43,10 @@ export type CallArgToDependencyConvertorFunc = (callArgs: any[])=>any[];
 	<Func extends Function>(name: string, accessor: (s: RootState)=>Func, callArgToDependencyConvertorFunc?: CallArgToDependencyConvertorFunc): Func & {WS: (state: RootState)=>Func};
 }*/
 interface StoreAccessorFunc<RootState> {
-	<Func extends Function>(accessor: (s: RootState)=>Func, callArgToDependencyConvertorFunc?: CallArgToDependencyConvertorFunc): Func;
-	<Func extends Function>(name: string, accessor: (s: RootState)=>Func, callArgToDependencyConvertorFunc?: CallArgToDependencyConvertorFunc): Func;
+	<Func extends Function>(accessor: (s: RootState)=>Func): Func;
+	<Func extends Function>(options: StoreAccessorOptions, accessor: (s: RootState)=>Func): Func;
+	<Func extends Function>(name: string, accessor: (s: RootState)=>Func): Func;
+	<Func extends Function>(name: string, options: StoreAccessorOptions, accessor: (s: RootState)=>Func): Func;
 }
 
 export function CreateStoreAccessor<RootState>() {
@@ -44,6 +55,8 @@ export function CreateStoreAccessor<RootState>() {
 	return StoreAccessor_Base as StoreAccessorFunc<RootState>;
 }
 
+export const storeOverridesStack = [];
+
 /**
 Wrap a function with StoreAccessor if it's under the "Store/" path, and one of the following:
 1) It accesses the store directly (ie. store.main.page). (thus, "WithStore(testStoreContents, ()=>GetThingFromStore())" works, without hacky overriding of project-wide "store" export)
@@ -51,20 +64,61 @@ Wrap a function with StoreAccessor if it's under the "Store/" path, and one of t
 3) It involves a transformation of data into a new wrapper (ie. breaking reference equality), such that it's worth caching the processing. (to not trigger unnecessary child-ui re-renders)
 */
 export const StoreAccessor_Base: StoreAccessorFunc<RootState_Base> = (...args)=>{
-	let name: string, accessor: Function, callArgToDependencyConvertorFunc: CallArgToDependencyConvertorFunc;
-	if (typeof args[0] == "function") [accessor, callArgToDependencyConvertorFunc] = args;
-	else [name, accessor, callArgToDependencyConvertorFunc] = args;
+	let name: string, options: StoreAccessorOptions, accessorGetter: Function;
+	if (typeof args[0] == "function" && args.length == 1) [accessorGetter] = args;
+	if (typeof args[0] == "object" && args.length == 2) [options, accessorGetter] = args;
+	else if (args.length == 2) [name, accessorGetter] = args;
+	else [name, options, accessorGetter] = args;
 
-	// add profiling to the accessor function
-	//if (manager.devEnv) { // manager isn't populated yet
-	if (g.DEV) {
-		const accessor_orig = accessor;
-		accessor = (...callArgs)=>{
+	//let addProfiling = manager.devEnv; // manager isn't populated yet
+	const addProfiling = window["DEV"];
+	//const needsWrapper = addProfiling || options.cache;
+
+	let accessor_forMainStore;
+	const wrapperAccessor = (...callArgs)=>{
+		if (addProfiling) {
 			accessorStack.push(name);
 
-			const startTime = performance.now();
+			var startTime = performance.now();
 			//return accessor.apply(this, callArgs);
-			const result = accessor_orig(...callArgs);
+		}
+
+		let accessor;
+		const usingMainStore = storeOverridesStack.length == 0;
+		if (usingMainStore) {
+			if (accessor_forMainStore == null) {
+				accessor_forMainStore = accessorGetter(manager.store);
+			}
+			accessor = accessor_forMainStore;
+		} else {
+			accessor = accessorGetter(storeOverridesStack[storeOverridesStack.length - 1]);
+		}
+
+		let result;
+		if (options.cache && usingMainStore) {
+			let callArgs_unwrapped = callArgs;
+			//const callArg_unwrapLengths = {};
+			if (options.cache_unwrapArgs) {
+				//Assert(options.cache, "There is no point to unwrapping-args if caching is disabled.");
+				//for (const argIndex of options.cache_unwrapArgs.Pairs().map(a=>a.keyNum)) {
+				//callArgs_unwrapped = callArgs.slice();
+				for (const argIndex of options.cache_unwrapArgs) {
+					if (!Array.isArray(callArgs[argIndex])) continue;
+					const unwrappedValuesForCallArg = callArgs[argIndex];
+					if (callArgs_unwrapped == callArgs) callArgs_unwrapped = callArgs.slice();
+					callArgs_unwrapped.splice(argIndex, 1, ...unwrappedValuesForCallArg);
+					//callArg_unwrapLengths[argIndex] = unwrappedValuesForCallArg.length;
+				}
+			}
+
+			result = computedFn((...callArgs_unwrapped_2)=>{
+				accessor(...callArgs);
+			}, options.cache_keepAlive)(callArgs_unwrapped);
+		} else {
+			result = accessor(...callArgs);
+		}
+
+		if (addProfiling) {
 			const runTime = performance.now() - startTime;
 
 			const profileData = storeAccessorProfileData[name] || (storeAccessorProfileData[name] = new StoreAccessorProfileData(name));
@@ -73,33 +127,20 @@ export const StoreAccessor_Base: StoreAccessorFunc<RootState_Base> = (...args)=>
 			if (accessorStack.length == 1) {
 				profileData.totalRunTime_asRoot += runTime;
 			}
-			// name should have been added by webpack transformer, but if not, give some info to help debugging
+			// name should have been added by webpack transformer, but if not, give some info to help debugging (under key "null")
 			if (name == null) {
 				profileData["origAccessors"] = profileData["origAccessors"] || [];
-				if (!profileData["origAccessors"].Contains(accessor_orig)) {
-					profileData["origAccessors"].push(accessor_orig);
+				if (!profileData["origAccessors"].Contains(accessorGetter)) {
+					profileData["origAccessors"].push(accessorGetter);
 				}
 			}
 
 			accessorStack.RemoveAt(accessorStack.length - 1);
-			return result;
-		};
-	}
+		}
 
-	if (name) accessor["displayName"] = name;
-	/*accessor["Watch"] = function(...callArgs) {
-		const dependencies = callArgToDependencyConvertorFunc ? callArgToDependencyConvertorFunc(callArgs) : callArgs;
+		return result;
+	};
 
-		//const accessor_withCallArgsBound = accessor.bind(null, ...callArgs); // bind is bad, because it doesn't "gobble" the "watcher" arg
-		const accessor_withCallArgsBound = ()=>{
-			//return accessor.apply(this, callArgs);
-			return accessor(...callArgs);
-			//return accessor_withProfiling(...callArgs);
-		};
-		if (name) accessor_withCallArgsBound["displayName"] = name;
-		//outerAccessor["callArgs"] = callArgs;
-		//outerAccessor["displayName"] = `${name || "Unknown"}(${callArgs.join(", ")})`;
-		return Watch(accessor_withCallArgsBound, dependencies);
-	};*/
-	return accessor as any;
+	if (name) wrapperAccessor["displayName"] = name;
+	return wrapperAccessor as any;
 };
