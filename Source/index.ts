@@ -1,6 +1,9 @@
 // grab the hidden "exports" argument that is sent to the webpack module-wrapper function; thus we gain access to the exports object, letting us modify it
 // declare var exports;
 
+import "js-vextensions/Source/ClassExtensions/@ApplyTypes";
+import "js-vextensions/Dist/ClassExtensions/@ApplyCode";
+
 // import own exports; thus we gain access to the exports object, letting us modify it
 import * as frameworkExportsObject from ".";
 

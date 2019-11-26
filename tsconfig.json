@@ -33,13 +33,13 @@
 	},
 	//"files": ["Source/index.ts"],
 	"include": [
-		"Typings/**/*.d.ts",
-		"Source/**/*.ts",
-		"Source/**/*.tsx"
+		"./Typings/**/*.d.ts",
+		"./Source/**/*.ts",
+		"./Source/**/*.tsx"
 	],
-	"exclude": [
+	/*"exclude": [
 		"Dist",
 		"node_modules"
-	],
+	],*/
 	"compileOnSave": true
 }
