@@ -3,10 +3,10 @@
 		"rootDir": "Source",
 		"baseUrl": "Source", // keep commented; this way, we remember to always use relative paths (needed for in-node-modules typescript type-resolving)
 		"paths": { // ("paths" is relative to "baseUrl")
-			"*": [
+			/*"*": [
 				"../node_modules/@types/*", // prefer "/node_modules/@types" over "/node_modules/[something]/node_modules/@types" (eg, when using npm link)
 				"*"
-			],
+			],*/
 			// remove @types/node and such (conflicts with typescript web definitions)
 			"@types/node": ["Typings/empty.d.ts"],
 			// remove @types/react/global.d.ts, as it breaks the auto-import-finder for react-vcomponents/Text
