@@ -61,7 +61,7 @@ export class Link extends BaseComponentPlus({} as Link_Props, {}) {
 				actionFunc(draft);
 			});
 			//let newURL = UsingRootState(newState, ()=>manager.GetNewURL());
-			const newURL = WithStore(newState, ()=>manager.GetNewURL());
+			const newURL = manager.WithStore(newState, ()=>manager.GetNewURL());
 			//const newURL = manager.GetNewURL.WS(newState)();
 			to = newURL.toString();
 		}

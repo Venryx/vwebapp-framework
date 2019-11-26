@@ -1,5 +1,4 @@
 import {VRect, Vector2i, GetPropsChanged} from "js-vextensions";
-import {RemoveHelpers} from "../Database/DatabaseHelpers";
 import {AddSchema, GetSchemaJSON} from "../Database/SchemaHelpers";
 
 // like js-vextensions GetPropsChanged(), except also applies RemoveHelpers on the result (since intended to be used for db-objects)
@@ -17,7 +16,8 @@ export function GetUpdates(oldData, newData, useJSONCompare = false, useNullInst
 	if (useNullInsteadOfUndefined) {
 		result.Pairs().filter(a=>a.value === undefined).forEach(a=>result[a.key] = null);
 	}
-	return RemoveHelpers(result);
+	//return RemoveHelpers(result);
+	return result;
 }
 
 export function GetOffsetRect(el: Element) {

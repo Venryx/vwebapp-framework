@@ -10,7 +10,7 @@ export * from "./@EnableExportOverwrites";
 
 export * from "./Manager";
 
-export * from "./Server/Command";
+//export * from "./Server/Command";
 
 export * from "./Utils/Audio/AudioNodes";
 export * from "./Utils/Audio/TextToSpeech";

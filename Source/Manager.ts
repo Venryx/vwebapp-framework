@@ -6,6 +6,7 @@ import {Action} from "./Utils/General/Action";
 import {ActionFunc} from "./Utils/Store/MobX";
 
 export type RootState_Base = any; // temp
+//export type WithStoreFunc<T> = (store: RootState_Base, func: ()=>T)=>T;
 
 export class Manager {
 	GetExtraReducers() {
@@ -33,6 +34,7 @@ export class Manager {
 		Assert(window["firestoreDB"] != null);
 		return window["firestoreDB"];
 	} */
+	WithStore<T>(store: RootState_Base, func: ()=>T): T { return null as any; } // stub
 
 	iconInfo: {[key: string]: any};
 

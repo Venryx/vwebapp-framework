@@ -1,7 +1,7 @@
 import AJV from "ajv";
 import AJVKeywords from "ajv-keywords";
 import {Clone, ToJSON, IsString, Assert, IsObject} from "js-vextensions";
-import {RemoveHelpers, WithoutHelpers} from "./DatabaseHelpers";
+//import {RemoveHelpers, WithoutHelpers} from "./DatabaseHelpers";
 
 export const ajv = AJVKeywords(new AJV({allErrors: true})) as AJV_Extended;
 
@@ -97,14 +97,14 @@ export function ValidateAJVExtraChecks(schemaName: string, data) {
 }
 
 /** Returns null if the supplied data matches the schema. Else, returns error message. */
-export function Validate(schemaName: string, data, removeHelpers = true) {
-	return Validate_Full(GetSchemaJSON(schemaName), schemaName, data, removeHelpers);
+export function Validate(schemaName: string, data) { //, removeHelpers = true) {
+	return Validate_Full(GetSchemaJSON(schemaName), schemaName, data); //, removeHelpers);
 }
 /** Returns null if the supplied data matches the schema. Else, returns error message. */
-export function Validate_Full(schemaObject: Object, schemaName: string, data, removeHelpers = true) {
-	if (removeHelpers) {
+export function Validate_Full(schemaObject: Object, schemaName: string, data) { //, removeHelpers = true) {
+	/* if (removeHelpers) {
 		data = WithoutHelpers(data);
-	}
+	} */
 
 	if (data == null) return "Data is null/undefined!";
 
@@ -131,7 +131,7 @@ export function AssertValidate_Full(schemaObject: Object, schemaName: string, da
 		schemaObject = Schema_WithOptionalPropsAllowedNull(schemaObject);
 	}
 
-	const errorsText = Validate_Full(schemaObject, schemaName, data, false);
+	const errorsText = Validate_Full(schemaObject, schemaName, data); //, false);
 
 	let failureMessage = IsString(failureMessageOrGetter) ? failureMessageOrGetter : failureMessageOrGetter(errorsText);
 	if (options.addErrorsText) {
