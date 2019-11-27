@@ -1,11 +1,14 @@
+///// <reference path="../node_modules/js-vextensions/Source/ClassExtensions/@ApplyTypes.d.ts"/>
+
 // grab the hidden "exports" argument that is sent to the webpack module-wrapper function; thus we gain access to the exports object, letting us modify it
 // declare var exports;
 
-import "js-vextensions/Source/ClassExtensions/@ApplyTypes";
-import "js-vextensions/Dist/ClassExtensions/@ApplyCode";
-
 // import own exports; thus we gain access to the exports object, letting us modify it
 import * as frameworkExportsObject from ".";
+
+//import "js-vextensions/Source/ClassExtensions/@ApplyTypes";
+type __ = typeof import("../node_modules/js-vextensions/Source/ClassExtensions/@ApplyTypes");
+import "js-vextensions/Dist/ClassExtensions/@ApplyCode"; // eslint-disable-line
 
 export * from "./@EnableExportOverwrites";
 // special key, marking this module's exports object, which allows the patch in ExportOverwriteEnabler.ts to make the remaining exports overwriteable
