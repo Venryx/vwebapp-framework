@@ -23,10 +23,10 @@ export * from "./Utils/Audio/TextToSpeech";
 export * from "./Utils/Audio/SoundRecorder";
 export * from "./Utils/Audio/SpeechToText";
 
-export * from "./Utils/Database/DatabaseHelpers";
+//export * from "./Utils/Database/DatabaseHelpers";
 //export * from "./Utils/Database/QuickJoin";
 export * from "./Utils/Database/SchemaHelpers";
-export * from "./Utils/Database/StringSplitCache";
+//export * from "./Utils/Database/StringSplitCache";
 
 //export * from "./Utils/General/ClassExtensions/MobX";
 export * from "./Utils/General/Action";

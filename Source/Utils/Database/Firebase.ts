@@ -1,8 +1,9 @@
-import firebase_real from "firebase/app";
+import firebase_real from "firebase";
+//import firebase_real from "firebase/app";
 import {MockFirebaseSdk, MockAuthentication, MockFirestore} from "firebase-mock";
 
-export let firebaseApp = firebase_real;
-export let firebaseAppIsReal = true;
+export let firebase = firebase_real;
+export let firebaseIsReal = true;
 
 // firebase mocking (replacing the firebase SDK with a local simplified version, for testing)
 // ==========
@@ -16,9 +17,9 @@ if (window.location.href.includes("/personal/---TestingMap---")) {
 	const storageMock = null;
 	const messagingMock = null;
 
-	const firebaseAppMock = new MockFirebaseSdk(()=>realTimeDBMock, ()=>authMock, ()=>firestoreMock, ()=>storageMock, ()=>messagingMock);
-	console.log("Set up Firebase app/sdk mock:", firebaseAppMock);
+	const firebaseMock = new MockFirebaseSdk(()=>realTimeDBMock, ()=>authMock, ()=>firestoreMock, ()=>storageMock, ()=>messagingMock);
+	console.log("Set up Firebase app/sdk mock:", firebaseMock);
 
-	firebaseApp = firebaseAppMock;
-	firebaseAppIsReal = false;
+	firebase = firebaseMock;
+	firebaseIsReal = false;
 }
