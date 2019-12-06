@@ -56,6 +56,15 @@ export function CreateStoreAccessor<RootState>() {
 }
 
 export const storeOverridesStack = [];
+export function WithStore<T>(store: RootState_Base, accessorFunc: ()=>T): T {
+	storeOverridesStack.push(store);
+	try {
+		var result = accessorFunc();
+	} finally {
+		storeOverridesStack.pop();
+	}
+	return result;
+}
 
 /**
 Wrap a function with StoreAccessor if it's under the "Store/" path, and one of the following:

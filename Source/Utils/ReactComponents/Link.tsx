@@ -7,6 +7,7 @@ import {GetCurrentURL} from "../URL/URLs";
 import {manager, OnPopulated} from "../../Manager";
 import {Action} from "../General/Action";
 import {ActionFunc} from "../Store/MobX";
+import {WithStore} from "../Store/StoreAccessor";
 
 /*@Radium
 export class Link extends BaseComponent<{to, target?: string, replace?: boolean, style?, onClick?}, {}> {
@@ -61,7 +62,7 @@ export class Link extends BaseComponentPlus({} as Link_Props, {}) {
 				actionFunc(draft);
 			});
 			//let newURL = UsingRootState(newState, ()=>manager.GetNewURL());
-			const newURL = manager.WithStore(newState, ()=>manager.GetNewURL());
+			const newURL = WithStore(newState, ()=>manager.GetNewURL());
 			//const newURL = manager.GetNewURL.WS(newState)();
 			to = newURL.toString();
 		}

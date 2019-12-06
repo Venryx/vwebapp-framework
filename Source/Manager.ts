@@ -34,7 +34,7 @@ export class Manager {
 		Assert(window["firestoreDB"] != null);
 		return window["firestoreDB"];
 	} */
-	WithStore<T>(store: RootState_Base, func: ()=>T): T { return null as any; } // stub
+	//WithStore<T>(store: RootState_Base, func: ()=>T): T { return null as any; } // stub
 
 	iconInfo: {[key: string]: any};
 
