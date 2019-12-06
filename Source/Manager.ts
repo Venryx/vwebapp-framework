@@ -1,5 +1,4 @@
 import {VURL, Assert} from "js-vextensions";
-import {connectRouter} from "connected-react-router";
 import {browserHistory} from "./Utils/URL/History";
 import {LogOptions} from "./Utils/General/Logging";
 import {Action} from "./Utils/General/Action";
@@ -9,18 +8,10 @@ export type RootState_Base = any; // temp
 //export type WithStoreFunc<T> = (store: RootState_Base, func: ()=>T)=>T;
 
 export class Manager {
-	GetExtraReducers() {
-		//let { routerReducer } = require("./Utils/Store/CreateStore");
-		return {
-			//router: routerReducer,
-			router: connectRouter(browserHistory),
-		};
-	}
-
 	/*onPopulated = new Promise((resolve, reject)=>this.onPopulated_resolve = resolve);
 	onPopulated_resolve: Function;*/
 	//Populate(data: Omit<Manager, "onPopulated" | "onPopulated_resolve" | "Populate">) {
-	Populate(data: Omit<Manager, "Populate" | "GetExtraReducers" | "store" | "rootState" | "firestoreDB">) {
+	Populate(data: Omit<Manager, "Populate" | "store" | "rootState" | "firestoreDB">) {
 		this.Extend(data);
 		//G({Log: Log}); // set globals
 		//this.onPopulated_resolve();
@@ -54,7 +45,6 @@ export class Manager {
 	DoesURLChangeCountAsPageChange: (oldURL: VURL, newURL: VURL)=>boolean;
 
 	GetStore: ()=>any;
-	firebaseConfig: any;
 
 	globalConnectorPropGetters: {[key: string]: (state: any, props: any)=>any};
 

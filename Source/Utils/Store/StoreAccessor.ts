@@ -30,6 +30,7 @@ export function LogStoreAccessorRunTimes() {
 export const accessorStack = [];
 
 export class StoreAccessorOptions {
+	static default = new StoreAccessorOptions();
 	cache? = true;
 	cache_keepAlive? = false;
 	//cache_unwrapArgs?: {[key: number]: boolean};
@@ -78,6 +79,7 @@ export const StoreAccessor_Base: StoreAccessorFunc<RootState_Base> = (...args)=>
 	if (typeof args[0] == "object" && args.length == 2) [options, accessorGetter] = args;
 	else if (args.length == 2) [name, accessorGetter] = args;
 	else [name, options, accessorGetter] = args;
+	options = E(StoreAccessorOptions.default, options);
 
 	//let addProfiling = manager.devEnv; // manager isn't populated yet
 	const addProfiling = window["DEV"];
@@ -121,7 +123,7 @@ export const StoreAccessor_Base: StoreAccessorFunc<RootState_Base> = (...args)=>
 			}
 
 			result = computedFn((...callArgs_unwrapped_2)=>{
-				accessor(...callArgs);
+				return accessor(...callArgs);
 			}, options.cache_keepAlive)(callArgs_unwrapped);
 		} else {
 			result = accessor(...callArgs);

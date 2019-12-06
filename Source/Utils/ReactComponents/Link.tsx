@@ -1,7 +1,6 @@
 import {VURL, Assert} from "js-vextensions";
 import React from "react";
 import {BaseComponent, FilterOutUnrecognizedProps, BaseComponentPlus} from "react-vextensions";
-import {replace, push} from "connected-react-router";
 import produce from "immer";
 import {GetCurrentURL} from "../URL/URLs";
 import {manager, OnPopulated} from "../../Manager";
@@ -30,8 +29,9 @@ export type Link_Props = {
 } & Omit<React.HTMLProps<HTMLAnchorElement>, "href">;
 export class Link extends BaseComponentPlus({} as Link_Props, {}) {
 	static ValidateProps(props: Link_Props) {
-		const {actionFunc, to} = props;
-		Assert(actionFunc != null || to != null, `Must supply the Link component with either an "actionFunc" or "to" property.`);
+		/*const {actionFunc, to} = props;
+		Assert(actionFunc != null || to != null, `Must supply the Link component with either an "actionFunc" or "to" property.`);*/
+		Assert("actionFunc" in props || "to" in props, `Must supply the Link component with either an "actionFunc" or "to" property.`);
 	}
 
 	handleClick(event) {
@@ -50,7 +50,12 @@ export class Link extends BaseComponentPlus({} as Link_Props, {}) {
 			if (isExternal || target) return; // let browser handle external links, and "target=_blank"
 
 			event.preventDefault();
-			manager.store.dispatch(replaceURL ? replace(to) : push(to));
+			//manager.store.dispatch(replaceURL ? replace(to) : push(to));
+			if (replaceURL) {
+				history.replaceState(null, null, to);
+			} else {
+				history.pushState(null, null, to);
+			}
 		}
 	}
 
