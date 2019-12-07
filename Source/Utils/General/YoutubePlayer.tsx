@@ -1,4 +1,4 @@
-import {Timer, Assert} from "js-vextensions";
+import {Timer, Assert, CE, ObjectCE} from "js-vextensions";
 import {manager} from "../../Manager";
 import {g} from "../../PrivateExports";
 
@@ -18,7 +18,7 @@ export function EnsureYoutubeAPIReady() {
 		} else {
 			// if youtube-api loading hasn't started yet, start loading youtube API
 			if (!youtubeAPILoadStarted) {
-				document.head.appendChild(document.createElement("script").VSet({src: "https://www.youtube.com/iframe_api"}));
+				document.head.appendChild(ObjectCE(document.createElement("script")).VSet({src: "https://www.youtube.com/iframe_api"}));
 				youtubeAPILoadStarted = true;
 			}
 

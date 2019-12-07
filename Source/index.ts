@@ -7,8 +7,8 @@
 import * as frameworkExportsObject from ".";
 
 //import "js-vextensions/Source/ClassExtensions/@ApplyTypes";
-type __ = typeof import("../node_modules/js-vextensions/Source/ClassExtensions/@ApplyTypes");
-import "js-vextensions/Dist/ClassExtensions/@ApplyCode"; // eslint-disable-line
+type __ = typeof import("../node_modules/js-vextensions/Helpers/@ApplyCETypes");
+import "js-vextensions/Helpers/@ApplyCECode"; // eslint-disable-line
 
 export * from "./@EnableExportOverwrites";
 // special key, marking this module's exports object, which allows the patch in ExportOverwriteEnabler.ts to make the remaining exports overwriteable
