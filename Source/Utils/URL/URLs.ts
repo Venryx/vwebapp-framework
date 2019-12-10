@@ -1,4 +1,5 @@
 import {GetCurrentURLString, VURL, DeepGet} from "js-vextensions";
+import {runInAction} from "mobx";
 import {manager} from "../../Manager";
 import {e} from "../../PrivateExports";
 
@@ -18,7 +19,7 @@ export function LoadURL(url: VURL) {
 	manager.store.dispatch(new e.ActionSet(...syncActions));*/
 
 	const actionFunc = manager.GetLoadActionFuncForURL(url);
-	actionFunc(manager.store);
+	runInAction("LoadURL", ()=>actionFunc(manager.store));
 
 	//loadingURL = false;
 }

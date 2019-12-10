@@ -2,11 +2,11 @@ import {VURL, Assert} from "js-vextensions";
 import React from "react";
 import {BaseComponent, FilterOutUnrecognizedProps, BaseComponentPlus} from "react-vextensions";
 import produce from "immer";
+import {WithStore} from "mobx-firelink";
 import {GetCurrentURL} from "../URL/URLs";
 import {manager, OnPopulated} from "../../Manager";
 import {Action} from "../General/Action";
 import {ActionFunc} from "../Store/MobX";
-import {WithStore} from "../Store/StoreAccessor";
 
 /*@Radium
 export class Link extends BaseComponent<{to, target?: string, replace?: boolean, style?, onClick?}, {}> {
@@ -76,7 +76,7 @@ export class Link extends BaseComponentPlus({} as Link_Props, {}) {
 		//const href = this.context.router.history.createHref(typeof to === 'string' ? {pathname: to} : to)
 
 		// if external link (and target not specified), set target to "_blank", causing it to open in new tab
-		const isExternal = VURL.Parse(to, true).domain != GetCurrentURL().domain;
+		const isExternal = to && VURL.Parse(to, true).domain != GetCurrentURL().domain;
 		const target_final = isExternal && target === undefined ? "_blank" : target;
 
 		return (
