@@ -3,6 +3,7 @@ import React from "react";
 import {BaseComponent, FilterOutUnrecognizedProps, BaseComponentPlus} from "react-vextensions";
 import produce from "immer";
 import {WithStore} from "mobx-firelink";
+import {runInAction} from "mobx";
 import {GetCurrentURL} from "../URL/URLs";
 import {manager, OnPopulated} from "../../Manager";
 import {Action} from "../General/Action";
@@ -44,7 +45,7 @@ export class Link extends BaseComponentPlus({} as Link_Props, {}) {
 
 		if (actionFunc != null) {
 			event.preventDefault();
-			actionFunc(manager.store);
+			runInAction("Link.handleClick", ()=>actionFunc(manager.store));
 		} else {
 			const isExternal = VURL.Parse(to, true).domain != GetCurrentURL().domain;
 			if (isExternal || target) return; // let browser handle external links, and "target=_blank"
