@@ -1,12 +1,8 @@
-///// <reference path="../node_modules/js-vextensions/Source/ClassExtensions/@ApplyTypes.d.ts"/>
-
-// grab the hidden "exports" argument that is sent to the webpack module-wrapper function; thus we gain access to the exports object, letting us modify it
-// declare var exports;
+import {CE} from "js-vextensions";
 
 // import own exports; thus we gain access to the exports object, letting us modify it
 import * as frameworkExportsObject from ".";
 
-//import "js-vextensions/Source/ClassExtensions/@ApplyTypes";
 type __ = typeof import("../node_modules/js-vextensions/Helpers/@ApplyCETypes");
 import "js-vextensions/Helpers/@ApplyCECode.js"; // eslint-disable-line
 
@@ -83,7 +79,7 @@ export function VWAF_OverrideExport(...args) {
 	VWAF_exports_final[exportName] = newValue;
 }*/
 
-export const VWAF_exports_orig = E(frameworkExportsObject);
+export const VWAF_exports_orig = E(CE(frameworkExportsObject).Excluding("VWAF_exports_orig", "VWAF_exports_final", "VWAF_OverrideExport"));
 export const VWAF_exports_final = frameworkExportsObject;
 export function VWAF_OverrideExport(newValue_withNameProp: any);
 export function VWAF_OverrideExport(exportName: string, newValue: any);
