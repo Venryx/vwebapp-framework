@@ -15,6 +15,7 @@ export * from "./@EnableExportOverwrites";
 //export const __EnableExportOverwrites__ = true;
 
 export * from "./Manager";
+export * from "./UserTypes";
 
 //export * from "./Server/Command";
 

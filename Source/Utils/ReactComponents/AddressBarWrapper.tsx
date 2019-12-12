@@ -2,7 +2,7 @@ import {VURL} from "js-vextensions";
 import {BaseComponent, BaseComponentPlus} from "react-vextensions";
 import React from "react";
 import {manager} from "../../Manager";
-import {MaybeLog_Base} from "../General/Logging";
+import {MaybeLog} from "../General/Logging";
 import {loadingURL, NotifyURLLoaded} from "../URL/URLs";
 import {e} from "../../PrivateExports";
 
@@ -25,13 +25,13 @@ export class AddressBarWrapper extends BaseComponentPlus({}, {}) {
 			} else {
 				history.replaceState(null, null, newURL.toString({domain: false}));
 			}
-			MaybeLog_Base(a=>a.urlLoads, ()=>`Dispatching new-url: ${newURL} @type:${action.type}`);
+			MaybeLog(a=>a.urlLoads, ()=>`Dispatching new-url: ${newURL} @type:${action.type}`);
 		} else {
 			// if page just loaded, do one "start-up" LOCATION_CHANGED action, with whatever's in the address-bar
 			/*const startURL = e.GetCurrentURL(true).toString({domain: false});
 			//action = replace(startURL);
 			history.replaceState(null, null, startURL.toString());*/
-			MaybeLog_Base(a=>a.urlLoads, ()=>`Dispatching start-url: ${e.GetCurrentURL(true)} @type:${action.type}`);
+			MaybeLog(a=>a.urlLoads, ()=>`Dispatching start-url: ${e.GetCurrentURL(true)} @type:${action.type}`);
 		}
 
 		// action.byUser = false;

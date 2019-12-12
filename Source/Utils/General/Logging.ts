@@ -1,4 +1,5 @@
 import {GetStackTraceStr} from "js-vextensions";
+import {LogTypes} from "../../UserTypes";
 
 /*var Debug = true;
 
@@ -97,33 +98,13 @@ export function LogError(...args) {
 	return Log({type: "error"}, ...args);
 }
 
-export class LogTypes_Base {
-	// from vwebapp-framework
-	dbRequests = false;
-	dbRequests_onlyFirst = false;
-	pageViews = false;
-	urlLoads = false;
-	cacheUpdates = false;
-	commands = false;
-}
-export function ShouldLog_Base<LogTypes extends LogTypes_Base>(shouldLogFunc: (logTypes: LogTypes)=>boolean) {
+export function ShouldLog(shouldLogFunc: (logTypes: LogTypes)=>boolean) {
 	return shouldLogFunc(window["logTypes"] || {});
 }
-export function MaybeLog_Base<LogTypes extends LogTypes_Base>(shouldLogFunc: (logTypes: LogTypes)=>boolean, loggerFunc: any) {
-	if (!ShouldLog_Base(shouldLogFunc)) return;
+export function MaybeLog(shouldLogFunc: (logTypes: LogTypes)=>boolean, loggerFunc: any) {
+	if (!ShouldLog(shouldLogFunc)) return;
 	// let loggerFuncReturnsString = loggerFunc.arguments.length == 0;
 	const loggerFuncIsSimpleGetter = loggerFunc.toString().replace(/ /g, "").includes("function()");
 	if (loggerFuncIsSimpleGetter) Log(loggerFunc());
 	else loggerFunc(Log);
-}
-
-export function CreateShouldLog<LogTypes extends LogTypes_Base>() {
-	return function ShouldLog(shouldLogFunc: (logTypes: LogTypes)=>boolean) {
-		return ShouldLog_Base(shouldLogFunc);
-	};
-}
-export function CreateMaybeLog<LogTypes extends LogTypes_Base>() {
-	return function MaybeLog(shouldLogFunc: (logTypes: LogTypes)=>boolean, loggerFunc: any) {
-		return MaybeLog_Base(shouldLogFunc, loggerFunc);
-	};
 }

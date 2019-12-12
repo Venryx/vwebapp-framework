@@ -11,7 +11,7 @@ export function GetCurrentURL(fromAddressBar = false) {
 
 export let loadingURL = false;
 export function LoadURL(url: VURL) {
-	e.MaybeLog_Base(a=>a.urlLoads, ()=>`Loading url: ${url.toString()}`);
+	e.MaybeLog(a=>a.urlLoads, ()=>`Loading url: ${url.toString()}`);
 	loadingURL = true;
 
 	//if (!GetPath(GetUrlPath(url)).startsWith("global/map")) return;

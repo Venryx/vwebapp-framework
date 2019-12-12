@@ -4,9 +4,6 @@ import {LogOptions} from "./Utils/General/Logging";
 import {Action} from "./Utils/General/Action";
 import {ActionFunc} from "./Utils/Store/MobX";
 
-export type RootState_Base = any; // temp
-//export type WithStoreFunc<T> = (store: RootState_Base, func: ()=>T)=>T;
-
 export class Manager {
 	/*onPopulated = new Promise((resolve, reject)=>this.onPopulated_resolve = resolve);
 	onPopulated_resolve: Function;*/
@@ -20,12 +17,6 @@ export class Manager {
 	// shortcuts
 	get store() { return this.GetStore(); }
 	get firestoreDB() { return this.store.firebase.firestore(); }
-	/* get firestoreDB() {
-		//return this.store.firebase.firestore();
-		Assert(window["firestoreDB"] != null);
-		return window["firestoreDB"];
-	} */
-	//WithStore<T>(store: RootState_Base, func: ()=>T): T { return null as any; } // stub
 
 	iconInfo: {[key: string]: any};
 

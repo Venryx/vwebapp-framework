@@ -5,9 +5,10 @@ import produce from "immer";
 import {WithStore} from "mobx-firelink";
 import {runInAction} from "mobx";
 import {GetCurrentURL} from "../URL/URLs";
-import {manager, OnPopulated} from "../../Manager";
+import {manager} from "../../Manager";
 import {Action} from "../General/Action";
 import {ActionFunc} from "../Store/MobX";
+import {RootStore} from "../../UserTypes";
 
 /*@Radium
 export class Link extends BaseComponent<{to, target?: string, replace?: boolean, style?, onClick?}, {}> {
@@ -25,7 +26,7 @@ export type Link_Props = {
 	onClick?, style?,
 	text?: string, to?: string, target?: string, replace?: boolean, // url-based
 	//actions?: (dispatch: Function)=>void,
-	actionFunc?: ActionFunc<any>, // new approach, for mobx/mst store
+	actionFunc?: ActionFunc<RootStore>, // new approach, for mobx/mst store
 	//updateURLOnActions?: boolean, // action-based
 } & Omit<React.HTMLProps<HTMLAnchorElement>, "href">;
 export class Link extends BaseComponentPlus({} as Link_Props, {}) {
