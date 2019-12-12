@@ -3,11 +3,21 @@ import {BaseComponent, BaseComponentPlus} from "react-vextensions";
 import React from "react";
 import {manager} from "../../Manager";
 import {MaybeLog} from "../General/Logging";
-import {loadingURL, NotifyURLLoaded} from "../URL/URLs";
+import {loadingURL, NotifyURLLoaded, LoadURL} from "../URL/URLs";
 import {e} from "../../PrivateExports";
+import {Observer} from "../Store/MobX";
+
+// this handles: address-bar-change -> store-changes
+window.addEventListener("popstate", e=>{
+	//LoadURL(e.state);
+	//LoadURL(VURL.FromLocationObject(window.location));
+	LoadURL(VURL.Parse(window.location.href));
+});
 
 let lastProcessedURL: VURL;
+@Observer
 export class AddressBarWrapper extends BaseComponentPlus({}, {}) {
+	// the render function handles: store-changes -> address-bar-change
 	render() {
 		const newURL = manager.GetNewURL();
 		const pushURL = !loadingURL && manager.DoesURLChangeCountAsPageChange(lastProcessedURL, newURL);

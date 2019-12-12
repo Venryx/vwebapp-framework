@@ -48,8 +48,8 @@ export class Link extends BaseComponentPlus({} as Link_Props, {}) {
 			event.preventDefault();
 			runInAction("Link.handleClick", ()=>actionFunc(manager.store));
 		} else {
-			const isExternal = VURL.Parse(to, true).domain != GetCurrentURL().domain;
-			if (isExternal || target) return; // let browser handle external links, and "target=_blank"
+			const isExternalOrNewTab = VURL.Parse(to, true).domain != GetCurrentURL().domain;
+			if (isExternalOrNewTab || target) return; // let browser handle external or new-tab links
 
 			event.preventDefault();
 			//manager.store.dispatch(replaceURL ? replace(to) : push(to));
