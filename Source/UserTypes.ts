@@ -11,6 +11,16 @@ declare module 'vwebapp-framework/Source/UserTypes' {
 ==========
 
 This enables you to get typing within Link.actionFunc, etc. without having to pass type-data in each call.
+
+Note: If npm linking this module, it's recommended to add this to your tsconfig.json:
+==========
+"*": [
+	// prefer "/node_modules/X" over "/node_modules/[something]/node_modules/X"
+	// (for when using npm link; fixes auto-importer sometimes using SomeLib/node_modules/TargetLib)
+	"../node_modules/*",
+	"*"
+],
+==========
 */
 
 export interface RootStore {}
