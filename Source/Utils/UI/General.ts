@@ -57,7 +57,7 @@ export const RunWithRenderingBatched = WrapWithGo((func: Function)=>{
 	ReactDOM.unstable_batchedUpdates(func as any);
 });
 
-export class ExpensiveComponent_Options {
+/* export class ExpensiveComponent_Options {
 	simpleShouldUpdate_call? = true;
 	simpleShouldUpdate_options?: Partial<SimpleShouldUpdate_Options> = new SimpleShouldUpdate_Options();
 	warnOfTransientObjectProps_call? = true;
@@ -80,4 +80,4 @@ export function ExpensiveComponent(...args) {
 		if (options.simpleShouldUpdate_call) SimpleShouldUpdate(options.simpleShouldUpdate_options)(targetClass);
 		if (options.warnOfTransientObjectProps_call) WarnOfTransientObjectProps(options.warnOfTransientObjectProps_options)(targetClass);
 	}
-}
+} */

@@ -2,6 +2,7 @@ import {runInAction, observable} from "mobx";
 import {observer} from "mobx-react";
 import {EnsureClassProtoRenderFunctionIsWrapped, BaseComponent} from "react-vextensions";
 import React, {Component, useRef} from "react";
+import {ToJSON} from "js-vextensions";
 
 export type ActionFunc<StoreType> = (store: StoreType)=>void;
 
@@ -98,7 +99,9 @@ export function StoreAction(...args) {
 
 	//let action_final = action(name, actionFunc);
 	const result = (...callArgs)=>{
-		runInAction(name, ()=>actionFunc(...callArgs));
+		let name_withArgs = name;
+		name_withArgs += `(${callArgs.map(a=>(a != null ? ToJSON(a) : "null")).join(", ")})`;
+		runInAction(name_withArgs, ()=>actionFunc(...callArgs));
 	};
 	// result["isStoreAction"] = true; // mark export as store-action (for copying into mobx-state-tree actions collection)
 	return result;
