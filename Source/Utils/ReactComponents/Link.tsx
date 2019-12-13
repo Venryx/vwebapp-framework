@@ -47,7 +47,7 @@ export class Link extends BaseComponentPlus({} as Link_Props, {}) {
 		if (actionFunc != null) {
 			event.preventDefault();
 			runInAction("Link.handleClick", ()=>actionFunc(manager.store));
-		} else {
+		} else if (to != null) {
 			const isExternalOrNewTab = VURL.Parse(to, true).domain != GetCurrentURL().domain;
 			if (isExternalOrNewTab || target) return; // let browser handle external or new-tab links
 
@@ -82,7 +82,7 @@ export class Link extends BaseComponentPlus({} as Link_Props, {}) {
 		const target_final = isExternal && target === undefined ? "_blank" : target;
 
 		return (
-			<a {...FilterOutUnrecognizedProps(rest, "a")} onClick={this.handleClick} href={to} target={target_final}>
+			<a {...FilterOutUnrecognizedProps(rest, "a")} onClick={this.handleClick.bind(this)} href={to} target={target_final}>
 				{text}
 				{children}
 			</a>
