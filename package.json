@@ -1,31 +1,24 @@
 {
 	"name": "vwebapp-framework",
-	"version": "1.0.2",
 	"description": "The framework code for my web-apps, collected into a library for easy reuse.",
-	"module": "Source/index.ts",
-	"#main": "Dist/index.js",
+	"version": "1.0.2",
+	"@module": "Source/index.ts",
+	"@main": "Dist/index.js",
 	"main": "Source/index.ts",
+	"license": "MIT",
+	"author": {
+		"name": "Venryx",
+		"email": "venryx@gmail.com",
+		"url": "https://venryx.com"
+	},
+	"repository": {
+	  "type": "git",
+	  "url": "git+https://github.com/Venryx/vwebapp-framework.git"
+	},
 	"scripts": {
 		"#dev": "webpack --config webpack.config.js --inline --colors --progress --watch",
 		"#dist": "babel Source/index.jsx -u -o Dist/index.js --stage 1 --presets react"
 	},
-	"repository": {
-		"type": "git",
-		"url": "git+https://github.com/Venryx/vwebapp-framework.git"
-	},
-	"keywords": [
-		"react"
-	],
-	"author": {
-		"name": "Venryx",
-		"email": "venryx@gmail.com",
-		"url": "http://venryx.com"
-	},
-	"license": "MIT",
-	"bugs": {
-		"url": "https://github.com/Venryx/vwebapp-framework/issues"
-	},
-	"homepage": "https://github.com/Venryx/vwebapp-framework",
 	"peerDependencies": {
 		"ajv": "^6.10.0",
 		"ajv-keywords": "^3.4.0",
