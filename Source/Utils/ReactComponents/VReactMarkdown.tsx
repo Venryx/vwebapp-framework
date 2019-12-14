@@ -1,5 +1,5 @@
 import ReactMarkdown, {ReactMarkdownProps} from "react-markdown";
-import {BaseComponent, ShallowChanged} from "react-vextensions";
+import {BaseComponent, ShallowChanged, FilterOutUnrecognizedProps} from "react-vextensions";
 //import {Component as BaseComponent} from "react";
 import {VURL} from "js-vextensions";
 import React from "react";
@@ -22,10 +22,11 @@ export class VReactMarkdown extends BaseComponent
 		renderers_final.Link = renderers_final.Link || (props=>{
 			let {href, target, ...rest} = props;
 			const toURL = VURL.Parse(href);
+			if (target == "") target = null; // normalize falsy target
 			if (target == null && toURL.domain != GetCurrentURL().domain) {
 				target = "_blank";
 			}
-			return <Link {...rest} to={href} target={target}/>;
+			return <Link {...FilterOutUnrecognizedProps(rest, "a")} to={href} target={target}/>;
 		});
 
 		if (replacements) {

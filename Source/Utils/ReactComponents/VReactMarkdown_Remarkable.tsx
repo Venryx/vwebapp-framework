@@ -1,12 +1,12 @@
-import { VURL } from "js-vextensions";
-import { BaseComponent, ShallowChanged, FilterOutUnrecognizedProps } from "react-vextensions";
+import {VURL} from "js-vextensions";
+import {BaseComponent, ShallowChanged, FilterOutUnrecognizedProps} from "react-vextensions";
 import Remarkable from "remarkable";
 import RemarkableReactRenderer from "remarkable-react";
-import { ParseSegmentsForPatterns } from "../General/RegexHelpers";
-import { GetCurrentURL } from "../URL/URLs";
-import { Link } from "./Link";
-import { ReplacementFunc } from "./VReactMarkdown";
 import React from "react";
+import {ParseSegmentsForPatterns} from "../General/RegexHelpers";
+import {GetCurrentURL} from "../URL/URLs";
+import {Link} from "./Link";
+import {ReplacementFunc} from "./VReactMarkdown";
 
 //import Markdown from "react-remarkable";
 
@@ -30,7 +30,7 @@ import React from "react";
 			};
 			comp.forceUpdate();
 		}
-		
+
 		if (replacements) {
 			let patterns = replacements.VKeys().map((regexStr, index)=>({name: index+"", regex: new RegExp(regexStr)}));
 			let segments = ParseSegmentsForPatterns(source, patterns);
@@ -60,23 +60,26 @@ type Props = {
 } & React.HTMLProps<HTMLDivElement>;
 export class VReactMarkdown_Remarkable extends BaseComponent<Props, {}> {
 	static defaultProps = {containerType: "div"};
-	
+
 	markdown: Remarkable;
 	InitMarkdown(props) {
 		let {extraInfo, markdownOptions, rendererOptions} = props;
 		markdownOptions = markdownOptions || {html: true};
 		this.markdown = new Remarkable(markdownOptions);
 
-		let rendererOptions_final = {...rendererOptions};
+		const rendererOptions_final = {...rendererOptions};
 		rendererOptions_final.components = {...rendererOptions_final.components};
-		if (rendererOptions_final.components.a == null) rendererOptions_final.components.a = (props=> {
-			let {href, target, ...rest} = props;
-			let toURL = VURL.Parse(href);
-			if (target == null && toURL.domain != GetCurrentURL().domain) {
-				target = "_blank";
-			}
-			return <Link {...FilterOutUnrecognizedProps(rest, "a")} to={href} target={target}/>;
-		});
+		if (rendererOptions_final.components.a == null) {
+			rendererOptions_final.components.a = (props=>{
+				let {href, target, ...rest} = props;
+				const toURL = VURL.Parse(href);
+				if (target == "") target = null; // normalize falsy target
+				if (target == null && toURL.domain != GetCurrentURL().domain) {
+					target = "_blank";
+				}
+				return <Link {...FilterOutUnrecognizedProps(rest, "a")} to={href} target={target}/>;
+			});
+		}
 		/*if (rendererOptions_final.components.htmlblock == null) rendererOptions_final.components.htmlblock = (props=> {
 			let {content} = props;
 			return <div dangerouslySetInnerHTML={{__html: content}}/>;
@@ -99,7 +102,7 @@ export class VReactMarkdown_Remarkable extends BaseComponent<Props, {}> {
 	}
 
 	render() {
-		let {source, extraInfo, markdownOptions, rendererOptions, replacements, containerType, style, addMarginsForDanglingNewLines, ...rest} = this.props;
+		const {source, extraInfo, markdownOptions, rendererOptions, replacements, containerType, style, addMarginsForDanglingNewLines, ...rest} = this.props;
 		//source = source || this.FlattenedChildren.join("\n\n");
 
 		if (this.markdown == null) {
@@ -107,15 +110,15 @@ export class VReactMarkdown_Remarkable extends BaseComponent<Props, {}> {
 		}
 
 		if (replacements) {
-			let patterns = replacements.VKeys().map((regexStr, index)=>({name: index+"", regex: new RegExp(regexStr)}));
-			let segments = ParseSegmentsForPatterns(source, patterns);
+			const patterns = replacements.VKeys().map((regexStr, index)=>({name: `${index}`, regex: new RegExp(regexStr)}));
+			const segments = ParseSegmentsForPatterns(source, patterns);
 			if (segments.length > 1) {
-				let segmentUIs = segments.map((segment, index)=> {
+				const segmentUIs = segments.map((segment, index)=>{
 					if (segment.patternMatched == null) {
 						if (replacements.default) {
 							return replacements.default(segment, index, extraInfo).VAct(a=>a.key = index);
 						}
-						let text = segment.textParts[0].replace(/\r/g, "");
+						const text = segment.textParts[0].replace(/\r/g, "");
 						return (
 							<VReactMarkdown_Remarkable key={index} source={text.trim()} replacements={replacements} extraInfo={extraInfo}
 								markdownOptions={markdownOptions} rendererOptions={rendererOptions}
@@ -126,14 +129,14 @@ export class VReactMarkdown_Remarkable extends BaseComponent<Props, {}> {
 								addMarginsForDanglingNewLines={addMarginsForDanglingNewLines}/>
 						);
 					}
-					let renderFuncForReplacement= replacements.VValues()[segment.patternMatched] as ReplacementFunc;
+					const renderFuncForReplacement = replacements.VValues()[segment.patternMatched] as ReplacementFunc;
 					return renderFuncForReplacement(segment, index, extraInfo).VAct(a=>a.key = index);
 				});
 				return React.createElement(containerType, {style}, segmentUIs);
 			}
 		}
 
-		let markdownResult = this.markdown.render(source);
+		const markdownResult = this.markdown.render(source);
 		return React.createElement(containerType, {...rest, style}, markdownResult);
 	}
 }
