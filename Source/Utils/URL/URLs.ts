@@ -3,10 +3,13 @@ import {runInAction} from "mobx";
 import {manager} from "../../Manager";
 import {e} from "../../PrivateExports";
 
-export function GetCurrentURL(fromAddressBar = false) {
+/*export function GetCurrentURL(fromAddressBar = false) {
 	if (fromAddressBar) return VURL.Parse(GetCurrentURLString());
 	const locationObj = DeepGet(manager.store, manager.routerLocationPathInStore);
 	return VURL.FromLocationObject(locationObj);
+}*/
+export function GetCurrentURL() {
+	return VURL.Parse(GetCurrentURLString());
 }
 
 export let loadingURL = false;

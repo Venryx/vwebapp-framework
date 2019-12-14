@@ -12,8 +12,8 @@
 		"url": "https://venryx.com"
 	},
 	"repository": {
-	  "type": "git",
-	  "url": "git+https://github.com/Venryx/vwebapp-framework.git"
+		"type": "git",
+		"url": "git+https://github.com/Venryx/vwebapp-framework.git"
 	},
 	"scripts": {
 		"#dev": "webpack --config webpack.config.js --inline --colors --progress --watch",
@@ -69,13 +69,13 @@
 		"eslint-plugin-react": "^7.12.4",
 		"eslint-plugin-standard": "^4.0.0",
 		"firebase": "^5.7.0",
-		"firebase-feedback": "0.0.6",
+		"firebase-feedback": "0.0.7",
 		"firebase-forum": "0.0.6",
 		"firebase-mock": "github:Venryx/firebase-mock",
-		"js-vextensions": "0.0.46",
+		"js-vextensions": "0.0.55",
 		"lodash": "^4.17.15",
 		"mobx": "^5.15.0",
-		"mobx-firelink": "^1.0.2",
+		"mobx-firelink": "^1.0.10",
 		"mobx-react": "^6.1.4",
 		"mobx-utils": "^5.5.2",
 		"moment": "2.24.0",
@@ -86,13 +86,13 @@
 		"react-ga": "^2.5.6",
 		"react-markdown": "^4.0.4",
 		"react-router": "^4.3.1",
-		"react-vcomponents": "^1.0.3",
-		"react-vextensions": "^1.0.1",
+		"react-vcomponents": "^1.0.4",
+		"react-vextensions": "^1.0.2",
 		"react-vscrollview": "0.0.4",
 		"remarkable": "^1.7.1",
 		"remarkable-react": "^1.4.1",
 		"ts-loader": "^5.3.1",
-		"typescript": "^3.7.2",
+		"typescript": "^3.7.3",
 		"webpack": "^4.6.0",
 		"webpack-cli": "^3.1.2",
 		"webpack-runtime-require": "^0.3.1"

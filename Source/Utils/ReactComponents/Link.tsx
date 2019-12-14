@@ -6,21 +6,14 @@ import {WithStore} from "mobx-firelink";
 import {runInAction} from "mobx";
 import {GetCurrentURL} from "../URL/URLs";
 import {manager} from "../../Manager";
-import {Action} from "../General/Action";
 import {ActionFunc} from "../Store/MobX";
 import {RootStore} from "../../UserTypes";
-
-/*@Radium
-export class Link extends BaseComponent<{to, target?: string, replace?: boolean, style?, onClick?}, {}> {
-	render() {
-		let {to, style, onClick, children} = this.props;
-		return <LinkInner to={to} style={style} onClick={onClick}>{children}</LinkInner>;
-	}
-}*/
 
 function isModifiedEvent(event) {
 	return !!(event.metaKey || event.altKey || event.ctrlKey || event.shiftKey);
 }
+
+// maybe todo: extract this comp into its own library (or react-vcomponents)
 
 export type Link_Props = {
 	onClick?, style?,
@@ -65,13 +58,14 @@ export class Link extends BaseComponentPlus({} as Link_Props, {}) {
 		let {text, actionFunc, to, target, children, ...rest} = this.props;
 
 		if (actionFunc) {
-			const newState = produce(manager.store, draft=>{
+			/*const newState = produce(manager.store, draft=>{
 				actionFunc(draft);
 			});
 			//let newURL = UsingRootState(newState, ()=>manager.GetNewURL());
-			const newURL = WithStore(newState, ()=>manager.GetNewURL());
+			const newURL = WithStore({}, newState, ()=>manager.GetNewURL());
 			//const newURL = manager.GetNewURL.WS(newState)();
-			to = newURL.toString();
+			to = newURL.toString();*/
+			to = manager.GetNewURLForStoreChanges(actionFunc);
 		}
 
 		//if (manager.prodEnv && to == null) return; // defensive

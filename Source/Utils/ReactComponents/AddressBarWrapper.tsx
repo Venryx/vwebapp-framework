@@ -41,7 +41,7 @@ export class AddressBarWrapper extends BaseComponentPlus({}, {}) {
 			/*const startURL = e.GetCurrentURL(true).toString({domain: false});
 			//action = replace(startURL);
 			history.replaceState(null, null, startURL.toString());*/
-			MaybeLog(a=>a.urlLoads, ()=>`Dispatching start-url: ${e.GetCurrentURL(true)} @type:${action.type}`);
+			MaybeLog(a=>a.urlLoads, ()=>`Dispatching start-url: ${e.GetCurrentURL()} @type:${action.type}`);
 		}
 
 		// action.byUser = false;

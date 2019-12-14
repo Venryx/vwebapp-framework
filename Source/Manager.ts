@@ -1,8 +1,8 @@
 import {VURL, Assert} from "js-vextensions";
 import {browserHistory} from "./Utils/URL/History";
 import {LogOptions} from "./Utils/General/Logging";
-import {Action} from "./Utils/General/Action";
 import {ActionFunc} from "./Utils/Store/MobX";
+import {RootStore} from "./UserTypes";
 
 export class Manager {
 	/*onPopulated = new Promise((resolve, reject)=>this.onPopulated_resolve = resolve);
@@ -30,10 +30,11 @@ export class Manager {
 	mobxCompatMode: boolean;
 
 	startURL: VURL;
-	routerLocationPathInStore: string[];
 	GetLoadActionFuncForURL: (url: VURL)=>ActionFunc<any>;
 	GetNewURL: ()=>VURL;
 	DoesURLChangeCountAsPageChange: (oldURL: VURL, newURL: VURL)=>boolean;
+	// new
+	GetNewURLForStoreChanges: (actionFunc: ActionFunc<RootStore>)=>string;
 
 	GetStore: ()=>any;
 
