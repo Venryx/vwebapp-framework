@@ -66,5 +66,3 @@ declare global {
 	function Log(options: LogOptions, ...messageSegments: any[]);
 	function Log(...messageSegments: any[]);
 }
-
-// breakpoint: implement deep-function-replacement system
