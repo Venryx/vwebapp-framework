@@ -1,5 +1,5 @@
 import {Draggable} from "react-beautiful-dnd";
-import {GetDOM} from "react-vextensions";
+import {GetDOM, ShallowChanged} from "react-vextensions";
 import {ToJSON} from "js-vextensions";
 import React from "react";
 
@@ -44,8 +44,10 @@ export function MakeDraggable(getDraggableCompProps: (props: Object)=>DraggableC
 				this.index = index;*/
 				//this.compProps = E({enabled: true}, getDraggableCompProps(props));
 				this.compProps = getDraggableCompProps(props);
+				//this.firstDragInfoForCurrentData = {} as DragInfo; // not sure if this is needed
 			}
 
+			firstDragInfoForCurrentData = {} as DragInfo;
 			render() {
 				//if (this.compProps == null || !this.compProps.enabled) {
 				if (this.compProps == null) {
@@ -56,7 +58,15 @@ export function MakeDraggable(getDraggableCompProps: (props: Object)=>DraggableC
 				return (
 					<Draggable type={this.compProps.type} key={draggableID} draggableId={draggableID} index={this.compProps.index}>
 						{(provided, snapshot)=>{
-							const dragInfo = {provided, snapshot};
+							let dragInfo = {provided, snapshot} as DragInfo;
+							// if drag-info data actually changed, store ref to first object with that data
+							if (ShallowChanged(dragInfo, this.firstDragInfoForCurrentData)) {
+							//if (ToJSON(dragInfo) != ToJSON(this.firstDragInfoForCurrentData)) {
+								this.firstDragInfoForCurrentData = dragInfo;
+							} else {
+								// if drag-info *hasn't* changed data-wise, use the stable-ref object we stored (so we don't cause unneeded re-render)
+								dragInfo = this.firstDragInfoForCurrentData;
+							}
 							return <WrappedComponent {...this.props} ref={c=>provided.innerRef(GetDOM(c) as any)} dragInfo={dragInfo}/>;
 							// test
 							/*return (
