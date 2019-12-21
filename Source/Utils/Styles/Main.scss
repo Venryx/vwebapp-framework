@@ -58,7 +58,21 @@ html, body {
 		font-size: 12px;
 	}*/
 }
-*, *:before, *:after {
+* {
+	box-sizing: inherit;
+	// If element has {flex: 1}, css-spec dictates that minWidth/minHeight be set to "auto".
+	// We revert that by having all elements default minWidth/minHeight to 0.
+	// Why? Because otherwise, given:
+	//	<container style="display:flex">
+	//		<child1 style="height: 10">
+	//		<child2 style="flex: 1">
+	// </container>
+	// ...child2 would, rather than fill the remaining space, just expand to the height its children "want"/default-to-being. (causing problems for scroll-views and such)
+	// An alternate fix, is to use "style={{display: flex, minHeight: 0}}" or "style={ES({display: flex})}" for the "container" element (in the example above).
+	/*min-width: 0;
+	min-height: 0;*/
+}
+*:before, *:after {
 	box-sizing: inherit;
 }
 /**, .quick1 { nothing: nothing; }*/

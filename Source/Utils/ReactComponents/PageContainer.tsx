@@ -5,6 +5,7 @@ import {ToInt, IsNumber} from "js-vextensions";
 import React from "react";
 
 // same as E(...), except applies extra things for style-objects
+// (alternative: the global "* { minWidth: 0; minHeight: 0; }" style)
 function ES(...styles) {
 	const result = E(...styles);
 
