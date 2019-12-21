@@ -66,6 +66,8 @@ export type YoutubeClipInfo = {
 
 export type YoutubePlayer_ReadyListener = ()=>void;
 export type YoutubePlayer_StateListener = (state: YoutubePlayerState, removeListener: ()=>void)=>void;
+export type PosChangeSource = "playback" | "setPosition";
+
 export class YoutubePlayer {
 	static lastID = -1;
 
@@ -143,7 +145,7 @@ export class YoutubePlayer {
 			this.positionUpdateTimer.Start();
 		} else {
 			this.positionUpdateTimer.Stop();
-			this.UpdateCurrentPos(); // update one last time
+			this.NotifyCurrentPosChanged(this.internalPlayer.getCurrentTime(), "playback"); // update one last time
 
 			// if ended naturally (reached end of video), possibly clear buffer (depending on youtube-buffered-players setting)
 			if (state == YoutubePlayerState.ENDED) {
@@ -152,19 +154,20 @@ export class YoutubePlayer {
 		}
 	}
 
+	UpdateCurrentPos_triggerOnPosChangeEvenIfNotPlaying = true;
 	currentPosition = 0;
-	onPositionChanged: (position: number)=>any;
-	UpdateCurrentPos(actualNewPos?: number) {
-		this.currentPosition = actualNewPos != null ? actualNewPos : this.internalPlayer.getCurrentTime();
-		if (this.onPositionChanged) this.onPositionChanged(this.currentPosition);
+	onPositionChanged: (position: number, source: PosChangeSource)=>any;
+	NotifyCurrentPosChanged(newPos: number, source: PosChangeSource) {
+		this.currentPosition = newPos;
+		if (this.onPositionChanged) this.onPositionChanged(this.currentPosition, source);
 		if (this.loadedClipInfo && this.loadedClipInfo.endTime && this.currentPosition >= this.loadedClipInfo.endTime) {
 			this.OnEndReached();
 		}
 	}
 	positionUpdateTimer = new Timer(100, ()=>{
 		if (!this.ready) return;
-		//if (this.state != YoutubePlayerState.PLAYING) return; // this is needed, since getCurrentTime() thinks time progresses even while video is paused (thus, we need to wait for next play to begin, resetting current-time)
-		this.UpdateCurrentPos();
+		if (this.state != YoutubePlayerState.PLAYING) return; // this is needed, since getCurrentTime() doesn't reflect changes from SetPosition calls, while video isn't running
+		this.NotifyCurrentPosChanged(this.internalPlayer.getCurrentTime(), "playback");
 	});
 
 	loop = false; // must be manually set, after LoadVideo() is called, but before Play() is called (well, if you want it to work reliably)
@@ -236,7 +239,7 @@ export class YoutubePlayer {
 	SetPosition(timeInSec: number) {
 		this.AssertReady();
 		this.internalPlayer.seekTo(timeInSec);
-		this.UpdateCurrentPos(timeInSec); // we need to just tell it the new time, because the seekTo command does not apply instantly
+		this.NotifyCurrentPosChanged(timeInSec, "setPosition"); // we need to just tell it the new time, because the seekTo command does not apply instantly
 	}
 
 	lastPlayTime: number;

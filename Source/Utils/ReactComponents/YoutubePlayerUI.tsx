@@ -1,14 +1,15 @@
 import React, {Ref} from "react";
 import {BaseComponent, BaseComponentPlus} from "react-vextensions";
 import {Row} from "react-vcomponents";
-import {YoutubePlayer} from "../General/YoutubePlayer";
+import {YoutubePlayer, PosChangeSource} from "../General/YoutubePlayer";
 
 export class YoutubePlayerUI extends BaseComponentPlus(
-	{heightVSWidthPercent: .75, autoplay: false} as {
+	{heightVSWidthPercent: .75, autoplay: false, onPosChanged_callForStartTime: true} as {
 		videoID: string, startTime?: number, heightVSWidthPercent: number, autoplay?: boolean,
 		initPlayer?: (player: YoutubePlayer)=>any,
 		onPlayerInitialized?: (player: YoutubePlayer)=>any,
-		onPosChanged?: (position: number)=>any,
+		onPosChanged?: (position: number, source: PosChangeSource)=>any,
+		onPosChanged_callForStartTime?: boolean,
 		style?,
 	},
 ) {
@@ -23,7 +24,7 @@ export class YoutubePlayerUI extends BaseComponentPlus(
 	}
 
 	async ComponentDidMount() {
-		const {videoID, startTime, autoplay, initPlayer, onPlayerInitialized, onPosChanged} = this.props;
+		const {videoID, startTime, autoplay, initPlayer, onPlayerInitialized, onPosChanged, onPosChanged_callForStartTime} = this.props;
 		const player = new YoutubePlayer();
 		if (initPlayer) initPlayer(player);
 		this.player = player;
@@ -34,6 +35,9 @@ export class YoutubePlayerUI extends BaseComponentPlus(
 
 		if (onPlayerInitialized) onPlayerInitialized(player);
 		player.LoadVideo({videoID, startTime}, autoplay);
+		if (onPosChanged_callForStartTime && startTime != null && onPosChanged) {
+			onPosChanged(startTime, "playback"); // it's not really either source, but it's closer to playback
+		}
 
 		if (onPosChanged) player.onPositionChanged = onPosChanged;
 	}
