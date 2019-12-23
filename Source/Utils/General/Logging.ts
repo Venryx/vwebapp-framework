@@ -1,4 +1,4 @@
-import {GetStackTraceStr} from "js-vextensions";
+import {GetStackTraceStr, E} from "js-vextensions";
 import {LogTypes} from "../../UserTypes";
 
 /*var Debug = true;

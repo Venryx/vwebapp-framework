@@ -2,6 +2,7 @@ import {BaseComponent, BaseComponentPlus} from "react-vextensions";
 import React, {Component} from "react";
 import {TextArea, Column} from "react-vcomponents";
 import {ScrollView} from "react-vscrollview";
+import {E} from "js-vextensions";
 
 type ReactErrorInfo = {componentStack: string};
 export type ReactError = {message: string, info: ReactErrorInfo};

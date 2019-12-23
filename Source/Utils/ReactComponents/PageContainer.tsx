@@ -1,7 +1,7 @@
 import {ScrollView} from "react-vscrollview";
 import {BaseComponent} from "react-vextensions";
 import {Row, Div} from "react-vcomponents";
-import {ToInt, IsNumber} from "js-vextensions";
+import {ToInt, IsNumber, E} from "js-vextensions";
 import React from "react";
 
 // same as E(...), except applies extra things for style-objects

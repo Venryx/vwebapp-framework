@@ -116,6 +116,9 @@ input {
 input[type=spinner] {
 	min-width: 50px; // set more reasonable default (the default default is 254)
 }
+input[type=checkbox] {
+	margin: 0; // remove odd "margin: 3px 3px 3px 4px;" default
+}
 textarea:not(neverMatch) {
 	background: rgba(255,255,255,.8);
 	color: rgba(0,0,0,1);

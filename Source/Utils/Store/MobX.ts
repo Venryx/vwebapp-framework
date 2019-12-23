@@ -2,7 +2,7 @@ import {runInAction, observable} from "mobx";
 import {observer} from "mobx-react";
 import {EnsureClassProtoRenderFunctionIsWrapped, BaseComponent} from "react-vextensions";
 import React, {Component, useRef} from "react";
-import {ToJSON} from "js-vextensions";
+import {ToJSON, E} from "js-vextensions";
 import {manager} from "../../Manager";
 
 export type ActionFunc<StoreType> = (store: StoreType)=>void;
@@ -10,7 +10,7 @@ export type ActionFunc<StoreType> = (store: StoreType)=>void;
 export class Observer_Options {
 	classHooks = true;
 }
-export function Observer(target: Function);
+export function Observer(targetClass: Function);
 export function Observer(options: Partial<Observer_Options>);
 export function Observer(...args) {
 	let options = new Observer_Options();

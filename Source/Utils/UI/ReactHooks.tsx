@@ -1,5 +1,5 @@
 import {UseState, ShallowEquals} from "react-vextensions";
-import {VRect, ToJSON} from "js-vextensions";
+import {VRect, ToJSON, E} from "js-vextensions";
 import {useRef, useLayoutEffect, MutableRefObject, useState, useCallback, Component} from "react";
 import ReactDOM from "react-dom";
 

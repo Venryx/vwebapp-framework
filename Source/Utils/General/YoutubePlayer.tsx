@@ -1,4 +1,4 @@
-import {Timer, Assert, CE, ObjectCE} from "js-vextensions";
+import {Timer, Assert, CE, ObjectCE, E} from "js-vextensions";
 import {manager} from "../../Manager";
 import {g} from "../../PrivateExports";
 

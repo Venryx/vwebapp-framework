@@ -1,4 +1,4 @@
-import {VURL} from "js-vextensions";
+import {VURL, E} from "js-vextensions";
 import {BaseComponent, ShallowChanged, FilterOutUnrecognizedProps} from "react-vextensions";
 import Remarkable from "remarkable";
 import RemarkableReactRenderer from "remarkable-react";

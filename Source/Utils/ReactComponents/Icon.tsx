@@ -1,6 +1,6 @@
 import {BaseComponent} from "react-vextensions";
 import React, {SVGFactory, DetailedHTMLFactory} from "react";
-import {Assert} from "js-vextensions";
+import {Assert, E} from "js-vextensions";
 import {manager} from "../..";
 
 // todo: get this working, despite our now being in the vwebapp-framework module

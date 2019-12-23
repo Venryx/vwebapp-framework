@@ -1,5 +1,6 @@
 import {BaseComponent} from "react-vextensions";
 import React from "react";
+import {E} from "js-vextensions";
 import {Icon} from "./Icon";
 
 type Props = {

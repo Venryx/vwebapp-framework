@@ -30,27 +30,6 @@ export function QuickIncrement(name = "default") {
 QuickIncrement["values"] = [];
 G({QuickIncrement});
 
-// general
-// ==========
-
-/*G({E}); declare global { function E(...objExtends: any[]); }
-export function E(...objExtends: any[]) {
-    var result = {} as any;
-    for (var extend of objExtends)
-        result.Extend(extend);
-	return result;
-	//return StyleSheet.create(result);
-}*/
-G({E}); declare global {	function E<E1, E2, E3, E4, E5, E6, E7, E8>(e1?:E1, e2?:E2, e3?:E3, e4?:E4, e5?:E5, e6?:E6, e7?:E7, e8?:E8):E1&E2&E3&E4&E5&E6&E7&E8; }
-export							function E<E1, E2, E3, E4, E5, E6, E7, E8>(e1?:E1, e2?:E2, e3?:E3, e4?:E4, e5?:E5, e6?:E6, e7?:E7, e8?:E8):E1&E2&E3&E4&E5&E6&E7&E8 {
-	var result = {} as any;
-	for (const extend of arguments) {
-		result.Extend(extend);
-	}
-	return result;
-	//return StyleSheet.create(result);
-}
-
 // methods: url writing/parsing
 // ==================
 
@@ -62,10 +41,6 @@ export var inFirefox = navigator.userAgent.toLowerCase().includes("firefox");
 export var loadTime = Date.now();
 export function GetTimeSinceLoad() {
 	return (Date.now() - loadTime) / 1000;
-}
-
-export function $Simple(queryStr): HTMLElement[] {
-	return [].slice.call(document.querySelectorAll(queryStr));
 }
 
 export function CopyText(text) {
@@ -122,14 +97,6 @@ export function BlobToArrayBuffer(blob: Blob) {
 		reader.addEventListener("loadend", e=>resolve(reader.result as ArrayBuffer));
 		reader.readAsArrayBuffer(blob);
 	}) as Promise<ArrayBuffer>;
-}
-
-export function ConvertGetterFuncToPropChain(pathGetterFunc: Function) {
-	const pathStr = pathGetterFunc.toString().match(/return a\.(.+?);/)[1] as string;
-	Assert(!pathStr.includes("["), "Getter-func cannot contain bracket-based property-access.");
-	//let result = pathStr.replace(/\./g, "/");
-	const result = pathStr.split(".");
-	return result;
 }
 
 // use a singleton for empty-obj and empty-array (that way VCache and other shallow-compare systems work with them)

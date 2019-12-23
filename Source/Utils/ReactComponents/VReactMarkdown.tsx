@@ -1,7 +1,7 @@
 import ReactMarkdown, {ReactMarkdownProps} from "react-markdown";
 import {BaseComponent, ShallowChanged, FilterOutUnrecognizedProps} from "react-vextensions";
 //import {Component as BaseComponent} from "react";
-import {VURL} from "js-vextensions";
+import {VURL, E} from "js-vextensions";
 import React from "react";
 import {Segment, ParseSegmentsForPatterns} from "../General/RegexHelpers";
 import {GetCurrentURL} from "../URL/URLs";

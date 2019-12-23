@@ -1,4 +1,4 @@
-import {CE} from "js-vextensions";
+import {CE, E} from "js-vextensions";
 
 // import own exports; thus we gain access to the exports object, letting us modify it
 import * as frameworkExportsObject from ".";
