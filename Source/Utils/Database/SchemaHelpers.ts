@@ -122,8 +122,9 @@ export class AssertValidateOptions {
 	addDataStr = true;
 	allowOptionalPropsToBeNull = true;
 }
-export function AssertValidate(schemaName: string, data, failureMessageOrGetter: string | ((errorsText: string)=>string), options = new AssertValidateOptions()) {
-	return AssertValidate_Full(GetSchemaJSON(schemaName), schemaName, data, failureMessageOrGetter, options);
+export function AssertValidate(schemaNameOrJSON: string | Object, data, failureMessageOrGetter: string | ((errorsText: string)=>string), options = new AssertValidateOptions()) {
+	const schemaName = IsString(schemaNameOrJSON) ? schemaNameOrJSON : null;
+	return AssertValidate_Full(schemaName ?? schemaNameOrJSON, schemaName, data, failureMessageOrGetter, options);
 }
 export function AssertValidate_Full(schemaObject: Object, schemaName: string, data, failureMessageOrGetter: string | ((errorsText: string)=>string), options?: Partial<AssertValidateOptions>) {
 	options = E(new AssertValidateOptions(), options);
