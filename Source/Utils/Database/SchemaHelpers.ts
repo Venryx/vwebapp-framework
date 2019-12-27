@@ -1,6 +1,7 @@
 import AJV from "ajv";
 import AJVKeywords from "ajv-keywords";
 import {Clone, ToJSON, IsString, Assert, IsObject, E} from "js-vextensions";
+import {AssertV} from "mobx-firelink";
 //import {RemoveHelpers, WithoutHelpers} from "./DatabaseHelpers";
 
 export const ajv = AJVKeywords(new AJV({allErrors: true})) as AJV_Extended;
@@ -121,29 +122,34 @@ export class AssertValidateOptions {
 	addErrorsText = true;
 	addDataStr = true;
 	allowOptionalPropsToBeNull = true;
+	useAssertV = true;
 }
-export function AssertValidate(schemaNameOrJSON: string | Object, data, failureMessageOrGetter: string | ((errorsText: string)=>string), options = new AssertValidateOptions()) {
+export function AssertValidate(schemaNameOrJSON: string | Object, data, failureMessageOrGetter: string | ((errorsText: string)=>string), opt = new AssertValidateOptions()) {
 	const schemaName = IsString(schemaNameOrJSON) ? schemaNameOrJSON : null;
-	return AssertValidate_Full(schemaName ?? schemaNameOrJSON, schemaName, data, failureMessageOrGetter, options);
+	return AssertValidate_Full(schemaName ?? schemaNameOrJSON, schemaName, data, failureMessageOrGetter, opt);
 }
-export function AssertValidate_Full(schemaObject: Object, schemaName: string, data, failureMessageOrGetter: string | ((errorsText: string)=>string), options?: Partial<AssertValidateOptions>) {
-	options = E(new AssertValidateOptions(), options);
-	if (options.allowOptionalPropsToBeNull) {
+export function AssertValidate_Full(schemaObject: Object, schemaName: string, data, failureMessageOrGetter: string | ((errorsText: string)=>string), opt?: Partial<AssertValidateOptions>) {
+	opt = E(new AssertValidateOptions(), opt);
+	if (opt.allowOptionalPropsToBeNull) {
 		schemaObject = Schema_WithOptionalPropsAllowedNull(schemaObject);
 	}
 
 	const errorsText = Validate_Full(schemaObject, schemaName, data); //, false);
 
 	let failureMessage = IsString(failureMessageOrGetter) ? failureMessageOrGetter : failureMessageOrGetter(errorsText);
-	if (options.addErrorsText) {
+	if (opt.addErrorsText) {
 		failureMessage += `: ${errorsText}`;
 	}
-	if (options.addDataStr) {
+	if (opt.addDataStr) {
 		failureMessage += `\nData: ${ToJSON(data, null, 3)}`;
 	}
 	failureMessage += "\n";
 
-	Assert(errorsText == null, failureMessage);
+	if (opt.useAssertV) {
+		AssertV(errorsText == null, failureMessage);
+	} else {
+		Assert(errorsText == null, failureMessage);
+	}
 }
 
 export function Schema_WithOptionalPropsAllowedNull(schema: any) {
