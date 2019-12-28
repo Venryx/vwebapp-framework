@@ -126,10 +126,13 @@ export class AssertValidateOptions {
 }
 export function AssertValidate(schemaNameOrJSON: string | Object, data, failureMessageOrGetter: string | ((errorsText: string)=>string), opt = new AssertValidateOptions()) {
 	const schemaName = IsString(schemaNameOrJSON) ? schemaNameOrJSON : null;
-	return AssertValidate_Full(schemaName ?? schemaNameOrJSON, schemaName, data, failureMessageOrGetter, opt);
+	const schemaObject = IsString(schemaNameOrJSON) ? GetSchemaJSON(schemaName) : schemaNameOrJSON;
+	return AssertValidate_Full(schemaObject, schemaName, data, failureMessageOrGetter, opt);
 }
 export function AssertValidate_Full(schemaObject: Object, schemaName: string, data, failureMessageOrGetter: string | ((errorsText: string)=>string), opt?: Partial<AssertValidateOptions>) {
 	opt = E(new AssertValidateOptions(), opt);
+	AssertV(schemaObject, "schemaObject cannot be null.");
+	schemaObject = Schema(schemaObject); // make sure we apply schema-object defaults
 	if (opt.allowOptionalPropsToBeNull) {
 		schemaObject = Schema_WithOptionalPropsAllowedNull(schemaObject);
 	}
