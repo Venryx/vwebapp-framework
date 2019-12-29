@@ -1,7 +1,7 @@
-import {VRect, Vector2i, GetPropsChanged} from "js-vextensions";
+import {VRect, Vector2i, GetPropChanges} from "js-vextensions";
 import {AddSchema, GetSchemaJSON} from "../Database/SchemaHelpers";
 
-// like js-vextensions GetPropsChanged(), except also applies RemoveHelpers on the result (since intended to be used for db-objects)
+// like js-vextensions GetPropChanges(), except also applies RemoveHelpers on the result (since intended to be used for db-objects)
 export function GetUpdates(oldData, newData, useJSONCompare = false, useNullInsteadOfUndefined = true) {
 	/*const result = {};
 	for (const key of oldData.VKeys(true).concat(newData.VKeys(true))) {
@@ -12,7 +12,7 @@ export function GetUpdates(oldData, newData, useJSONCompare = false, useNullInst
 			}
 		}
 	}*/
-	const result = GetPropsChanged(oldData, newData, false, useJSONCompare).ToMap(a=>a.key, a=>a.newVal);
+	const result = GetPropChanges(oldData, newData, false, useJSONCompare).ToMap(a=>a.key, a=>a.newVal);
 	if (useNullInsteadOfUndefined) {
 		result.Pairs().filter(a=>a.value === undefined).forEach(a=>result[a.key] = null);
 	}
