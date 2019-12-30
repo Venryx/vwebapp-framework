@@ -6,6 +6,7 @@ import React from "react";
 import {Segment, ParseSegmentsForPatterns} from "../General/RegexHelpers";
 import {GetCurrentURL} from "../URL/URLs";
 import {Link} from "./Link";
+import {manager} from "../../Manager";
 
 export type ReplacementFunc = (segment: Segment, index: number, extraInfo)=>JSX.Element;
 
@@ -19,12 +20,19 @@ export class VReactMarkdown extends BaseComponent
 		containerProps_final.style = E(containerProps_final.style, style);
 
 		const renderers_final = {...renderers} as any;
-		renderers_final.Link = renderers_final.Link || (props=>{
+		renderers_final.link = renderers_final.link || (props=>{
 			let {href, target, ...rest} = props;
 			const toURL = VURL.Parse(href);
+			const sameDomain = toURL.domain == GetCurrentURL().domain;
+
 			if (target == "") target = null; // normalize falsy target
-			if (target == null && toURL.domain != GetCurrentURL().domain) {
+			if (target == null && sameDomain) {
 				target = "_blank";
+			}
+
+			if (sameDomain) {
+				const actionFunc = manager.GetLoadActionFuncForURL(toURL);
+				return <Link {...FilterOutUnrecognizedProps(rest, "a")} actionFunc={actionFunc} target={target}/>;
 			}
 			return <Link {...FilterOutUnrecognizedProps(rest, "a")} to={href} target={target}/>;
 		});
