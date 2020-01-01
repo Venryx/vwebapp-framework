@@ -123,7 +123,7 @@ export function GetDOMPath(el) {
 
 export function ClearPropsNotInSchema(obj, schemaName: string) {
 	const schema = GetSchemaJSON(schemaName);
-	for (const key of obj.VKeys(true)) {
+	for (const key of obj.VKeys()) {
 		if (schema["properties"][key] == null) {
 			delete obj[key];
 		}

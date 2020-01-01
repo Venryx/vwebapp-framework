@@ -11,12 +11,12 @@ export class Slider extends BaseComponent
 	static defaultProps = {enabled: true};
 	slider: RCSlider;
 	render() {
-		let {value, enabled, delayChangeTillDefocus, onChange, ...rest} = this.props;
-		let {editedValue} = this.state;
+		const {value, enabled, delayChangeTillDefocus, onChange, ...rest} = this.props;
+		const {editedValue} = this.state;
 		return (
 			<RCSlider ref={c=>this.slider = c} {...rest} disabled={!enabled}
 				value={editedValue != null ? editedValue : (value || 0)}
-				onChange={val=> {
+				onChange={val=>{
 					if (delayChangeTillDefocus) {
 						this.SetState({editedValue: val});
 					} else {
@@ -24,7 +24,7 @@ export class Slider extends BaseComponent
 						this.SetState({editedValue: null});
 					}
 				}}
-				onAfterChange={val=> {
+				onAfterChange={val=>{
 					if (delayChangeTillDefocus && onChange) {
 						onChange(val);
 						this.SetState({editedValue: null});

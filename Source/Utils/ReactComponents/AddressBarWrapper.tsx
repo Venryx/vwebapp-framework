@@ -27,21 +27,19 @@ export class AddressBarWrapper extends BaseComponentPlus({}, {}) {
 
 		if (lastProcessedURL && newURL.toString({domain: false}) === lastProcessedURL.toString({domain: false})) return null;
 
-		let action;
 		if (lastProcessedURL) {
-			//action = pushURL ? push(newURL) : replace(newURL);
 			if (pushURL) {
 				history.pushState(null, null, newURL.toString({domain: false}));
 			} else {
 				history.replaceState(null, null, newURL.toString({domain: false}));
 			}
-			MaybeLog(a=>a.urlLoads, ()=>`Dispatching new-url: ${newURL} @type:${action.type}`);
+			MaybeLog(a=>a.urlLoads, ()=>`Dispatching new-url: ${newURL} @push:${pushURL}`);
 		} else {
 			// if page just loaded, do one "start-up" LOCATION_CHANGED action, with whatever's in the address-bar
 			/*const startURL = e.GetCurrentURL(true).toString({domain: false});
 			//action = replace(startURL);
 			history.replaceState(null, null, startURL.toString());*/
-			MaybeLog(a=>a.urlLoads, ()=>`Dispatching start-url: ${e.GetCurrentURL()} @type:${action.type}`);
+			MaybeLog(a=>a.urlLoads, ()=>`Dispatching start-url: ${e.GetCurrentURL()} @push:${pushURL}`);
 		}
 
 		// action.byUser = false;
