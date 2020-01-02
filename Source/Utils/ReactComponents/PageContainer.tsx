@@ -58,13 +58,17 @@ export function ReactTextToPixelVal(reactText: React.ReactText) {
 export type PageContainerPreset = "text" | "full";
 
 export class PageContainer extends BaseComponentPlus(
-	{preset: "text", scrollable: false, shadow: true} as {preset?: PageContainerPreset, scrollable?: boolean, shadow?: boolean, style?, innerStyle?} & React.HTMLProps<ScrollView & Row>,
+	{preset: "text", scrollable: false} as {preset?: PageContainerPreset, scrollable?: boolean, shadow?: boolean, style?, innerStyle?} & React.HTMLProps<ScrollView & Row>,
 	{},
 ) {
 	render() {
 		let {preset, scrollable, shadow, style, innerStyle, children, ...rest} = this.props; // eslint-disable-line
 		const outerStyle = style || {};
 		innerStyle = innerStyle || {};
+		//shadow = shadow ?? preset == "text";
+		if (preset == "text") {
+			shadow = true;
+		}
 
 		const outerStyle_base = ES(
 			preset == "text" && {flex: "0 1 960px", margin: "50px 10px 20px 10px"},
@@ -73,7 +77,7 @@ export class PageContainer extends BaseComponentPlus(
 		);
 		const innerStyle_base = ES(
 			{display: "flex", flexDirection: "column", borderRadius: 10},
-			preset == "text" && {background: `rgba(0,0,0,${shadow ? ".6" : ".8"})`, padding: 50},
+			preset == "text" && {padding: 50, background: `rgba(0,0,0,${shadow ? ".6" : ".8"})`},
 		);
 
 		if (preset) {
