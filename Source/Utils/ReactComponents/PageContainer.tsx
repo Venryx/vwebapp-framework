@@ -1,5 +1,5 @@
 import {ScrollView} from "react-vscrollview";
-import {BaseComponent} from "react-vextensions";
+import {BaseComponent, BaseComponentPlus} from "react-vextensions";
 import {Row, Div} from "react-vcomponents";
 import {ToInt, IsNumber, E} from "js-vextensions";
 import React from "react";
@@ -55,30 +55,39 @@ export function ReactTextToPixelVal(reactText: React.ReactText) {
 	return ToInt(pxMatch[1]);
 }
 
-export class PageContainer extends BaseComponent<{scrollable?: boolean, fullWidth?: boolean, fullHeight?: boolean, shadow?: boolean, style?, innerStyle?} & React.HTMLProps<ScrollView & Row>, {}> {
-	static defaultProps = {scrollable: false, shadow: true};
+export type PageContainerPreset = "text" | "full";
+
+export class PageContainer extends BaseComponentPlus(
+	{preset: "text", scrollable: false, shadow: true} as {preset?: PageContainerPreset, scrollable?: boolean, shadow?: boolean, style?, innerStyle?} & React.HTMLProps<ScrollView & Row>,
+	{},
+) {
 	render() {
-		let {scrollable, fullWidth, fullHeight, shadow, style, innerStyle, children, ...rest} = this.props; // eslint-disable-line
+		let {preset, scrollable, shadow, style, innerStyle, children, ...rest} = this.props; // eslint-disable-line
 		const outerStyle = style || {};
 		innerStyle = innerStyle || {};
 
 		const outerStyle_base = ES(
-			{flex: "0 1 960px", margin: "50px 10px 20px 10px"},
+			preset == "text" && {flex: "0 1 960px", margin: "50px 10px 20px 10px"},
+			preset == "full" && {flex: 1, width: "100%", margin: "30px 0 0 0"},
 			shadow && {filter: "drop-shadow(rgb(0, 0, 0) 0px 0px 10px)"},
-			fullWidth && {flex: 1, width: "100%"},
 		);
-		const innerStyle_base = {display: "flex", flexDirection: "column", background: `rgba(0,0,0,${shadow ? ".6" : ".8"})`, borderRadius: 10, padding: 50};
+		const innerStyle_base = ES(
+			{display: "flex", flexDirection: "column", borderRadius: 10},
+			preset == "text" && {background: `rgba(0,0,0,${shadow ? ".6" : ".8"})`, padding: 50},
+		);
 
-		const marginValuesFromMarginProp = GetExpandedCSSPropValuesFromString("margin", ES(outerStyle_base, outerStyle).margin);
-		const marginValues = ES(marginValuesFromMarginProp, outerStyle);
-		const verticalMargin = ReactTextToPixelVal(marginValues.marginTop) + ReactTextToPixelVal(marginValues.marginBottom);
-		outerStyle_base[fullHeight ? "height" : "maxHeight"] = `calc(100% - ${verticalMargin}px)`;
+		if (preset) {
+			const marginValuesFromMarginProp = GetExpandedCSSPropValuesFromString("margin", ES(outerStyle_base, outerStyle).margin);
+			const marginValues = ES(marginValuesFromMarginProp, outerStyle);
+			const verticalMargin = ReactTextToPixelVal(marginValues.marginTop) + ReactTextToPixelVal(marginValues.marginBottom);
+			outerStyle_base[preset == "full" ? "height" : "maxHeight"] = `calc(100% - ${verticalMargin}px)`;
+		}
 
 		if (scrollable) {
 			return (
 				<ScrollView {...rest as any}
 						style={ES(outerStyle_base, outerStyle)}
-						contentStyle={ES(innerStyle_base, {display: "flex", flexDirection: "column"}, innerStyle)}>
+						contentStyle={ES(innerStyle_base, innerStyle)}>
 					{children}
 				</ScrollView>
 			);
