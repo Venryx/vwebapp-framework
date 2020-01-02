@@ -46,11 +46,11 @@ export class TreeView extends BaseComponent<Props, {collapsed: boolean}> {
 						},
 						!collapsable && {opacity: 0},
 					)}
-					onClick={this.onArrowClick}/>
-				<div onClick={this.onClick}
+					onClick={this.onArrowClick.bind(this)}/>
+				<div onClick={this.onClick.bind(this)}
 					style={E(
 						titleStyle,
-						{display: "inline-block", width: "calc(100% - 12px)",
+						{display: "inline-flex", width: "calc(100% - 12px)",
 							backgroundColor: selected ? "rgba(44, 79, 122, .5)" : null},
 					)}>
 					{title}
