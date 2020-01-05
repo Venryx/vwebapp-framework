@@ -129,7 +129,7 @@ export class VReactMarkdown_Remarkable extends BaseComponent<Props, {}> {
 								addMarginsForDanglingNewLines={addMarginsForDanglingNewLines}/>
 						);
 					}
-					const renderFuncForReplacement = replacements.VValues()[segment.patternMatched] as ReplacementFunc;
+					const renderFuncForReplacement = replacements.VValues()[segment.patternMatched.name] as ReplacementFunc;
 					return renderFuncForReplacement(segment, index, extraInfo).VAct(a=>a.key = index);
 				});
 				return React.createElement(containerType, {style}, segmentUIs);

@@ -3,7 +3,7 @@ export interface Pattern {
 	regex: RegExp;
 }
 export interface Segment {
-	patternMatched: string;
+	patternMatched: Pattern;
 	textParts: string[];
 }
 
@@ -13,23 +13,25 @@ export function ParseSegmentsForPatterns(text: string, patterns: Pattern[]): Seg
 
 	while (textRemaining.length) {
 		let match: RegExpMatchArray;
-		for (let pattern of patterns) {
+		for (const pattern of patterns) {
 			match = pattern.regex.exec(textRemaining);
 			if (match) {
-				let partNotUsed = textRemaining.substr(0, match.index);
-				if (partNotUsed.length)
+				const partNotUsed = textRemaining.substr(0, match.index);
+				if (partNotUsed.length) {
 					segments.push({patternMatched: null, textParts: [partNotUsed]});
+				}
 
-				segments.push({patternMatched: pattern.name, textParts: match});
+				segments.push({patternMatched: pattern, textParts: match});
 				textRemaining = textRemaining.substr(match.index + match[0].length);
 				break;
 			}
 		}
 
 		if (!match) {
-			let partNotUsed = textRemaining;
-			if (partNotUsed.length)
+			const partNotUsed = textRemaining;
+			if (partNotUsed.length) {
 				segments.push({patternMatched: null, textParts: [partNotUsed]});
+			}
 			textRemaining = "";
 		}
 	}

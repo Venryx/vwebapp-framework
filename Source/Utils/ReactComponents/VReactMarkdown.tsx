@@ -57,7 +57,7 @@ export class VReactMarkdown extends BaseComponent
 								</div>
 							);
 						}
-						const renderFuncForReplacement = replacements.VValues()[segment.patternMatched] as ReplacementFunc;
+						const renderFuncForReplacement = replacements.VValues()[segment.patternMatched.name] as ReplacementFunc;
 						return renderFuncForReplacement(segment, index, extraInfo).VAct(a=>a.key = index);
 					})}
 				</div>
