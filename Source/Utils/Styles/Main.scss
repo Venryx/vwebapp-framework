@@ -94,7 +94,8 @@ div:focus {
 }
 
 a {
-	text-decoration: none !important;
+	//text-decoration: none !important;
+	text-decoration: none;
 	&:not(.ignoreBaseCSS) {
 		color: rgba(100,255,100,.7);
 		&:hover { color: rgba(100,255,100,1); }
