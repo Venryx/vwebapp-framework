@@ -84,8 +84,9 @@ Details: ${ToJSON(this.errors, null, 3)}
 // validation
 // ==========
 
-export const ajvExtraChecks = {}; // schemaName -> $index -> $validationFunc
-export function AddAJVExtraCheck(schemaName: string, extraCheckFunc: (item: any)=>string) {
+export type AJVExtraCheckFunc = (item: any)=>string;
+export const ajvExtraChecks = {} as {[key: string]: AJVExtraCheckFunc[]}; // schemaName -> $index -> $validationFunc
+export function AddAJVExtraCheck(schemaName: string, extraCheckFunc: AJVExtraCheckFunc) {
 	ajvExtraChecks[schemaName] = ajvExtraChecks[schemaName] || [];
 	ajvExtraChecks[schemaName].push(extraCheckFunc);
 }
@@ -98,15 +99,11 @@ export function ValidateAJVExtraChecks(schemaName: string, data) {
 }
 
 /** Returns null if the supplied data matches the schema. Else, returns error message. */
-export function Validate(schemaName: string, data) { //, removeHelpers = true) {
-	return Validate_Full(GetSchemaJSON(schemaName), schemaName, data); //, removeHelpers);
+export function Validate(schemaName: string, data: any) {
+	return Validate_Full(GetSchemaJSON(schemaName), schemaName, data);
 }
 /** Returns null if the supplied data matches the schema. Else, returns error message. */
-export function Validate_Full(schemaObject: Object, schemaName: string, data) { //, removeHelpers = true) {
-	/* if (removeHelpers) {
-		data = WithoutHelpers(data);
-	} */
-
+export function Validate_Full(schemaObject: Object, schemaName: string, data: any) {
 	if (data == null) return "Data is null/undefined!";
 
 	const passed = ajv.validate(schemaObject, data);
@@ -120,6 +117,7 @@ export function Validate_Full(schemaObject: Object, schemaName: string, data) { 
 
 export class AssertValidateOptions {
 	addErrorsText = true;
+	addSchemaName = true;
 	addDataStr = true;
 	allowOptionalPropsToBeNull = true;
 	useAssertV = true;
@@ -137,12 +135,18 @@ export function AssertValidate_Full(schemaObject: Object, schemaName: string, da
 		schemaObject = Schema_WithOptionalPropsAllowedNull(schemaObject);
 	}
 
-	const errorsText = Validate_Full(schemaObject, schemaName, data); //, false);
+	const errorsText = Validate_Full(schemaObject, schemaName, data)?.trimRight();
 
 	let failureMessage = IsString(failureMessageOrGetter) ? failureMessageOrGetter : failureMessageOrGetter(errorsText);
 	if (opt.addErrorsText) {
 		failureMessage += `: ${errorsText}`;
 	}
+	if (opt.addSchemaName && schemaName) {
+		failureMessage += `\nSchemaName: "${schemaName}"`;
+	}
+	/*if (opt.addSchemaObject) {
+		failureMessage += `\nSchemaObject: "${schemaObject}"`;
+	}*/
 	if (opt.addDataStr) {
 		failureMessage += `\nData: ${ToJSON(data, null, 3)}`;
 	}
