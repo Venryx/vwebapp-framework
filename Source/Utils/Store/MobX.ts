@@ -1,5 +1,5 @@
 import {runInAction, observable} from "mobx";
-import {observer} from "mobx-react";
+import {observer, IReactComponent} from "mobx-react";
 import {EnsureClassProtoRenderFunctionIsWrapped, BaseComponent} from "react-vextensions";
 import React, {Component, useRef} from "react";
 import {ToJSON, E} from "js-vextensions";
@@ -7,6 +7,12 @@ import {manager} from "../../Manager";
 
 export type ActionFunc<StoreType> = (store: StoreType)=>void;
 
+// variant of observer(...) wrapper-func, which returns a simple function result, instead of a ReactJS element-info entry (needed for ShowMessageBox.message)
+export function observer_simple<T extends IReactComponent>(target: T): T {
+	return observer(target)["type"];
+}
+
+// variant of @observer decorator, which also adds (and is compatible with) class-hooks
 export class Observer_Options {
 	classHooks = true;
 }
