@@ -12,7 +12,6 @@ import {WebpackStringReplacer} from "webpack-string-replacer";
 import {CE} from "js-vextensions/Source"; // temp; require source, thus ts-node compiles to commonjs (fix for that ts-node doesn't support es2015-modules)
 // import resolverFactory from 'enhanced-resolve/lib/ResolverFactory';
 import SymlinkPlugin from "enhanced-resolve/lib/SymlinkPlugin";
-import {npmPatch_replacerConfig} from "./NPMPatches";
 import {MakeSoWebpackConfigOutputsStats} from "./WebpackConfig/OutputStats";
 // const BundleAnalyzerPlugin = require("webpack-bundle-analyzer").BundleAnalyzerPlugin;
 // const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
@@ -36,7 +35,7 @@ const ownModules = [
 	"webpack-runtime-require", // misc
 ];
 
-export function CreateWebpackConfig(config: ReturnType<typeof CreateConfig>, ext: Partial<webpack.Configuration> & {name: string}) {
+export function CreateWebpackConfig(config: ReturnType<typeof CreateConfig>, npmPatch_replacerConfig, ext: Partial<webpack.Configuration> & {name: string}) {
 	const paths = config.utils_paths;
 
 	debug("Creating configuration.");

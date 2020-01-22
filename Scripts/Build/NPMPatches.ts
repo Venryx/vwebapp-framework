@@ -1,13 +1,13 @@
 import {Options, Rule} from "webpack-string-replacer";
 
-export const npmPatch_replacerConfig: Options = {
+const npmPatch_replacerConfig_base: Options = {
 	shouldValidate: ({compilations})=>compilations.length == 3, // only validate on initial compile
 	// validationLogType: 'logError',
 	rules: [],
 };
 
 function AddRule(rule: Rule) {
-	npmPatch_replacerConfig.rules.push(rule);
+	npmPatch_replacerConfig_base.rules.push(rule);
 }
 
 AddRule({
@@ -234,3 +234,11 @@ AddRule({
 		},
 	],
 });
+
+export function CreateNPMPatchesConfig(ext: Partial<Options>): Options {
+	const config = Object.assign(
+		npmPatch_replacerConfig_base,
+		ext,
+	);
+	return config;
+}
