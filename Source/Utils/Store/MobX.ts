@@ -126,21 +126,33 @@ See here for more info: https://github.com/immerjs/immer/issues/515
 export function GetMirrorOfMobXTree<T>(mobxTree: T): T {
 	if (mobxTree == null) return null;
 	if (mobxTree["$mirror"] == null) {
-		const tree_plainMirror = Array.isArray(mobxTree) ? [] : {};
+		const tree_plainMirror =
+			mobxTree instanceof Map ? new Map() :
+			mobxTree instanceof Set ? new Set() :
+			Array.isArray(mobxTree) ? [] :
+			{};
+		// uncomment this line if you want the mirror to have the same prototype/functions
+		Object.setPrototypeOf(tree_plainMirror, Object.getPrototypeOf(mobxTree));
+
 		Object.defineProperty(mobxTree, "$mirror", {value: tree_plainMirror});
 		StartUpdatingMirrorOfMobXTree(mobxTree, tree_plainMirror);
 	}
 	return mobxTree["$mirror"];
 }
 export function StartUpdatingMirrorOfMobXTree(mobxTree: any, tree_plainMirror: any) {
+	//const stopUpdating = autorun(()=>{
 	autorun(()=>{
 		for (const key of Object.keys(mobxTree)) {
 			const value = mobxTree[key]; // this counts as a mobx-get, meaning the autorun subscribes, so this func reruns when the prop-value changes
+			//const oldValue = tree_plainMirror[key];
 			if (typeof value == "object") {
 				tree_plainMirror[key] = GetMirrorOfMobXTree(value);
 			} else {
 				tree_plainMirror[key] = value;
 			}
+
+			//if (typeof oldValue == "object" && oldValue["$mirror_stopUpdating"]) { [...]
 		}
 	});
+	//Object.defineProperty(mobxTree, "$mirror_stopUpdating", stopUpdating);
 }
