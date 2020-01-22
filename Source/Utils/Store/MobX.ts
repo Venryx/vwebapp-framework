@@ -1,4 +1,4 @@
-import {runInAction, observable} from "mobx";
+import {runInAction, observable, autorun} from "mobx";
 import {observer, IReactComponent} from "mobx-react";
 import {EnsureClassProtoRenderFunctionIsWrapped, BaseComponent} from "react-vextensions";
 import React, {Component, useRef} from "react";
@@ -115,3 +115,32 @@ export function StoreAction(...args) {
 }
 
 export const O = observable;
+
+// mobx-mirror
+// ==========
+
+/**
+Makes it possible to use MobX object-trees as the source/base object for Immer's produce function.
+See here for more info: https://github.com/immerjs/immer/issues/515
+*/
+export function GetMirrorOfMobXTree<T>(mobxTree: T): T {
+	if (mobxTree == null) return null;
+	if (mobxTree["$mirror"] == null) {
+		const tree_plainMirror = Array.isArray(mobxTree) ? [] : {};
+		Object.defineProperty(mobxTree, "$mirror", {value: tree_plainMirror});
+		StartUpdatingMirrorOfMobXTree(mobxTree, tree_plainMirror);
+	}
+	return mobxTree["$mirror"];
+}
+export function StartUpdatingMirrorOfMobXTree(mobxTree: any, tree_plainMirror: any) {
+	autorun(()=>{
+		for (const key of Object.keys(mobxTree)) {
+			const value = mobxTree[key]; // this counts as a mobx-get, meaning the autorun subscribes, so this func reruns when the prop-value changes
+			if (typeof value == "object") {
+				tree_plainMirror[key] = GetMirrorOfMobXTree(value);
+			} else {
+				tree_plainMirror[key] = value;
+			}
+		}
+	});
+}

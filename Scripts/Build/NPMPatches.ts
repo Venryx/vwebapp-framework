@@ -156,7 +156,8 @@ module.exports =
 ]); */
 
 // immer
-AddRule({
+// commented; we don't need this anymore, since we have the mobx-mirror system now
+/*AddRule({
 	fileInclude: /immer.module.js$/,
 	// logFileMatches: true,
 	// logFileMatchContents: true,
@@ -208,9 +209,9 @@ AddRule({
 				}
 				if (value !== peek$1(state.base, prop)) { return value; }
 			`,
-		}, */
+		}, *#/
 	],
-});
+});*/
 
 // mobx-utils
 // ==========
