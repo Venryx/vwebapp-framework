@@ -114,7 +114,7 @@
 	},
 	"dependencies": {
 		"history": "^4.10.1",
-		"immer": "^5.0.0",
+		"immer": "5.0.0",
 		"rc-slider": "^8.7.1",
 		"rc-tooltip": "^3.7.3",
 		"react-datetime": "^2.16.3",
