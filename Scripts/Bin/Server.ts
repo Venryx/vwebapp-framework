@@ -17,7 +17,7 @@ export function Serve(config: ReturnType<typeof CreateConfig>, webpackConfig: we
 	app.use(connectHistoryAPIFallback({
 		rewrites: [
 			{
-				from: /^(.(?!\.(html|js|css|png|jpg)))+$/, // paths with these extensions will NOT be redirected to "index.html""
+				from: /^(.(?!\.(html|js|css|png|jpg|wasm)))+$/, // paths with these extensions will NOT be redirected to "index.html""
 				to(context) {
 					return "/index.html";
 				},
