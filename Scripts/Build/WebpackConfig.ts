@@ -55,8 +55,10 @@ export function CreateWebpackConfig(config: ReturnType<typeof CreateConfig>, npm
 				"node_modules", // commented; thus we ignore the closest-to-import-statement node_modules folder, instead we: [...]
 				// paths.base('node_modules'), // [...] always get libraries from the root node_modules folder
 				// paths.source(),
-				USE_TSLOADER ? paths.source() : paths.base("Source_JS"),
-			],
+				//USE_TSLOADER ? paths.source() : paths.sourceJS(),
+				!USE_TSLOADER && paths.sourceJS(), // add source-js folder first, so it has priority
+				paths.base(),
+			].filter(a=>a),
 			// extensions: [".js", ".jsx", ".json"].concat(USE_TSLOADER ? [".ts", ".tsx"] : []),
 			extensions: [
 				".js", ".jsx", ".json",
@@ -109,7 +111,7 @@ export function CreateWebpackConfig(config: ReturnType<typeof CreateConfig>, npm
 	// entry points
 	// ==========
 
-	const APP_ENTRY = paths.source(USE_TSLOADER ? "Main.ts" : "Main.js");
+	const APP_ENTRY = USE_TSLOADER ? paths.source("Main.ts") : paths.sourceJS("Source/Main.js");
 
 	webpackConfig.entry = {
 		app: DEV && config.useHotReloading

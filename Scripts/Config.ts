@@ -37,7 +37,8 @@ function S(obj) {
 
 const config_base = {
 	// paths
-	dir_source: USE_TSLOADER ? "Source" : "Source_JS",
+	dir_source: "Source",
+	dir_sourceJS: "Source_JS",
 	dir_dist: "Dist",
 	dir_server: "Scripts/Server",
 	dir_test: "Tests",
@@ -91,6 +92,7 @@ export function CreateConfig(ext: Partial<typeof config_base> & {path_base: stri
 			utils_paths: {
 				base: (...extra)=>path.resolve(ext.path_base, ...extra),
 				source: (...extra)=>path.resolve(ext.path_base, config.dir_source, ...extra),
+				sourceJS: (...extra)=>path.resolve(ext.path_base, config.dir_sourceJS, ...extra),
 				dist: (...extra)=>path.resolve(ext.path_base, config.dir_dist, ...extra),
 			},
 		},
