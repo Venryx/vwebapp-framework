@@ -98,8 +98,3 @@ export function BlobToArrayBuffer(blob: Blob) {
 		reader.readAsArrayBuffer(blob);
 	}) as Promise<ArrayBuffer>;
 }
-
-// use a singleton for empty-obj and empty-array (that way VCache and other shallow-compare systems work with them)
-export function IsSpecialEmptyArray<T>(array: Array<T>) {
-	return array == emptyArray || array == emptyArray_forLoading;
-}

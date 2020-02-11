@@ -1,5 +1,5 @@
 import {VRect, Vector2i, GetPropChanges} from "js-vextensions";
-import {AddSchema, GetSchemaJSON} from "../Database/SchemaHelpers";
+import {AddSchema, GetSchemaJSON} from "mobx-firelink";
 
 // like js-vextensions GetPropChanges(), except also applies RemoveHelpers on the result (since intended to be used for db-objects)
 export function GetUpdates(oldData, newData, useJSONCompare = false, useNullInsteadOfUndefined = true) {
