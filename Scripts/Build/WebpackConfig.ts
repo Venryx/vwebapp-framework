@@ -134,7 +134,7 @@ export function CreateWebpackConfig(opt: CreateWebpackConfig_Options) {
 
 	const APP_ENTRY = opt.sourcesFromRoot
 		? (USE_TSLOADER ? paths.source("Main.ts") : paths.sourceJS("Source/Main.js"))
-		: paths.source(USE_TSLOADER ? "Main.ts" : "Main.js");
+		: (USE_TSLOADER ? paths.source("Main.ts") : paths.sourceJS("Main.js"));
 
 	webpackConfig.entry = {
 		app: DEV && opt.config.useHotReloading
