@@ -9,7 +9,7 @@ import fs from "fs";
 import SpriteLoaderPlugin from "svg-sprite-loader/plugin";
 import {WebpackStringReplacer} from "webpack-string-replacer";
 //import {CE} from "js-vextensions";
-import {CE} from "js-vextensions/Source"; // temp; require source, thus ts-node compiles to commonjs (fix for that ts-node doesn't support es2015-modules)
+import {CE, E} from "js-vextensions/Source"; // temp; require source, thus ts-node compiles to commonjs (fix for that ts-node doesn't support es2015-modules)
 // import resolverFactory from 'enhanced-resolve/lib/ResolverFactory';
 import SymlinkPlugin from "enhanced-resolve/lib/SymlinkPlugin";
 import {MakeSoWebpackConfigOutputsStats} from "./WebpackConfig/OutputStats";
@@ -35,8 +35,21 @@ const ownModules = [
 	"webpack-runtime-require", // misc
 ];
 
-export function CreateWebpackConfig(config: ReturnType<typeof CreateConfig>, npmPatch_replacerConfig, ext: Partial<webpack.Configuration> & {name: string}) {
-	const paths = config.utils_paths;
+export class CreateWebpackConfig_Options {
+	config: ReturnType<typeof CreateConfig>;
+	npmPatch_replacerConfig: any;
+	/** Raw webpack-config field sets/overrides. */
+	ext: Partial<webpack.Configuration> & {
+		name: string,
+	};
+
+	sourcesFromRoot? = false;
+}
+
+export function CreateWebpackConfig(opt: CreateWebpackConfig_Options) {
+	opt = E(new CreateWebpackConfig_Options(), opt);
+
+	const paths = opt.config.utils_paths;
 
 	debug("Creating configuration.");
 	const webpackConfig = <webpack.Configuration>{
@@ -49,16 +62,24 @@ export function CreateWebpackConfig(config: ReturnType<typeof CreateConfig>, npm
 			noEmitOnErrors: true,
 		},
 		target: "web",
-		devtool: config.compiler_devtool as any,
+		devtool: opt.config.compiler_devtool as any,
 		resolve: {
-			modules: [
-				"node_modules", // commented; thus we ignore the closest-to-import-statement node_modules folder, instead we: [...]
-				// paths.base('node_modules'), // [...] always get libraries from the root node_modules folder
-				// paths.source(),
-				//USE_TSLOADER ? paths.source() : paths.sourceJS(),
-				!USE_TSLOADER && paths.sourceJS(), // add source-js folder first, so it has priority
-				paths.base(),
-			].filter(a=>a),
+			modules:
+				opt.sourcesFromRoot
+					? [
+						"node_modules", // commented; thus we ignore the closest-to-import-statement node_modules folder, instead we: [...]
+						// paths.base('node_modules'), // [...] always get libraries from the root node_modules folder
+						// paths.source(),
+						//USE_TSLOADER ? paths.source() : paths.sourceJS(),
+						!USE_TSLOADER && paths.sourceJS(), // add source-js folder first, so it has priority
+						paths.base(),
+					].filter(a=>a)
+					: [
+						"node_modules", // commented; thus we ignore the closest-to-import-statement node_modules folder, instead we: [...]
+						// paths.base('node_modules'), // [...] always get libraries from the root node_modules folder
+						// paths.source(),
+						USE_TSLOADER ? paths.source() : paths.base("Source_JS"),
+					],
 			// extensions: [".js", ".jsx", ".json"].concat(USE_TSLOADER ? [".ts", ".tsx"] : []),
 			extensions: [
 				".js", ".jsx", ".json",
@@ -111,11 +132,13 @@ export function CreateWebpackConfig(config: ReturnType<typeof CreateConfig>, npm
 	// entry points
 	// ==========
 
-	const APP_ENTRY = USE_TSLOADER ? paths.source("Main.ts") : paths.sourceJS("Source/Main.js");
+	const APP_ENTRY = opt.sourcesFromRoot
+		? (USE_TSLOADER ? paths.source("Main.ts") : paths.sourceJS("Source/Main.js"))
+		: paths.source(USE_TSLOADER ? "Main.ts" : "Main.js");
 
 	webpackConfig.entry = {
-		app: DEV && config.useHotReloading
-			? [APP_ENTRY].concat(`webpack-hot-middleware/client?path=${config.compiler_public_path}__webpack_hmr`)
+		app: DEV && opt.config.useHotReloading
+			? [APP_ENTRY].concat(`webpack-hot-middleware/client?path=${opt.config.compiler_public_path}__webpack_hmr`)
 			: [APP_ENTRY],
 	};
 
@@ -125,7 +148,7 @@ export function CreateWebpackConfig(config: ReturnType<typeof CreateConfig>, npm
 	webpackConfig.output = {
 		filename: "[name].js?[hash]", // have js/css files have static names, so google can still display content (even when js file has changed)
 		path: paths.dist(),
-		publicPath: config.compiler_public_path,
+		publicPath: opt.config.compiler_public_path,
 		pathinfo: true, // include comments next to require-funcs saying path
 	};
 
@@ -158,7 +181,7 @@ export function CreateWebpackConfig(config: ReturnType<typeof CreateConfig>, npm
 				// throw new Error(errors)
 			});
 		},
-		new webpack.DefinePlugin(config.globals),
+		new webpack.DefinePlugin(opt.config.globals),
 		new HtmlWebpackPlugin({
 			template: "./Source/index.html",
 			hash: false,
@@ -277,7 +300,7 @@ export function CreateWebpackConfig(config: ReturnType<typeof CreateConfig>, npm
 	// file text-replacements
 	// ==========
 
-	webpackConfig.plugins.push(new WebpackStringReplacer(npmPatch_replacerConfig));
+	webpackConfig.plugins.push(new WebpackStringReplacer(opt.npmPatch_replacerConfig));
 
 	// css loaders
 	// ==========
@@ -355,7 +378,7 @@ export function CreateWebpackConfig(config: ReturnType<typeof CreateConfig>, npm
 		MakeSoWebpackConfigOutputsStats(webpackConfig);
 	}
 
-	return Object.assign(webpackConfig, ext);
+	return Object.assign(webpackConfig, opt.ext);
 }
 
 // also do this, for if sending to cli-started webpack
