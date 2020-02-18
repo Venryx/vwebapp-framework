@@ -1,8 +1,8 @@
-import {IsString} from "js-vextensions";
+import {IsString, E} from "js-vextensions";
 import Moment from "moment";
 import React from "react";
 import DateTime, {DatetimepickerProps} from "react-datetime";
-import {BaseComponent} from "react-vextensions";
+import {BaseComponent, BaseComponentPlus} from "react-vextensions";
 
 function RawValToMoment(val: Moment.Moment | string, dateFormat: string | false, timeFormat: string | false): Moment.Moment {
 	//let timeOnly = props.dateFormat == false;
@@ -40,22 +40,30 @@ function MomentOrString_Normalize(momentOrStr_raw: Moment.Moment | string, dateF
 }
 
 export type VDateTime_Props = {
-	delayChangeTillDefocus: boolean, min?: Moment.Moment, max?: Moment.Moment, onChange: (val: Moment.Moment)=>void,
+	enabled?: boolean, delayChangeTillDefocus?: boolean, min?: Moment.Moment, max?: Moment.Moment, onChange: (val: Moment.Moment)=>void,
 	//dateFormatExtras?: string[], timeFormatExtras?: string[],
 	// fixes for DatetimepickerProps
 	dateFormat?: string | false, timeFormat?: string | false,
-} & Omit<DatetimepickerProps, "dateFormat" | "timeFormat">;
-export class VDateTime extends BaseComponent<VDateTime_Props, {editedValue_raw: Moment.Moment | string}> {
-	/*static defaultProps = {
-		dateFormatExtras: [""],
-		timeFormatExtras: [""],
-	};*/
-
+} & Omit<DatetimepickerProps, "onChange" | "dateFormat" | "timeFormat">;
+export class VDateTime extends BaseComponentPlus(
+	{
+		enabled: true,
+		/*dateFormatExtras: [""],
+		timeFormatExtras: [""],*/
+	} as VDateTime_Props,
+	{editedValue_raw: null as Moment.Moment | string},
+) {
 	render() {
-		const {value, onChange, delayChangeTillDefocus, dateFormat, timeFormat, min, max, ...rest} = this.props;
+		let {enabled, value, onChange, delayChangeTillDefocus, dateFormat, timeFormat, inputProps, min, max, ...rest} = this.props;
 		const {editedValue_raw} = this.state;
+
+		if (!enabled) {
+			inputProps = E(inputProps, {disabled: true});
+		}
+
 		return (
 			<DateTime {...rest} value={editedValue_raw != null ? editedValue_raw : value}
+				dateFormat={dateFormat} timeFormat={timeFormat}
 				onChange={newVal_raw=>{
 					const newVal = MomentOrString_Normalize(newVal_raw, dateFormat, timeFormat, min, max);
 					if (`${newVal}` == `${RawValToMoment(editedValue_raw, dateFormat, timeFormat)}`) return; // if no change, ignore event
@@ -67,7 +75,7 @@ export class VDateTime extends BaseComponent<VDateTime_Props, {editedValue_raw: 
 						this.SetState({editedValue_raw: null});
 					}
 				}}
-				inputProps={{onBlur: e=>this.OnInputBlurOrBoxClose(e.target.value)}}
+				inputProps={E({onBlur: e=>this.OnInputBlurOrBoxClose(e.target.value)}, inputProps)}
 				onBlur={val=>this.OnInputBlurOrBoxClose(val as string | Moment.Moment)}/>
 		);
 	}
