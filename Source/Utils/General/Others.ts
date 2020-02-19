@@ -27,6 +27,18 @@ export function GetScreenRect(el: Element) {
 	var clientRect = el.getBoundingClientRect();
 	return new VRect(clientRect.left, clientRect.top, clientRect.width, clientRect.height, false);
 }
+export function GetPageRect(el: Element) {
+	var box = el.getBoundingClientRect();
+	const win = el.ownerDocument.defaultView;
+	return new VRect(
+		/*box.left + (window.pageXOffset || document.documentElement.scrollLeft) - (document.documentElement.clientLeft || 0),
+		box.top + (window.pageYOffset || document.documentElement.scrollTop) - (document.documentElement.clientTop  || 0),*/
+		box.left + win.pageXOffset,
+		box.top + win.pageYOffset,
+		box.width,
+		box.height,
+	);
+}
 
 AddSchema("Vector2i", {
 	properties: {

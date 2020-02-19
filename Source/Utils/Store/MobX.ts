@@ -116,6 +116,19 @@ export function StoreAction(...args) {
 
 export const O = observable;
 
+export function RunInAction_Set(setterFunc: ()=>any);
+export function RunInAction_Set(compInstance: Component, setterFunc: ()=>any);
+export function RunInAction_Set(...args) {
+	let compInstance: Component, setterFunc: ()=>any;
+	if (args.length == 1) [setterFunc] = args;
+	else [compInstance, setterFunc] = args;
+
+	const funcStr = setterFunc.toString();
+	const funcStr_namePartMatch = funcStr.match(/(store.+?) /);
+	const actionName = `Set${compInstance ? `@${compInstance.constructor.name}` : ""}:${funcStr_namePartMatch?.[1] ?? funcStr}`;
+	runInAction(actionName, setterFunc);
+}
+
 // mobx-mirror
 // ==========
 
