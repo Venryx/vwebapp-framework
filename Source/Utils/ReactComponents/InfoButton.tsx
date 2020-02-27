@@ -1,9 +1,9 @@
 import {BaseComponent} from "react-vextensions";
 //import ReactTooltip from "react-tooltip";
 import Tooltip from "rc-tooltip";
-import {InTooltip} from "./Tooltip";
 import {Button, ButtonProps} from "react-vcomponents";
 import React from "react";
+import {InTooltip, InTooltipProps} from "./Tooltip";
 
 type EffectType = "float" | "solid";
 class TooltipInfo {
@@ -13,14 +13,14 @@ class TooltipInfo {
 		this.id = ++lastTipID;
 	}
 	id: number;
-	get IDStr() { return "tooltip_" + this.id; }
+	get IDStr() { return `tooltip_${this.id}`; }
 	text: string;
 	effect: EffectType;
 }
-let tooltips = [] as TooltipInfo[];
+const tooltips = [] as TooltipInfo[];
 
 let lastTipID = -1;
-export class InfoButton extends BaseComponent<{text: string, effect?: EffectType} & ButtonProps, {}> {
+export class InfoButton extends BaseComponent<{text: string, effect?: EffectType, tooltipProps?: InTooltipProps} & ButtonProps, {}> {
 	static defaultProps = {effect: "solid"};
 
 	ComponentWillMountOrReceiveProps(props) {
@@ -37,7 +37,7 @@ export class InfoButton extends BaseComponent<{text: string, effect?: EffectType
 		this.tooltip = null;
 	}
 	CreateTooltip(props) {
-		let {text, effect} = props;
+		const {text, effect} = props;
 		this.tooltip = new TooltipInfo(text, effect);
 		tooltips.push(this.tooltip);
 		/*if (InfoButton_TooltipWrapper.main) {
@@ -46,9 +46,9 @@ export class InfoButton extends BaseComponent<{text: string, effect?: EffectType
 	}
 
 	render() {
-		let {text, effect, ...rest} = this.props;
+		const {text, effect, tooltipProps, ...rest} = this.props;
 		return (
-			<Tooltip placement="top" overlay={<InTooltip>{text}</InTooltip>}>
+			<Tooltip placement="top" overlay={<InTooltip {...tooltipProps as any}>{text}</InTooltip>}>
 				<Button {...rest as any} size={13} iconSize={13} iconPath="/Images/Buttons/Info.png"
 						useOpacityForHover={true} style={{position: `relative`, zIndex: 1, marginLeft: 1, backgroundColor: null, boxShadow: null, border: null}}
 						//title={text}
@@ -62,7 +62,7 @@ export class InfoButton extends BaseComponent<{text: string, effect?: EffectType
 	}
 }
 
-// we have to use an outside-of-scrollview tooltip-wrapper, because "position: fixed" does not work under an element with "willChange: transform" 
+// we have to use an outside-of-scrollview tooltip-wrapper, because "position: fixed" does not work under an element with "willChange: transform"
 /*export class InfoButton_TooltipWrapper extends BaseComponent<{}, {}> {
 	static main: InfoButton_TooltipWrapper;
 	ComponentDidMount() {

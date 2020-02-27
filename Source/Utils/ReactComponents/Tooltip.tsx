@@ -1,14 +1,17 @@
 import {BaseComponent} from "react-vextensions";
-import React from "react";
+import React, {HTMLProps} from "react";
+import {E} from "js-vextensions";
 //import "rc-tooltip/assets/bootstrap.css";
 
-export class InTooltip extends BaseComponent<{}, {}> {
+export type InTooltipProps = {style?: any} & Partial<HTMLProps<HTMLDivElement>>;
+
+export class InTooltip extends BaseComponent<InTooltipProps, {}> {
 	render() {
-		let {children} = this.props;
+		const {style, children, ...rest} = this.props;
 		return (
-			<div style={{whiteSpace: "pre"}}>
+			<div {...rest} style={E({whiteSpace: "pre"}, style)}>
 				{children}
 			</div>
-		)
+		);
 	}
 }
