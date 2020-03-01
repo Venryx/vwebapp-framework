@@ -278,20 +278,31 @@ export function CreateWebpackConfig(opt: CreateWebpackConfig_Options) {
 	// webpackConfig.module.rules.push({test: /\.tsx?$/, use: "awesome-typescript-loader"});
 	// webpackConfig.module.rules.push({test: /\.tsx?$/, loader: "ts-loader", options: {include: [paths.source()]}});
 	webpackConfig.module.rules.push({
-		// limiting ts-loader to these paths fixes the odd issue it was having (where it said files in vwebapp-framework were "outside the root" of js-extensions, despite jsve source-files never importing from vwaf!)
-		test: [
+		test: /\.tsx?$/,
+		// only use ts-loader for "node_modules/..." folders explicitly listed here (helps prevent accidental usage of ts versions of packages, when could use faster js+dts versions)
+		/*test: [
 			/vwebapp-framework[/\\].*Source[/\\].*\.tsx?$/,
 			/js-vextensions[/\\].*Source[/\\].*@ApplyTypes\.tsx?$/,
-		],
+			// this is only used by the @debate-map/client repo, but it's easier here, and doesn't cause issues in other repos
+			/@debate-map[/\\]server-link[/\\].*Source[/\\].*\.tsx?$/,
+		],*/
 		loader: "ts-loader",
-		/* options: {
-			include: [
+		options: {
+			/*include: [
 				// paths.source(),
 				// paths.base("node_modules", ""),
 				fs.realpathSync(paths.base('node_modules', 'vwebapp-framework', 'Source')),
 				fs.realpathSync(paths.base('node_modules', 'js-vextensions', 'Source', 'ClassExtensions', '@ApplyTypes.ts')),
-			],
-		}, */
+			],*/
+			allowTsInNodeModules: true,
+			//configFile: "tsconfig.json",
+		},
+		/*use: [{
+			loader: "ts-loader",
+			options: {
+				configFile: "tsconfig.json",
+			},
+		}],*/
 	});
 
 	// for mobx-sync
