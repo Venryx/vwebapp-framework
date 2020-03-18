@@ -178,7 +178,7 @@ export class TranscriptSegment {
 	index: number;
 	text: string;
 	get Key() {
-		return ToJSON({index: this.index, text: this.text});
+		return ToJSON({index: this.index, text: this.text.toLowerCase()});
 	}
 
 	initialTime: number;
