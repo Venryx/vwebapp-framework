@@ -1,4 +1,4 @@
-import {runInAction, observable, autorun, configure, onReactionError} from "mobx";
+import {runInAction, observable, autorun, configure, onReactionError, ObservableMap, ObservableSet} from "mobx";
 import {observer, IReactComponent} from "mobx-react";
 import {EnsureClassProtoRenderFunctionIsWrapped, BaseComponent} from "react-vextensions";
 import React, {Component, useRef} from "react";
@@ -6,6 +6,9 @@ import {ToJSON, E} from "js-vextensions";
 import {setUseProxies, setAutoFreeze} from "immer";
 import {manager} from "../../Manager";
 import {HandleError} from "../General/Errors";
+
+// old: call ConfigureMobX() before any part of mobx tree is created (ie. at start of Store/index.ts); else, immer produce() doesn't work properly
+//ConfigureMobX();
 
 ConfigureMobX();
 export function ConfigureMobX() {
@@ -16,6 +19,7 @@ export function ConfigureMobX() {
 	onReactionError((error, derivation)=>{
 		HandleError(error);
 	});
+
 	// fixes various issues when Immer is sent mobx objects (see NPMPatches.ts for old fix attempts)
 	setUseProxies(false);
 	setAutoFreeze(false);
@@ -148,39 +152,53 @@ export function RunInAction_Set(...args) {
 // mobx-mirror
 // ==========
 
+/*export type MobXToPlainConverter = (mobxTree: any)=>any;
+export const defaultMobXToPlainConverters = [
+	(mobxTree)=> {
+		if (mobxTree instanceof )
+	},
+] as MobXToPlainConverter[];*/
+
 /**
 Makes it possible to use MobX object-trees as the source/base object for Immer's produce function.
 See here for more info: https://github.com/immerjs/immer/issues/515
 */
-export function GetMirrorOfMobXTree<T>(mobxTree: T): T {
+export function GetMirrorOfMobXTree<T>(mobxTree: T, prototypesToKeep: Function[] = [Array, Map, Set]): T {
 	if (mobxTree == null) return null;
 	if (mobxTree["$mirror"] == null) {
 		const tree_plainMirror =
-			mobxTree instanceof Map ? new Map() :
-			mobxTree instanceof Set ? new Set() :
 			Array.isArray(mobxTree) ? [] :
+			mobxTree instanceof Map || mobxTree instanceof ObservableMap ? new Map() :
+			mobxTree instanceof Set || mobxTree instanceof ObservableSet ? new Set() :
 			{};
-		// uncomment this line if you want the mirror to have the same prototype/functions
-		Object.setPrototypeOf(tree_plainMirror, Object.getPrototypeOf(mobxTree));
+		if (prototypesToKeep.Any(a=>mobxTree instanceof a)) {
+			Object.setPrototypeOf(tree_plainMirror, Object.getPrototypeOf(mobxTree));
+		}
 
-		Object.defineProperty(mobxTree, "$mirror", {value: tree_plainMirror});
+		if (Object.isExtensible(mobxTree)) {
+			Object.defineProperty(mobxTree, "$mirror", {value: tree_plainMirror});
+		}
 		StartUpdatingMirrorOfMobXTree(mobxTree, tree_plainMirror);
 	}
 	return mobxTree["$mirror"];
 }
-export function StartUpdatingMirrorOfMobXTree(mobxTree: any, tree_plainMirror: any) {
+export function StartUpdatingMirrorOfMobXTree(mobxTree: any, tree_plainMirror: any, prototypesToKeep: Function[] = [Array, Map, Set]) {
 	//const stopUpdating = autorun(()=>{
 	autorun(()=>{
-		for (const key of Object.keys(mobxTree)) {
-			const value = mobxTree[key]; // this counts as a mobx-get, meaning the autorun subscribes, so this func reruns when the prop-value changes
-			//const oldValue = tree_plainMirror[key];
-			if (typeof value == "object") {
-				tree_plainMirror[key] = GetMirrorOfMobXTree(value);
+		const sourceIsMap = mobxTree instanceof Map || mobxTree instanceof ObservableMap;
+		const targetIsMap = tree_plainMirror instanceof Map || tree_plainMirror instanceof ObservableMap;
+		for (const key of sourceIsMap ? mobxTree.keys() : Object.keys(mobxTree)) {
+			const valueFromSource = sourceIsMap ? mobxTree.get(key) : mobxTree[key]; // this counts as a mobx-get, meaning the autorun subscribes, so this func reruns when the prop-value changes
+			//const valueForTarget_old = tree_plainMirror[key];
+			const valueForTarget = typeof valueFromSource == "object" ? GetMirrorOfMobXTree(valueFromSource, prototypesToKeep) : valueFromSource;
+
+			if (targetIsMap) {
+				tree_plainMirror.set(key, valueForTarget);
 			} else {
-				tree_plainMirror[key] = value;
+				tree_plainMirror[key] = valueForTarget;
 			}
 
-			//if (typeof oldValue == "object" && oldValue["$mirror_stopUpdating"]) { [...]
+			//if (typeof valueForTarget_old == "object" && valueForTarget_old["$mirror_stopUpdating"]) { [...]
 		}
 	});
 	//Object.defineProperty(mobxTree, "$mirror_stopUpdating", stopUpdating);
