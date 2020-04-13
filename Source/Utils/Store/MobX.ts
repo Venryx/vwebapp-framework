@@ -1,9 +1,25 @@
-import {runInAction, observable, autorun} from "mobx";
+import {runInAction, observable, autorun, configure, onReactionError} from "mobx";
 import {observer, IReactComponent} from "mobx-react";
 import {EnsureClassProtoRenderFunctionIsWrapped, BaseComponent} from "react-vextensions";
 import React, {Component, useRef} from "react";
 import {ToJSON, E} from "js-vextensions";
+import {setUseProxies, setAutoFreeze} from "immer";
 import {manager} from "../../Manager";
+import {HandleError} from "../General/Errors";
+
+ConfigureMobX();
+export function ConfigureMobX() {
+	// configure({ enforceActions: 'always' });
+	configure({enforceActions: "observed"});
+
+	// have unhandled exceptions in mobx reactions sent to the global error-handler
+	onReactionError((error, derivation)=>{
+		HandleError(error);
+	});
+	// fixes various issues when Immer is sent mobx objects (see NPMPatches.ts for old fix attempts)
+	setUseProxies(false);
+	setAutoFreeze(false);
+}
 
 export type ActionFunc<StoreType> = (store: StoreType)=>void;
 
