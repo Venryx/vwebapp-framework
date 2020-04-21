@@ -1,8 +1,7 @@
 import fs from "fs-extra";
 import debug_base from "debug";
+import webpack from "webpack";
 import {StartWebpackCompiler} from "../Build/WebpackCompiler";
-
-import webpack = require("webpack");
 
 declare const {CreateConfig}: typeof import("../Config");
 const debug = debug_base("app:bin:compile");

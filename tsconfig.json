@@ -39,6 +39,9 @@
 		"allowSyntheticDefaultImports": true
 		//"declaration": true,
 		//"declarationDir": "Dist",
+
+		// needed to fix "cannot find [vwaf file] under rootDir [of some other linked package]" compile error that occurs sometimes
+		//"composite": true
 	},
 	//"files": ["Source/index.ts"],
 	"include": [
