@@ -38,12 +38,15 @@ const ownModules = [
 export class CreateWebpackConfig_Options {
 	config: ReturnType<typeof CreateConfig>;
 	npmPatch_replacerConfig: any;
+
 	/** Raw webpack-config field sets/overrides. */
 	ext: Partial<webpack.Configuration> & {
 		name: string,
 	};
 
+	// custom options
 	sourcesFromRoot? = false;
+	tsLoaderPaths?: webpack.RuleSetConditions;
 }
 
 export function CreateWebpackConfig(opt: CreateWebpackConfig_Options) {
@@ -277,24 +280,28 @@ export function CreateWebpackConfig(opt: CreateWebpackConfig_Options) {
 	// if (USE_TSLOADER) {
 	// webpackConfig.module.rules.push({test: /\.tsx?$/, use: "awesome-typescript-loader"});
 	// webpackConfig.module.rules.push({test: /\.tsx?$/, loader: "ts-loader", options: {include: [paths.source()]}});
-	webpackConfig.module.rules.push({
-		test: /\.tsx?$/,
+	const tsLoaderPaths_base = [
+		/vwebapp-framework[/\\].*Source[/\\].*\.tsx?$/,
+		/js-vextensions[/\\].*Helpers[/\\].*@ApplyCETypes\.tsx?$/,
+	];
+	const tsLoaderPaths = opt.tsLoaderPaths ?? tsLoaderPaths_base;
+
+	/*webpackConfig.module.rules.push({
+		//test: /\.tsx?$/,
 		// only use ts-loader for "node_modules/..." folders explicitly listed here (helps prevent accidental usage of ts versions of packages, when could use faster js+dts versions)
-		/*test: [
-			/vwebapp-framework[/\\].*Source[/\\].*\.tsx?$/,
-			/js-vextensions[/\\].*Source[/\\].*@ApplyTypes\.tsx?$/,
-			// this is only used by the @debate-map/client repo, but it's easier here, and doesn't cause issues in other repos
-			/@debate-map[/\\]server-link[/\\].*Source[/\\].*\.tsx?$/,
-		],*/
+		test: opt.tsLoaderPaths ?? tsLoaderPaths_base,
 		loader: "ts-loader",
 		options: {
 			/*include: [
 				// paths.source(),
 				// paths.base("node_modules", ""),
 				fs.realpathSync(paths.base('node_modules', 'vwebapp-framework', 'Source')),
-				fs.realpathSync(paths.base('node_modules', 'js-vextensions', 'Source', 'ClassExtensions', '@ApplyTypes.ts')),
-			],*/
+				fs.realpathSync(paths.base('node_modules', 'js-vextensions', 'Helpers', @ApplyCETypes.ts')),
+				// this is only used by the @debate-map/client repo, but it's easier here, and doesn't cause issues in other repos
+				fs.realpathSync(paths.base('node_modules', '@debate-map', 'server-link', 'Source')),
+			],*#/
 			allowTsInNodeModules: true,
+			// needed for consistency, else ts-loader *sometimes* allows contents from [linked-package/Source] to compile as part of root project (even if outside rootDir, and not in includes)
 			//configFile: "tsconfig.json",
 		},
 		/*use: [{
@@ -302,8 +309,20 @@ export function CreateWebpackConfig(opt: CreateWebpackConfig_Options) {
 			options: {
 				configFile: "tsconfig.json",
 			},
-		}],*/
-	});
+		}],*#/
+	});*/
+
+	// to reliably run ts-loader on node_modules folders, each must use a separate ts-loader instance
+	// (else it "finds" the tsconfig.json in one, and complains when the other packages' files aren't under its rootDir)
+	for (const tsLoaderPath of tsLoaderPaths) {
+		webpackConfig.module.rules.push({
+			test: tsLoaderPath,
+			loader: "ts-loader",
+			options: {
+				allowTsInNodeModules: true,
+			},
+		});
+	}
 
 	// for mobx-sync
 	webpackConfig.module.rules.push({test: /\.mjs$/, type: "javascript/auto"});
