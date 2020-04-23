@@ -35,6 +35,10 @@ const ownModules = [
 	"webpack-runtime-require", // misc
 ];
 
+export class TSLoaderEntry {
+	//context: string;
+	test: webpack.RuleSetCondition;
+}
 export class CreateWebpackConfig_Options {
 	config: ReturnType<typeof CreateConfig>;
 	npmPatch_replacerConfig: any;
@@ -46,7 +50,9 @@ export class CreateWebpackConfig_Options {
 
 	// custom options
 	sourcesFromRoot? = false;
-	tsLoaderPaths?: webpack.RuleSetConditions;
+	//tsLoaderPaths?: webpack.RuleSetConditions;
+	//tsLoaderPaths?: string[];
+	tsLoaderEntries?: TSLoaderEntry[];
 }
 
 export function CreateWebpackConfig(opt: CreateWebpackConfig_Options) {
@@ -280,11 +286,23 @@ export function CreateWebpackConfig(opt: CreateWebpackConfig_Options) {
 	// if (USE_TSLOADER) {
 	// webpackConfig.module.rules.push({test: /\.tsx?$/, use: "awesome-typescript-loader"});
 	// webpackConfig.module.rules.push({test: /\.tsx?$/, loader: "ts-loader", options: {include: [paths.source()]}});
-	const tsLoaderPaths_base = [
-		/vwebapp-framework[/\\].*Source[/\\].*\.tsx?$/,
-		/js-vextensions[/\\].*Helpers[/\\].*@ApplyCETypes\.tsx?$/,
+	/*const tsLoaderPaths_base = [
+		fs.realpathSync(paths.base("node_modules", "vwebapp-framework", "Source")),
+		fs.realpathSync(paths.base("node_modules", "js-vextensions", "Helpers", "@ApplyCETypes.d.ts")),
+	];*/
+	/*function resolvePath(...segmentsFromRoot: string[]) {
+		//return fs.realpathSync(paths.base(...segmentsFromRoot));
+		return paths.base(...segmentsFromRoot);
+	}
+	const tsLoaderEntries_base = [
+		{context: resolvePath("node_modules", "vwebapp-framework"), test: /vwebapp-framework[/\\]Source[/\\].*\.tsx?$/},
+		{context: resolvePath("node_modules", "js-vextensions"), test: /js-vextensions[/\\]Helpers[/\\]@ApplyCETypes\.tsx?$/},
+	];*/
+	const tsLoaderEntries_base = [
+		{test: /vwebapp-framework[/\\]Source[/\\].*\.tsx?$/},
+		{test: /js-vextensions[/\\]Helpers[/\\]@ApplyCETypes\.tsx?$/},
 	];
-	const tsLoaderPaths = opt.tsLoaderPaths ?? tsLoaderPaths_base;
+	const tsLoaderEntries = opt.tsLoaderEntries ?? tsLoaderEntries_base;
 
 	/*webpackConfig.module.rules.push({
 		//test: /\.tsx?$/,
@@ -296,7 +314,7 @@ export function CreateWebpackConfig(opt: CreateWebpackConfig_Options) {
 				// paths.source(),
 				// paths.base("node_modules", ""),
 				fs.realpathSync(paths.base('node_modules', 'vwebapp-framework', 'Source')),
-				fs.realpathSync(paths.base('node_modules', 'js-vextensions', 'Helpers', @ApplyCETypes.ts')),
+				fs.realpathSync(paths.base('node_modules', 'js-vextensions', 'Helpers', '@ApplyCETypes.ts')),
 				// this is only used by the @debate-map/client repo, but it's easier here, and doesn't cause issues in other repos
 				fs.realpathSync(paths.base('node_modules', '@debate-map', 'server-link', 'Source')),
 			],*#/
@@ -313,13 +331,20 @@ export function CreateWebpackConfig(opt: CreateWebpackConfig_Options) {
 	});*/
 
 	// to reliably run ts-loader on node_modules folders, each must use a separate ts-loader instance
-	// (else it "finds" the tsconfig.json in one, and complains when the other packages' files aren't under its rootDir)
-	for (const tsLoaderPath of tsLoaderPaths) {
+	// (else it [sometimes] "finds" the tsconfig.json in one, and complains when the other packages' files aren't under its rootDir)
+	for (const [index, entry] of tsLoaderEntries.entries()) {
 		webpackConfig.module.rules.push({
-			test: tsLoaderPath,
+			//include: [tsLoaderPath],
+			//include: entry.context,
+			test: entry.test,
 			loader: "ts-loader",
 			options: {
 				allowTsInNodeModules: true,
+				// ensures ts-loader uses the package's tsconfig.json, rather than the root project's (or even that of other packages!)
+				/*instance: entry.context, // forces separate ts-loader instance
+				context: entry.context,
+				configFile: path.resolve(entry.context, "tsconfig.json"),*/
+				instance: `tsLoader_instance${index}`,
 			},
 		});
 	}
