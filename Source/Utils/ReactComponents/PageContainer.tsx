@@ -66,7 +66,7 @@ export class PageContainer extends BaseComponentPlus(
 		const outerStyle = style || {};
 		innerStyle = innerStyle || {};
 		//shadow = shadow ?? preset == "text";
-		if (preset == "text") {
+		if (preset == "text" && shadow == null) {
 			shadow = true;
 		}
 
