@@ -76,7 +76,7 @@ export class Link extends BaseComponentPlus({} as Link_Props, {}) {
 		const target_final = isExternal && target === undefined ? "_blank" : target;
 
 		return (
-			<a {...FilterOutUnrecognizedProps(rest, "a")} onClick={this.handleClick.bind(this)} href={to} target={target_final}>
+			<a {...FilterOutUnrecognizedProps(rest, "a")} onClick={this.handleClick.bind(this)} href={to} target={target_final} rel={isExternal ? "noopener noreferrer nofollow" : null}>
 				{text}
 				{children}
 			</a>
