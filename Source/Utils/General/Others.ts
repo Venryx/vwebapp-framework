@@ -1,4 +1,4 @@
-import {VRect, Vector2i, GetPropChanges} from "js-vextensions";
+import {VRect, Vector2, GetPropChanges} from "js-vextensions";
 import {AddSchema, GetSchemaJSON} from "mobx-firelink";
 
 // like js-vextensions GetPropChanges(), except also applies RemoveHelpers on the result (since intended to be used for db-objects)
@@ -40,10 +40,17 @@ export function GetPageRect(el: Element) {
 	);
 }
 
-AddSchema("Vector2i", {
+AddSchema("Vector2", {
 	properties: {
 		x: {type: "number"},
 		y: {type: "number"},
+	},
+});
+AddSchema("Vector3", {
+	properties: {
+		x: {type: "number"},
+		y: {type: "number"},
+		z: {type: "number"},
 	},
 });
 AddSchema("VRect", {
@@ -52,6 +59,12 @@ AddSchema("VRect", {
 		y: {type: "number"},
 		width: {type: "number"},
 		height: {type: "number"},
+	},
+});
+AddSchema("VBounds", {
+	properties: {
+		position: {$ref: "Vector3"},
+		size: {$ref: "Vector3"},
 	},
 });
 

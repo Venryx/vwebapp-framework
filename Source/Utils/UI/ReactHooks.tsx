@@ -21,7 +21,7 @@ import ReactDOM from "react-dom";
 			const leftBoxDOM = dom.querySelector(".NodeUI_LeftBox");
 			const leftBoxRect = leftBoxDOM ? VRect.FromLTWH(leftBoxDOM.getBoundingClientRect()) : null;
 
-			const mouseRect = new VRect(mousePos, new Vector2i(1, 1));
+			const mouseRect = new VRect(mousePos, new Vector2(1, 1));
 			const intersectsOne = mouseRect.Intersects(mainRect) || (leftBoxRect && mouseRect.Intersects(leftBoxRect));
 			// Log(`Main: ${mainRect} Mouse:${mousePos} Intersects one?:${intersectsOne}`);
 			setHovered(intersectsOne);

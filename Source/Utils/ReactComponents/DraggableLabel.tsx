@@ -1,10 +1,10 @@
 import {BaseComponent} from "react-vextensions";
-import {Vector2i, E} from "js-vextensions";
+import {Vector2, E} from "js-vextensions";
 import React from "react";
 
 export class DraggableLabel extends BaseComponent<{
 	onDragStart: ()=>any,
-	onDrag?: (dragDelta: Vector2i, dragTotal: Vector2i, finalEvent: boolean)=>any,
+	onDrag?: (dragDelta: Vector2, dragTotal: Vector2, finalEvent: boolean)=>any,
 } & Omit<React.HTMLProps<HTMLLabelElement>, "onDragStart" | "onDrag">, {}> {
 	render() {
 		const {onDragStart, onDrag, style, ...rest} = this.props;
@@ -17,7 +17,7 @@ export class DraggableLabel extends BaseComponent<{
 				onMouseDown={e=>{
 					if (onDrag == null) return;
 
-					this.mouseDownPos = new Vector2i(e.pageX, e.pageY);
+					this.mouseDownPos = new Vector2(e.pageX, e.pageY);
 					this.lastMousePos = this.mouseDownPos;
 					onDragStart();
 
@@ -35,18 +35,18 @@ export class DraggableLabel extends BaseComponent<{
 		document.removeEventListener("mouseup", this.OnMouseUp_Global);
 	}
 
-	mouseDownPos: Vector2i;
-	lastMousePos: Vector2i;
+	mouseDownPos: Vector2;
+	lastMousePos: Vector2;
 	OnMouseMove_Global = (e: MouseEvent)=>{
 		const {onDrag} = this.props;
-		const mousePos = new Vector2i(e.pageX, e.pageY);
+		const mousePos = new Vector2(e.pageX, e.pageY);
 		onDrag(mousePos.Minus(this.lastMousePos), mousePos.Minus(this.mouseDownPos), false);
 
 		this.lastMousePos = mousePos;
 	};
 	OnMouseUp_Global = (e: MouseEvent)=>{
 		const {onDrag} = this.props;
-		const mousePos = new Vector2i(e.pageX, e.pageY);
+		const mousePos = new Vector2(e.pageX, e.pageY);
 		onDrag(mousePos.Minus(this.lastMousePos), mousePos.Minus(this.mouseDownPos), true);
 
 		this.RemoveListeners();

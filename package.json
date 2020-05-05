@@ -22,7 +22,7 @@
 	"peerDependencies": {
 		"react": "^16.6.3",
 		"react-dom": "^16.6.3",
-		"js-vextensions": "~1.0.9",
+		"js-vextensions": "1.0.33",
 		"react-vextensions": "~1.0.0",
 		"webpack-runtime-require": "^0.3.1",
 		"firebase": "^5.7.0",
@@ -76,7 +76,7 @@
 		"fs-extra": "^8.1.0",
 		"html-webpack-plugin": "^3.2.0",
 		"ip": "^1.1.5",
-		"js-vextensions": "^1.0.28",
+		"js-vextensions": "^1.0.33",
 		"lodash": "^4.17.15",
 		"mini-css-extract-plugin": "^0.9.0",
 		"mobx": "^5.15.4",
