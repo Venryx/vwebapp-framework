@@ -4,6 +4,10 @@ import {Row} from "react-vcomponents";
 import {E} from "js-vextensions";
 import {YoutubePlayer, PosChangeSource} from "../General/YoutubePlayer";
 
+export function ParseYoutubeVideoID(url: string) {
+	return url?.match(/v=([A-Za-z0-9_-]{11})/)?.[1];
+}
+
 export class YoutubePlayerUI extends BaseComponentPlus(
 	{heightVSWidthPercent: .75, autoplay: false, onPosChanged_callForStartTime: true} as {
 		videoID: string, startTime?: number, heightVSWidthPercent: number, autoplay?: boolean,
@@ -19,8 +23,7 @@ export class YoutubePlayerUI extends BaseComponentPlus(
 	render() {
 		const {heightVSWidthPercent, style} = this.props;
 		return (
-			<div ref={c=>this.root = c} style={E({position: "relative", paddingBottom: `${heightVSWidthPercent * 100}%`, height: 0}, style)}>
-			</div>
+			<div ref={c=>this.root = c} style={E({position: "relative", paddingBottom: `${heightVSWidthPercent * 100}%`, height: 0}, style)}/>
 		);
 	}
 
