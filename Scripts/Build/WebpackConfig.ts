@@ -101,6 +101,7 @@ export function CreateWebpackConfig(opt: CreateWebpackConfig_Options) {
 				"react-dom": paths.base("node_modules", "react-dom"),
 				firebase: paths.base("node_modules", "firebase"),
 				mobx: paths.base("node_modules", "mobx"),
+				"mobx-firelink/node_modules/mobx": paths.base("node_modules", "mobx"), // fsr, needed to prevent 2nd mobx, when mobx-firelink is npm-linked [has this always been true?]
 				// consolidating for these, since they have npm-patches applied (and we don't want to have to adjust the match-counts)
 				"react-beautiful-dnd": paths.base("node_modules", "react-beautiful-dnd"),
 				immer: paths.base("node_modules", "immer"),
