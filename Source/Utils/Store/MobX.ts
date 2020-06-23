@@ -137,15 +137,15 @@ export function StoreAction(...args) {
 export const O = observable;
 
 export function RunInAction_Set(setterFunc: ()=>any);
-export function RunInAction_Set(compInstance: Component, setterFunc: ()=>any);
+export function RunInAction_Set(classInstance: Object, setterFunc: ()=>any);
 export function RunInAction_Set(...args) {
-	let compInstance: Component, setterFunc: ()=>any;
+	let classInstance: Object, setterFunc: ()=>any;
 	if (args.length == 1) [setterFunc] = args;
-	else [compInstance, setterFunc] = args;
+	else [classInstance, setterFunc] = args;
 
 	const funcStr = setterFunc.toString();
 	const funcStr_namePartMatch = funcStr.match(/(store.+?) /);
-	const actionName = `Set${compInstance ? `@${compInstance.constructor.name}` : ""}:${funcStr_namePartMatch?.[1] ?? funcStr}`;
+	const actionName = `Set${classInstance ? `@${classInstance.constructor.name}` : ""}:${funcStr_namePartMatch?.[1] ?? funcStr}`;
 	runInAction(actionName, setterFunc);
 }
 

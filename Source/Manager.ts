@@ -57,9 +57,6 @@ export const manager = new Manager();
 export let OnPopulated_listeners = [];
 export function OnPopulated(listener: ()=>any) { OnPopulated_listeners.push(listener); }
 
-export const OnStoreCreated_listeners = [];
-export function OnStoreCreated(listener: ()=>any) { OnStoreCreated_listeners.push(listener); }
-
 // globals
 declare global {
 	//function Log(message, appendStackTrace?: boolean, logLater?: boolean);
