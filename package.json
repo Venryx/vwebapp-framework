@@ -1,7 +1,7 @@
 {
 	"name": "vwebapp-framework",
 	"description": "The framework code for my web-apps, collected into a library for easy reuse.",
-	"version": "1.0.37",
+	"version": "1.0.38",
 	"@module": "Source/index.ts",
 	"@main": "Dist/index.js",
 	"main": "Source/index.ts",
