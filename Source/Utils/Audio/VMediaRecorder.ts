@@ -1,13 +1,13 @@
 declare const MediaRecorder;
 export type MediaRecorderConstructor = new(..._)=>any;
 
-export class SoundRecorder {
+export class VMediaRecorder {
 	constructor(MediaRecorderClass?: MediaRecorderConstructor) {
 		this.MediaRecorderClass = MediaRecorderClass || MediaRecorder;
 	}
 	MediaRecorderClass: MediaRecorderConstructor;
 
-	audioChunks = [];
+	dataChunks = [];
 	//recorder: MediaRecorder;
 	stream: MediaStream;
 	recorder: any;
@@ -23,7 +23,9 @@ export class SoundRecorder {
 		return this.recorder != null && this.recorder.state == "paused";
 	}
 
-	async StartRecording(micDeviceID?: string) {
+	recordingStartTime: number;
+	async StartRecording_Audio(micDeviceID?: string) {
+		if (this.IsRecording()) return;
 		//let recorderClosed = this.recorder == null || this.recorder.state == "inactive";
 		/*const createEffectsContext_final = createEffectsContext && (this.effectsContext == null || this.effectsContext.state == "closed");
 		const stream = this.recorder == null || createEffectsContext_final ? await navigator.mediaDevices.getUserMedia({audio: true}) : null;*/
@@ -34,21 +36,30 @@ export class SoundRecorder {
 			});
 			this.recorder = new this.MediaRecorderClass(this.stream);
 			this.recorder.addEventListener("dataavailable", e=>{
-				const audioData = e.data as Blob;
-				this.audioChunks.push(audioData);
-				/*if (rec.state == "inactive") {
-					let blob = new Blob(this.audioChunks, {type:'audio/x-mpeg-3'});
-					recordedAudio.src = URL.createObjectURL(blob);
-					recordedAudio.controls=true;
-					recordedAudio.autoplay=true;
-					audioDownload.href = recordedAudio.src;
-					audioDownload.download = 'mp3';
-					audioDownload.innerHTML = 'download';
-				}*/
+				const dataChunk = e.data as Blob;
+				if (dataChunk.size == 0) return;
+				this.dataChunks.push(dataChunk);
 			});
 		}
 		this.recorder.start();
+		this.recordingStartTime = Date.now();
 	}
+	async StartRecording_Video(stream: MediaStream, options: {mimeType: string}) {
+		if (this.IsRecording()) return;
+
+		if (this.recorder == null) {
+			this.stream = stream;
+			this.recorder = new this.MediaRecorderClass(this.stream, options);
+			this.recorder.addEventListener("dataavailable", e=>{
+				const dataChunk = e.data as Blob;
+				if (dataChunk.size == 0) return;
+				this.dataChunks.push(dataChunk);
+			});
+		}
+		this.recorder.start();
+		this.recordingStartTime = Date.now();
+	}
+
 	StopRecording() {
 		if (!this.IsActive()) return;
 		return new Promise((resolve, reject)=>{

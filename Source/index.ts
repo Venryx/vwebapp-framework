@@ -17,9 +17,9 @@ export * from "./UserTypes";
 //export * from "./Server/Command";
 
 export * from "./Utils/Audio/AudioNodes";
-export * from "./Utils/Audio/TextToSpeech";
-export * from "./Utils/Audio/SoundRecorder";
 export * from "./Utils/Audio/SpeechToText";
+export * from "./Utils/Audio/TextToSpeech";
+export * from "./Utils/Audio/VMediaRecorder";
 
 //export * from "./Utils/Database/DatabaseHelpers";
 //export * from "./Utils/Database/QuickJoin";
