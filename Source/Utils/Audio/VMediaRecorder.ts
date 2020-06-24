@@ -61,8 +61,12 @@ export class VMediaRecorder {
 	}
 
 	StopRecording() {
-		if (!this.IsActive()) return;
 		return new Promise((resolve, reject)=>{
+			if (!this.IsActive()) {
+				//reject("No recording active.");
+				resolve();
+				return;
+			}
 			const self = this;
 			//this.effectsContext.close();
 			//this.effectsContext = null;
