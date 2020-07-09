@@ -32,7 +32,6 @@
 		"mobx-utils": "^5.5.2",
 		"mobx-firelink": "~1.0.0",
 		"react-vcomponents": "~1.0.0",
-		"react-markdown": "^4.0.4",
 		"raven-js": "^3.27.0",
 		"react-router": "^4.3.1",
 		"remarkable": "^1.7.1",
@@ -90,7 +89,6 @@
 		"react-beautiful-dnd": "^11.0.5",
 		"react-dom": "^16.7.0",
 		"react-ga": "^2.5.6",
-		"react-markdown": "^4.0.4",
 		"react-router": "^4.3.1",
 		"react-vcomponents": "^1.0.9",
 		"react-vextensions": "^1.0.4",
@@ -114,6 +112,7 @@
 		"rc-slider": "^8.7.1",
 		"rc-tooltip": "^3.7.3",
 		"react-datetime": "^2.16.3",
+		"react-markdown": "^4.0.4",
 		"updeep": "^1.2.0"
 	}
 }

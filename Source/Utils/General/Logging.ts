@@ -27,7 +27,7 @@ console.warn = function(...args) {
 	//var str = message + "";
 	if (typeof args[2] == "string" && args[2].includes("do not mix longhand and shorthand properties in the same style object")) return;
 	if (typeof args[0] == "string" && args[0].includes("a promise was created in a handler but was not returned from it, see http://goo.gl/rRqMUw")) return;
-	warn_orig.apply(this, args);
+	return warn_orig.apply(this, args);
 };
 
 var error_orig = console.error;
@@ -35,7 +35,7 @@ console.error = function(exception) {
 	var str = `${exception}`;
 	if (str.Contains("Warning: A component is `contentEditable`")) return;
 	//if (str.Contains("Warning: Unknown prop `")) return;
-	error_orig.apply(this, arguments);
+	return error_orig.apply(this, arguments);
 
 	//LogSourceStackTraceFrom(new Error());
 };

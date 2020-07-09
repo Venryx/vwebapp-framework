@@ -91,10 +91,13 @@ export function BlobToString(blob: Blob, readAsFuncName = "readAsText" as ReadAs
 		reader[readAsFuncName](blob);
 	}) as Promise<string>;
 }
-export function BlobToArrayBuffer(blob: Blob) {
+export function BlobToArrayBuffer(blob: Blob): Promise<ArrayBuffer> {
 	return new Promise((resolve, reject)=>{
 		const reader = new FileReader();
+		/*reader.onloadend = e=>resolve(reader.result as ArrayBuffer);
+		reader.onerror = e=>reject(e["error"]);*/
 		reader.addEventListener("loadend", e=>resolve(reader.result as ArrayBuffer));
+		reader.addEventListener("error", e=>reject(e["error"]));
 		reader.readAsArrayBuffer(blob);
-	}) as Promise<ArrayBuffer>;
+	});
 }

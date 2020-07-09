@@ -10,6 +10,7 @@ import {manager} from "../../Manager";
 
 export type ReplacementFunc = (segment: Segment, index: number, extraInfo)=>JSX.Element;
 
+// this is distinct from react-vmarkdown (this is a markdown renderer, whereas react-vmarkdown is a markdown editor)
 export class VReactMarkdown extends BaseComponent
 	<{source: string, replacements?: {[key: string]: ReplacementFunc}, extraInfo?, style?, addMarginsForDanglingNewLines?: boolean, containerProps?: any} & ReactMarkdownProps,
 	{}> {
