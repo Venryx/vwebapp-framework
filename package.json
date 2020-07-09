@@ -82,7 +82,7 @@
 		"mobx-react": "^6.1.4",
 		"mobx-utils": "^5.5.2",
 		"moment": "2.24.0",
-		"node-sass": "^4.13.1",
+		"node-sass": "^4.14.1",
 		"raven-js": "^3.27.0",
 		"react": "^16.11.0",
 		"react-beautiful-dnd": "^11.0.5",

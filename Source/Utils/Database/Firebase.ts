@@ -1,6 +1,8 @@
 import firebase_real from "firebase";
 //import firebase_real from "firebase/app";
-import {MockFirebaseSdk, MockAuthentication, MockFirestore} from "firebase-mock";
+//import {MockFirebaseSdk, MockAuthentication, MockFirestore} from "firebase-mock";
+import firebaseMock from "firebase-mock";
+const {MockFirebaseSdk, MockAuthentication, MockFirestore} = firebaseMock as any; // temp fix
 
 export let firebase = firebase_real;
 export let firebaseIsReal = true;
@@ -8,7 +10,7 @@ export let firebaseIsReal = true;
 // firebase mocking (replacing the firebase SDK with a local simplified version, for testing)
 // ==========
 
-if (window.location.href.includes("/personal/---TestingMap---")) {
+if (window.location.href.includes("/private/---TestingMap---")) {
 	const realTimeDBMock = null;
 	const authMock = new MockAuthentication();
 	authMock.autoFlush();
