@@ -1,6 +1,8 @@
-import {CyclicDependencyChecker} from "webpack-dependency-tools";
+import depTools from "webpack-dependency-tools";
 import fs from "fs";
 import webpack from "webpack";
+
+const {CyclicDependencyChecker} = depTools;
 
 export function MakeSoWebpackConfigOutputsStats(config: webpack.Configuration) {
 	let firstOutput = true;
