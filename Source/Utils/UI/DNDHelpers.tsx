@@ -8,7 +8,7 @@ import React from "react";
 // Thus, a MakeDroppable decorator just wouldn't be very useful. (ie. it would have few components using)
 
 //type DraggableCompProps = {type: string, draggableInfo: DraggableInfo, index: number, enabled: boolean};
-type DraggableCompProps = {type: string, draggableInfo: DraggableInfo, index: number};
+type DraggableCompProps = {draggableInfo: DraggableInfo, index: number};
 
 export type DropProvided = {innerRef: (element: HTMLElement)=>any, placeholder?: React.ReactElement<any>, droppableProps: any}; // todo: get from @types/react-beautiful-dnd
 export type DropSnapshot = {isDraggingOver: boolean, draggingOverWith?: string}; // todo: get from @types/react-beautiful-dnd
@@ -51,12 +51,12 @@ export function MakeDraggable(getDraggableCompProps: (props: Object)=>DraggableC
 			render() {
 				//if (this.compProps == null || !this.compProps.enabled) {
 				if (this.compProps == null) {
-					return <WrappedComponent {...this.props} dragInfo={null}/>;
+					return <Draggable key={"-123"} draggableId={"-123"} index={-123}>{(provided, snapshot)=>(<WrappedComponent {...this.props} dragInfo={null}/>)}</Draggable>;
 				}
 
 				const draggableID = ToJSON(this.compProps.draggableInfo);
 				return (
-					<Draggable type={this.compProps.type} key={draggableID} draggableId={draggableID} index={this.compProps.index}>
+					<Draggable key={draggableID} draggableId={draggableID} index={this.compProps.index}>
 						{(provided, snapshot)=>{
 							let dragInfo = {provided, snapshot} as DragInfo;
 							// if drag-info data actually changed, store ref to first object with that data

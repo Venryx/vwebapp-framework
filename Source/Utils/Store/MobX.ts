@@ -3,7 +3,7 @@ import {observer, IReactComponent} from "mobx-react";
 import {EnsureClassProtoRenderFunctionIsWrapped, BaseComponent} from "react-vextensions";
 import React, {Component, useRef} from "react";
 import {ToJSON, E} from "js-vextensions";
-import {setUseProxies, setAutoFreeze} from "immer";
+import produce, {setUseProxies, setAutoFreeze, enableES5} from "immer";
 import {manager} from "../../Manager";
 import {HandleError} from "../General/Errors";
 
@@ -21,6 +21,7 @@ export function ConfigureMobX() {
 	});
 
 	// fixes various issues when Immer is sent mobx objects (see NPMPatches.ts for old fix attempts)
+	enableES5(); // es5 mode is needed, since we're not using proxies
 	setUseProxies(false);
 	setAutoFreeze(false);
 }

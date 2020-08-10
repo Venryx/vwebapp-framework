@@ -114,7 +114,7 @@ AddRule({
 			patternMatchCount: 1,
 			replacement: ()=>`
 				var canScrollDroppable = function canScrollDroppable(droppable, change) {
-					if (window.LockMapEdgeScrolling()) return false;
+					if (window.LockMapEdgeScrolling && window.LockMapEdgeScrolling()) return false;
 			`.trim(),
 		},
 	],
