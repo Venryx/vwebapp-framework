@@ -1,6 +1,9 @@
 import {BaseComponent} from "react-vextensions";
-import RCSlider from "rc-slider";
 import React from "react";
+
+import RCSlider from "rc-slider";
+/*type RCSlider_Type = import("rc-slider");
+const RCSlider = require("rc-slider");*/
 
 export class Slider extends BaseComponent
 		<{

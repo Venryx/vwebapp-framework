@@ -59,6 +59,16 @@ export function CreateWebpackConfig(opt: CreateWebpackConfig_Options) {
 	opt = E(new CreateWebpackConfig_Options(), opt);
 
 	const paths = opt.config.utils_paths;
+	const vwafFolderInfo = fs.lstatSync(paths.base("node_modules/vwebapp-framework"));
+	const vwafSymlinked = vwafFolderInfo.isSymbolicLink();
+	if (vwafSymlinked) console.log("VWAF folder detected to be symlinked. Will adjust webpack config to be compatible.");
+	function SubdepPath(subPath: string) {
+		/*if (subPath.includes("/")) {
+			throw new Error("Not yet implemented.");
+		} else {*/
+		// must be flat subdep module-name (eg. "css-loader"), so just prepend vwaf path
+		return `vwebapp-framework/node_modules/${subPath}`;
+	}
 
 	debug("Creating configuration.");
 	const webpackConfig = <webpack.Configuration>{
@@ -260,7 +270,7 @@ export function CreateWebpackConfig(opt: CreateWebpackConfig_Options) {
 				// fs.realpathSync(paths.base('node_modules', 'vwebapp-framework')),
 				fs.realpathSync(paths.base("node_modules", "vwebapp-framework", "Source")),
 			],
-			loader: "babel-loader",
+			loader: SubdepPath("babel-loader"),
 			options: {
 				presets: [
 					[
@@ -312,7 +322,7 @@ export function CreateWebpackConfig(opt: CreateWebpackConfig_Options) {
 			// ensures that ts-loader ignores files outside of the path (not needed atm)
 			//include: entry.context,
 			test: entry.test,
-			loader: "ts-loader",
+			loader: SubdepPath("ts-loader"),
 			options: {
 				allowTsInNodeModules: true,
 				// forces separate ts-loader instance
@@ -341,7 +351,7 @@ export function CreateWebpackConfig(opt: CreateWebpackConfig_Options) {
 		use: [
 			MiniCssExtractPlugin.loader,
 			{
-				loader: "css-loader",
+				loader: SubdepPath("css-loader"),
 				// options: { minimize: false }, // cssnano already minifies
 			},
 		],
@@ -351,11 +361,11 @@ export function CreateWebpackConfig(opt: CreateWebpackConfig_Options) {
 		use: [
 			MiniCssExtractPlugin.loader,
 			{
-				loader: "css-loader",
+				loader: SubdepPath("css-loader"),
 				// options: { minimize: false }, // cssnano already minifies
 			},
 			{
-				loader: "postcss-loader",
+				loader: SubdepPath("postcss-loader"),
 				options: {
 					ident: "postcss",
 					plugins: loader=>[
@@ -383,10 +393,34 @@ export function CreateWebpackConfig(opt: CreateWebpackConfig_Options) {
 				},
 			},
 			{
-				loader: "sass-loader",
+				loader: SubdepPath("sass-loader"),
 				options: {
 					sassOptions: {
 						includePaths: [paths.source()],
+					},
+					additionalData: (content: string, loaderContext)=>{
+						// More information about available properties https://webpack.js.org/api/loaders/
+						const {resourcePath, rootContext} = loaderContext;
+						//const relativePath = path.relative(rootContext, resourcePath);
+						console.log(`Sass-loader preprocessing. @resourcePath:${resourcePath}`);
+						//console.log(`Content:${content}`);
+
+						//if (resourcePath.includes("node_modules/vwebapp-framework") && resourcePath.endsWith("Main.scss") && vwafSymlinked) {
+						/*const startPoint = content.indexOf("// [StartOfVWAFMainSCSS]");
+						const endPoint = content.includes("// [EndOfVWAFMainSCSS]") ? content.indexOf("// [EndOfVWAFMainSCSS]") + "// [EndOfVWAFMainSCSS]".length : -1;
+						// if vwaf Main.scss file is part of this content instance, and vwaf is symlinked, replace its top-level subdep imports with ones under vwaf folder
+						if (startPoint != -1 && endPoint != -1 && vwafSymlinked) {
+							console.log("Found vwaf Main.scss file. Applying fixes, since vwaf is symlinked.");
+							const vwafPart = content.slice(startPoint, endPoint);
+							const vwafPart_fixed = vwafPart.replace(/@import "~/g, "@import \"~vwebapp-framework/node_modules/");
+							return content.slice(0, startPoint) + vwafPart_fixed + content.slice(endPoint);
+						}*/
+
+						if (content.includes("vwebapp-framework/Source/Utils/Styles/Entry_Base.scss") && vwafSymlinked) {
+							return content.replace(/Styles\/Entry_Base.scss/g, "Styles/Entry_Symlinked.scss");
+						}
+
+						return content;
 					},
 				},
 			},
@@ -401,7 +435,7 @@ export function CreateWebpackConfig(opt: CreateWebpackConfig_Options) {
 	);
 	webpackConfig.module.rules.push({
 		test: /\.svg$/,
-		loader: "svg-sprite-loader",
+		loader: SubdepPath("svg-sprite-loader"),
 	});
 
 	if (OUTPUT_STATS) {
