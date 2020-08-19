@@ -18,6 +18,7 @@ import {MakeSoWebpackConfigOutputsStats} from "./WebpackConfig/OutputStats";
 // const AutoDllPlugin = require("autodll-webpack-plugin");
 
 import vwafPackageJSON from "../../package.json";
+
 const peerDeps = CE(vwafPackageJSON.peerDependencies).VKeys();
 
 declare const ENV, DEV, PROD, TEST;
@@ -65,11 +66,12 @@ export function CreateWebpackConfig(opt: CreateWebpackConfig_Options) {
 	const vwafSymlinked = vwafFolderInfo.isSymbolicLink();
 	if (vwafSymlinked) console.log("VWAF folder detected to be symlinked. Will adjust webpack config to be compatible.");
 	function SubdepPath(subPath: string) {
-		/*if (subPath.includes("/")) {
-			throw new Error("Not yet implemented.");
-		} else {*/
-		// must be flat subdep module-name (eg. "css-loader"), so just prepend vwaf path
-		return `vwebapp-framework/node_modules/${subPath}`;
+		// if vwaf is symlinked, we have to tunnel into vwaf folder to find its subdeps
+		if (vwafSymlinked) {
+			return `vwebapp-framework/node_modules/${subPath}`;
+		}
+		// if vwaf is installed normally (from npm install), then its subdeps will be peers/directly-under-user-project, so don't prepend anything
+		return subPath;
 	}
 
 	debug("Creating configuration.");
