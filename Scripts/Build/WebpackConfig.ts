@@ -16,7 +16,9 @@ import {MakeSoWebpackConfigOutputsStats} from "./WebpackConfig/OutputStats";
 // const BundleAnalyzerPlugin = require("webpack-bundle-analyzer").BundleAnalyzerPlugin;
 // const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 // const AutoDllPlugin = require("autodll-webpack-plugin");
-// require('js-vextensions'); // maybe temp; used atm for "".AsMultiline function
+
+import vwafPackageJSON from "../../package.json";
+const peerDeps = CE(vwafPackageJSON.peerDependencies).VKeys();
 
 declare const ENV, DEV, PROD, TEST;
 declare const {CreateConfig}: typeof import("../Config");
@@ -106,19 +108,14 @@ export function CreateWebpackConfig(opt: CreateWebpackConfig_Options) {
 				".mjs", // needed for mobx-sync
 			],
 			alias: {
-				// always retrieve these packages from the root node_modules folder (they have issues if there are multiple instances) [needed for when using "npm link"]
-				react: paths.base("node_modules", "react"),
-				"react-dom": paths.base("node_modules", "react-dom"),
-				firebase: paths.base("node_modules", "firebase"),
-				mobx: paths.base("node_modules", "mobx"),
+				...CE(peerDeps).ToMap(name=>name, name=>paths.base("node_modules", name)),
+				// necessary consolidations, to fix issues
 				"mobx-firelink/node_modules/mobx": paths.base("node_modules", "mobx"), // fsr, needed to prevent 2nd mobx, when mobx-firelink is npm-linked [has this always been true?]
-				codemirror: paths.base("node_modules", "codemirror"),
-				// consolidating for these, since they have npm-patches applied (and we don't want to have to adjust the match-counts)
+				// convenience consolidations, since they have npm-patches applied (and we don't want to have to adjust the match-counts)
 				"react-beautiful-dnd": paths.base("node_modules", "react-beautiful-dnd"),
 				immer: paths.base("node_modules", "immer"),
 				"mobx-utils": paths.base("node_modules", "mobx-utils"), // not npm-patch, but modified version
-				// consolidating for these wouldn't throw errors necessarily, but we do so to keep things tidy (since we know the different versions will be compatible anyway)
-				// note: just put all own packages here
+				// convenience consolidations (for any own-modules not in peer-deps), to keep things tidy (fine since we know the different versions will be compatible anyway)
 				...CE(ownModules).ToMap(name=>name, name=>paths.base("node_modules", name)),
 			},
 		},

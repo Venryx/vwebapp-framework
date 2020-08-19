@@ -1,5 +1,10 @@
 @import "~vwebapp-framework/node_modules/rc-tooltip/assets/bootstrap.css";
 @import "~vwebapp-framework/node_modules/rc-slider/assets/index.css";
 @import "~vwebapp-framework/node_modules/react-datetime/css/react-datetime.css";
+// keep the .css extension; without it, it imports from the symlinked/source vwaf node_modules rather than the higher-project's, fsr
+/*@import "../../../node_modules/codemirror/lib/codemirror.css";
+@import "../../../node_modules/codemirror/addon/scroll/simplescrollbars.css";*/
+@import "~vwebapp-framework/node_modules/codemirror/lib/codemirror.css";
+@import "~vwebapp-framework/node_modules/codemirror/addon/scroll/simplescrollbars.css";
 
 @import "Main";

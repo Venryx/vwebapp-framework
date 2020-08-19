@@ -41,7 +41,7 @@ export class TreeView extends BaseComponent<Props, {collapsed: boolean}> {
 				<Icon icon={`arrow-${collapsed ? "right" : "down"}`} size={iconSize}
 					style={E(
 						{
-							display: "inline-block", boxSizing: "content-box", width: iconSize, height: iconSize, verticalAlign: "top", marginTop: 2, padding: 2,
+							display: "inline-block", boxSizing: "content-box" as any, width: iconSize, height: iconSize, verticalAlign: "top", marginTop: 2, padding: 2,
 							backgroundPosition: 2, backgroundRepeat: "no-repeat", backgroundSize: 8, cursor: "pointer",
 						},
 						!collapsable && {opacity: 0},
