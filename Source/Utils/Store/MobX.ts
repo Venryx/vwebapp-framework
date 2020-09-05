@@ -166,6 +166,13 @@ See here for more info: https://github.com/immerjs/immer/issues/515
 */
 export function GetMirrorOfMobXTree<T>(mobxTree: T, prototypesToKeep: Function[] = [Array, Map, Set]): T {
 	if (mobxTree == null) return null;
+	try {
+		mobxTree["$mirror"];
+	} catch (ex) {
+		// if mere prop-access fails, we must have hit a different-domain frame context object, which prevents prop-access; just return empty object
+		return {} as any;
+	}
+
 	if (mobxTree["$mirror"] == null) {
 		const tree_plainMirror =
 			Array.isArray(mobxTree) ? [] :
