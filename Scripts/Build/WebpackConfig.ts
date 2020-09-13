@@ -1,25 +1,21 @@
-import webpack from "webpack";
-import MiniCssExtractPlugin from "mini-css-extract-plugin";
 import CSSNano from "cssnano";
-import HtmlWebpackPlugin from "html-webpack-plugin";
 import debug_base from "debug";
-import path from "path";
-import fs from "fs";
-//import HardSourceWebpackPlugin from "hard-source-webpack-plugin";
-import SpriteLoaderPlugin from "svg-sprite-loader/plugin";
-import WebpackStringReplacer from "webpack-string-replacer";
-//import {CE} from "js-vextensions";
-import {CE, E} from "js-vextensions/Source"; // temp; require source, thus ts-node compiles to commonjs (fix for that ts-node doesn't support es2015-modules)
 // import resolverFactory from 'enhanced-resolve/lib/ResolverFactory';
 import SymlinkPlugin from "enhanced-resolve/lib/SymlinkPlugin";
-import {MakeSoWebpackConfigOutputsStats} from "./WebpackConfig/OutputStats";
+import fs from "fs";
+import HtmlWebpackPlugin from "html-webpack-plugin";
+//import {CE} from "js-vextensions";
+import {CE, E} from "js-vextensions/Source"; // temp; require source, thus ts-node compiles to commonjs (fix for that ts-node doesn't support es2015-modules)
+import MiniCssExtractPlugin from "mini-css-extract-plugin";
+//import HardSourceWebpackPlugin from "hard-source-webpack-plugin";
+import SpriteLoaderPlugin from "svg-sprite-loader/plugin";
+import webpack from "webpack";
+import WebpackStringReplacer from "webpack-string-replacer";
 // const BundleAnalyzerPlugin = require("webpack-bundle-analyzer").BundleAnalyzerPlugin;
 // const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 // const AutoDllPlugin = require("autodll-webpack-plugin");
-
 import vwafPackageJSON from "../../package.json";
-
-const peerDeps = CE(vwafPackageJSON.peerDependencies).VKeys();
+import {MakeSoWebpackConfigOutputsStats} from "./WebpackConfig/OutputStats";
 
 declare const ENV, DEV, PROD, TEST;
 declare const {CreateConfig}: typeof import("../Config");
@@ -27,8 +23,7 @@ const debug = debug_base("app:webpack:config");
 
 const {QUICK, USE_TSLOADER, OUTPUT_STATS} = process.env;
 
-// const root = path.join(__dirname, '..', '..');
-
+const peerDeps = CE(vwafPackageJSON.peerDependencies).VKeys();
 const ownModules = [
 	"js-vextensions", // js (base)
 	"react-vextensions", "react-vcomponents", "react-vmenu", "react-vmessagebox", "react-vscrollview", "react-vmarkdown", // +react
@@ -37,6 +32,29 @@ const ownModules = [
 	"vwebapp-framework", // +framework
 	"webpack-runtime-require", // misc
 ];
+function GetAliases(opt: CreateWebpackConfig_Options) {
+	const paths = opt.config.utils_paths;
+	const flatList = [
+		...peerDeps,
+
+		// necessary consolidations, to fix issues
+		//"mobx-firelink/node_modules/mobx": paths.base("node_modules", "mobx"), // fsr, needed to prevent 2nd mobx, when mobx-firelink is npm-linked [has this always been true?]
+		"mobx",
+
+		// convenience consolidations, since they have npm-patches applied (and we don't want to have to adjust the match-counts)
+		"react-beautiful-dnd",
+		"immer",
+		"mobx-utils",
+
+		// convenience consolidations (for any own-modules not in peer-deps), to keep things tidy (fine since we know the different versions will be compatible anyway)
+		...ownModules,
+	];
+	//const map = {};
+
+	const flatList_existent = flatList.filter(a=>fs.existsSync(paths.base("node_modules", a)));
+	return CE(flatList_existent).ToMap(name=>name, name=>paths.base("node_modules", name));
+}
+
 
 export class TSLoaderEntry {
 	//context: string;
@@ -109,17 +127,7 @@ export function CreateWebpackConfig(opt: CreateWebpackConfig_Options) {
 				".ts", ".tsx", // always accept ts[x], because there might be some in node_modules (eg. vwebapp-framework)
 				".mjs", // needed for mobx-sync
 			],
-			alias: {
-				...CE(peerDeps).ToMap(name=>name, name=>paths.base("node_modules", name)),
-				// necessary consolidations, to fix issues
-				"mobx-firelink/node_modules/mobx": paths.base("node_modules", "mobx"), // fsr, needed to prevent 2nd mobx, when mobx-firelink is npm-linked [has this always been true?]
-				// convenience consolidations, since they have npm-patches applied (and we don't want to have to adjust the match-counts)
-				"react-beautiful-dnd": paths.base("node_modules", "react-beautiful-dnd"),
-				immer: paths.base("node_modules", "immer"),
-				"mobx-utils": paths.base("node_modules", "mobx-utils"), // not npm-patch, but modified version
-				// convenience consolidations (for any own-modules not in peer-deps), to keep things tidy (fine since we know the different versions will be compatible anyway)
-				...CE(ownModules).ToMap(name=>name, name=>paths.base("node_modules", name)),
-			},
+			alias: GetAliases(opt),
 		},
 		module: {
 			rules: [
