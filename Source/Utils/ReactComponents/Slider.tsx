@@ -7,20 +7,20 @@ const RCSlider = require("rc-slider");*/
 
 export class Slider extends BaseComponent
 		<{
-			min: number, max: number, step: number, value: number, enabled?: boolean, delayChangeTillDefocus?: boolean, onChange: (val: number)=>void,
+			min: number, max: number, step: number, value: number, enabled?: boolean, instant?: boolean, onChange: (val: number)=>void,
 			minimumTrackStyle?, trackStyle?, handleStyle?,
 		},
 		{editedValue: number}> {
 	static defaultProps = {enabled: true};
 	slider: RCSlider;
 	render() {
-		const {value, enabled, delayChangeTillDefocus, onChange, ...rest} = this.props;
+		const {value, enabled, instant, onChange, ...rest} = this.props;
 		const {editedValue} = this.state;
 		return (
 			<RCSlider ref={c=>this.slider = c} {...rest} disabled={!enabled}
 				value={editedValue != null ? editedValue : (value || 0)}
 				onChange={val=>{
-					if (delayChangeTillDefocus) {
+					if (!instant) {
 						this.SetState({editedValue: val});
 					} else {
 						onChange(val);
@@ -28,7 +28,7 @@ export class Slider extends BaseComponent
 					}
 				}}
 				onAfterChange={val=>{
-					if (delayChangeTillDefocus && onChange) {
+					if (!instant && onChange) {
 						onChange(val);
 						this.SetState({editedValue: null});
 					}

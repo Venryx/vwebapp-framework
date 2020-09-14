@@ -40,7 +40,7 @@ function MomentOrString_Normalize(momentOrStr_raw: Moment.Moment | string, dateF
 }
 
 export type VDateTime_Props = {
-	enabled?: boolean, delayChangeTillDefocus?: boolean, min?: Moment.Moment, max?: Moment.Moment, onChange: (val: Moment.Moment)=>void,
+	enabled?: boolean, instant?: boolean, min?: Moment.Moment, max?: Moment.Moment, onChange: (val: Moment.Moment)=>void,
 	//dateFormatExtras?: string[], timeFormatExtras?: string[],
 	// fixes for DatetimepickerProps
 	dateFormat?: string | false, timeFormat?: string | false,
@@ -54,7 +54,7 @@ export class VDateTime extends BaseComponentPlus(
 	{editedValue_raw: null as Moment.Moment | string},
 ) {
 	render() {
-		let {enabled, value, onChange, delayChangeTillDefocus, dateFormat, timeFormat, inputProps, min, max, ...rest} = this.props;
+		let {enabled, value, onChange, instant, dateFormat, timeFormat, inputProps, min, max, ...rest} = this.props;
 		const {editedValue_raw} = this.state;
 
 		if (!enabled) {
@@ -68,7 +68,7 @@ export class VDateTime extends BaseComponentPlus(
 					const newVal = MomentOrString_Normalize(newVal_raw, dateFormat, timeFormat, min, max);
 					if (`${newVal}` == `${RawValToMoment(editedValue_raw, dateFormat, timeFormat)}`) return; // if no change, ignore event
 
-					if (delayChangeTillDefocus) {
+					if (!instant) {
 						this.SetState({editedValue_raw: newVal_raw}, null, false);
 					} else {
 						onChange(newVal);
@@ -80,12 +80,12 @@ export class VDateTime extends BaseComponentPlus(
 		);
 	}
 	OnInputBlurOrBoxClose(newVal_raw: Moment.Moment | string) {
-		const {value, onChange, delayChangeTillDefocus, dateFormat, timeFormat, min, max} = this.props;
+		const {value, onChange, instant, dateFormat, timeFormat, min, max} = this.props;
 		const newVal = MomentOrString_Normalize(newVal_raw, dateFormat, timeFormat, min, max);
 		//if (`${newVal}` == `${value}`) return; // if no change, ignore event
 		const valChanged = `${newVal}` != `${value}`; // don't just return if same value; we still need to clear edited-value (in case date-time string needs normalization)
 
-		if (delayChangeTillDefocus) {
+		if (!instant) {
 			if (onChange && valChanged) onChange(newVal);
 			this.SetState({editedValue_raw: null});
 		}
