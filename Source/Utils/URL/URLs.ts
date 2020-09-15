@@ -1,7 +1,24 @@
-import {GetCurrentURLString, VURL, DeepGet} from "js-vextensions";
+import {GetCurrentURLString, VURL, DeepGet, ModifyString} from "js-vextensions";
 import {runInAction} from "mobx";
 import {manager} from "../../Manager";
 import {e} from "../../PrivateExports";
+
+export class Page {
+	constructor(initialData?: Partial<Page>, children?: {[key: string]: Page}) {
+		if (initialData) this.VSet(initialData);
+		if (children) {
+			for (const {key, value: child} of children.Pairs()) {
+				if (child.key == null) child.key = key;
+				if (child.title == null) child.title = ModifyString(child.key, m=>[m.startLower_to_upper]);
+			}
+			this.children = children;
+		}
+	}
+	key: string;
+	title: string;
+	simpleSubpages? = true;
+	children?: {[key: string]: Page};
+}
 
 /*export function GetCurrentURL(fromAddressBar = false) {
 	if (fromAddressBar) return VURL.Parse(GetCurrentURLString());
