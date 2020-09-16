@@ -47,6 +47,7 @@ export * from "./Utils/ReactComponents/InfoButton";
 export * from "./Utils/ReactComponents/Link";
 export * from "./Utils/ReactComponents/PageContainer";
 export * from "./Utils/ReactComponents/Slider";
+export * from "./Utils/ReactComponents/TextPlus";
 export * from "./Utils/ReactComponents/Tooltip";
 export * from "./Utils/ReactComponents/TreeView";
 export * from "./Utils/ReactComponents/VDateTime";

@@ -3,6 +3,7 @@ import {BaseComponent} from "react-vextensions";
 import Tooltip from "rc-tooltip";
 import {Button, ButtonProps} from "react-vcomponents";
 import React from "react";
+import {E} from "js-vextensions";
 import {InTooltip, InTooltipProps} from "./Tooltip";
 
 type EffectType = "float" | "solid";
@@ -19,8 +20,10 @@ class TooltipInfo {
 }
 const tooltips = [] as TooltipInfo[];
 
+export type InfoButtonProps = {text: string, effect?: EffectType, tooltipProps?: InTooltipProps, sel?: boolean} & ButtonProps;
+
 let lastTipID = -1;
-export class InfoButton extends BaseComponent<{text: string, effect?: EffectType, tooltipProps?: InTooltipProps} & ButtonProps, {}> {
+export class InfoButton extends BaseComponent<InfoButtonProps, {}> {
 	static defaultProps = {effect: "solid"};
 
 	ComponentWillMountOrReceiveProps(props) {
@@ -46,9 +49,17 @@ export class InfoButton extends BaseComponent<{text: string, effect?: EffectType
 	}
 
 	render() {
-		const {text, effect, tooltipProps, ...rest} = this.props;
+		const {text, effect, tooltipProps, sel, ...rest} = this.props;
+		const tooltip = (
+			<InTooltip {...E(
+				tooltipProps,
+				sel && {className: `${tooltipProps?.className} selectable`},
+			) as any}>
+				{text}
+			</InTooltip>
+		);
 		return (
-			<Tooltip placement="top" overlay={<InTooltip {...tooltipProps as any}>{text}</InTooltip>}>
+			<Tooltip placement="top" overlay={tooltip}>
 				<Button {...rest as any} size={13} iconSize={13} iconPath="/Images/Buttons/Info.png"
 						useOpacityForHover={true} style={{position: `relative`, zIndex: 1, marginLeft: 1, backgroundColor: null, boxShadow: null, border: null}}
 						//title={text}
