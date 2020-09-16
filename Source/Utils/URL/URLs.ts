@@ -2,6 +2,8 @@ import {GetCurrentURLString, VURL, DeepGet, ModifyString} from "js-vextensions";
 import {runInAction} from "mobx";
 import {manager} from "../../Manager";
 import {e} from "../../PrivateExports";
+import {ActionFunc} from "../Store/MobX";
+import {RootStore} from "../../UserTypes";
 
 export class Page {
 	constructor(initialData?: Partial<Page>, children?: {[key: string]: Page}) {
@@ -14,9 +16,14 @@ export class Page {
 			this.children = children;
 		}
 	}
+
 	key: string;
 	title: string;
 	simpleSubpages? = true;
+	/** Action performed (within MobX action) when nav-bar entry is clicked, but page/subpage is already active. */
+	// note: for now user-project must implement this, within NavBarPageButton and SubNavBarButton classes (see LF repo for example)
+	actionIfActive?: ActionFunc<RootStore>;
+
 	children?: {[key: string]: Page};
 }
 
