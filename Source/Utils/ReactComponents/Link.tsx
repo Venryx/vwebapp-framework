@@ -1,4 +1,4 @@
-import {VURL, Assert} from "js-vextensions";
+import {VURL, Assert, E} from "js-vextensions";
 import React from "react";
 import {BaseComponent, FilterOutUnrecognizedProps, BaseComponentPlus} from "react-vextensions";
 import produce from "immer";
@@ -65,7 +65,11 @@ export class Link extends BaseComponentPlus({} as Link_Props, {}) {
 			const newURL = WithStore({}, newState, ()=>manager.GetNewURL());
 			//const newURL = manager.GetNewURL.WS(newState)();
 			to = newURL.toString();*/
-			to = manager.GetNewURLForStoreChanges(actionFunc);
+			try {
+				to = manager.GetNewURLForStoreChanges(actionFunc);
+			} catch (ex) {
+				console.error(`Error while calculating Link's "to" prop:`, ex);
+			}
 		}
 
 		//if (manager.prodEnv && to == null) return; // defensive
