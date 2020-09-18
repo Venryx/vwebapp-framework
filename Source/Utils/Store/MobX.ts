@@ -1,8 +1,8 @@
-import {runInAction, observable, autorun, configure, onReactionError, ObservableMap, ObservableSet} from "mobx";
+import {runInAction, observable, autorun, configure, onReactionError, ObservableMap, ObservableSet, $mobx} from "mobx";
 import {observer, IReactComponent} from "mobx-react";
 import {EnsureClassProtoRenderFunctionIsWrapped, BaseComponent} from "react-vextensions";
 import React, {Component, useRef} from "react";
-import {ToJSON, E} from "js-vextensions";
+import {ToJSON, E, RemoveCircularLinks} from "js-vextensions";
 import produce, {setUseProxies, setAutoFreeze, enableES5} from "immer";
 import {manager} from "../../Manager";
 import {HandleError} from "../General/Errors";
@@ -161,10 +161,10 @@ export const defaultMobXToPlainConverters = [
 ] as MobXToPlainConverter[];*/
 
 /**
-Makes it possible to use MobX object-trees as the source/base object for Immer's produce function.
-See here for more info: https://github.com/immerjs/immer/issues/515
+Creates a complete copy of the object-tree passed in; for source nodes that are mobx objects, creates dynamically-updating "mirrors".
+Purpose: Enables use of MobX object-trees as the source/base object for immer.produce(). (see: https://github.com/immerjs/immer/issues/515)
 */
-export function GetMirrorOfMobXTree<T>(mobxTree: T, prototypesToKeep: Function[] = [Array, Map, Set]): T {
+export function GetMirrorOfMobXTree<T>(mobxTree: T, removeCircularLinks = true, prototypesToKeep: Function[] = [Array, Map, Set]): T {
 	if (mobxTree == null) return null;
 	try {
 		mobxTree["$mirror"];
@@ -188,6 +188,10 @@ export function GetMirrorOfMobXTree<T>(mobxTree: T, prototypesToKeep: Function[]
 		}
 		StartUpdatingMirrorOfMobXTree(mobxTree, tree_plainMirror);
 	}
+	// if enabled, remove circular-links from mirror tree; this doesn't affect original object-tree, and makes the mirror tree usable in immer.produce()
+	if (removeCircularLinks) {
+		RemoveCircularLinks(mobxTree["$mirror"]);
+	}
 	return mobxTree["$mirror"];
 }
 export function StartUpdatingMirrorOfMobXTree(mobxTree: any, tree_plainMirror: any, prototypesToKeep: Function[] = [Array, Map, Set]) {
@@ -198,7 +202,7 @@ export function StartUpdatingMirrorOfMobXTree(mobxTree: any, tree_plainMirror: a
 		for (const key of sourceIsMap ? mobxTree.keys() : Object.keys(mobxTree)) {
 			const valueFromSource = sourceIsMap ? mobxTree.get(key) : mobxTree[key]; // this counts as a mobx-get, meaning the autorun subscribes, so this func reruns when the prop-value changes
 			//const valueForTarget_old = tree_plainMirror[key];
-			const valueForTarget = typeof valueFromSource == "object" ? GetMirrorOfMobXTree(valueFromSource, prototypesToKeep) : valueFromSource;
+			const valueForTarget = typeof valueFromSource == "object" ? GetMirrorOfMobXTree(valueFromSource, false, prototypesToKeep) : valueFromSource;
 
 			if (targetIsMap) {
 				tree_plainMirror.set(key, valueForTarget);
