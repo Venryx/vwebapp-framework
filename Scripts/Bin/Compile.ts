@@ -1,6 +1,7 @@
 import fs from "fs-extra";
 import debug_base from "debug";
 import webpack from "webpack";
+import pathModule from "path";
 import {StartWebpackCompiler} from "../Build/WebpackCompiler";
 
 declare const {CreateConfig}: typeof import("../Config");
@@ -15,9 +16,21 @@ export function Compile(config: ReturnType<typeof CreateConfig>, webpackConfig: 
 			if (stats.warnings.length && config.compiler_fail_on_warning) {
 				throw new Error("Config set to fail on warning, exiting with status code '1'.");
 			}
-			debug("Copying resources to Dist folder.");
-			// fs.copySync(paths.source("Resources"), paths.dist());
-			fs.copySync(paths.base("Resources"), paths.dist());
+			debug("Copying resources to Dist folder. Resource folders:", config.resourceFolders, "Resource files:", config.resourceFiles);
+			for (const resourceFolder of config.resourceFolders) {
+				fs.copySync(
+					paths.base(resourceFolder.sourcePath),
+					//paths.dist(resourceFolder.destSubpath ?? ""),
+					paths.dist(),
+				);
+			}
+			for (const resourceFile of config.resourceFiles) {
+				const fileName = pathModule.basename(resourceFile.sourcePath);
+				fs.copySync(
+					paths.base(resourceFile.sourcePath),
+					paths.dist(resourceFile.destSubpath ?? fileName),
+				);
+			}
 		})
 		.then(()=>{
 			debug("Compilation completed successfully.");

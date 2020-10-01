@@ -3,6 +3,7 @@ import debug_base from "debug";
 import webpack from "webpack";
 import devMiddleware from "webpack-dev-middleware";
 import connectHistoryAPIFallback from "connect-history-api-fallback";
+import pathModule from "path";
 
 declare const ENV, DEV, PROD, TEST;
 declare const {CreateConfig}: typeof import("../Config");
@@ -57,10 +58,22 @@ export function Serve(config: ReturnType<typeof CreateConfig>, webpackConfig: we
 			app.use(devMiddleware(compiler));
 		}
 
-		// Serve static assets from ~/Source/Resources since Webpack is unaware of these files.
-		// This middleware doesn't need to be enabled outside of development since this directory will be copied into ~/Dist when the application is compiled.
-		// app.use(express.static(paths.source("Resources")));
-		app.use(express.static(paths.base("Resources")));
+		// serve static assets from resource folders, since webpack is unaware of these files (in dev-mode only, since resources are hard-copied into ~/Dist when app is compiled, in Compile.ts)
+		for (const resourceFolder of config.resourceFolders) {
+			app.use(express.static(paths.base(resourceFolder.sourcePath)));
+		}
+		// for resource-file entries, just serve each one's containing folder (this only happens for devs, so should be fine; for prod, Compile.ts only copies the specific files listed)
+		//const resourceFileFolders = config.resourceFiles.map(a=>pathModule.dirname(a.sourcePath)).filter((entry, i, arr)=>arr.indexOf(entry) == i);
+		/*const resourceFileFolders = [...new Set(config.resourceFiles.map(a=>pathModule.dirname(a.sourcePath)))];
+		for (const resourceFileFolder of resourceFileFolders) {
+			app.use(express.static(paths.base(resourceFileFolder)));
+		}*/
+		// for resource-file entries, serve each one to its specific destination path (since "app.use(express.static(...))" is built for folders and doesn't let you specify dest-subpath)
+		for (const resourceFile of config.resourceFiles) {
+			const fileName = pathModule.basename(resourceFile.sourcePath);
+			app.use(`/${resourceFile.destSubpath ?? fileName}`, express.static(paths.base(resourceFile.sourcePath)));
+		}
+
 		// app.use(express.static(paths.dist())); // enable static loading of files in Dist, for dll.vendor.js
 	} else {
 		debug(

@@ -11,7 +11,7 @@ Stack) ${error.stack}`);*/
 	if (error != null) {
 		HandleError(error, false);
 	} else {
-		HandleError({stack: `${filePath  }:${  line  }:${  column}`, toString: ()=>message} as any, false);
+		HandleError({stack: `${filePath}:${line}:${column}`, toString: ()=>message} as any, false);
 	}
 });
 window.addEventListener("unhandledrejection", e=>{
@@ -23,22 +23,24 @@ window.addEventListener("onrejectionhandled", e=>{
 	HandleError(e["reason"]);
 });
 
-export function HandleError(error: Error, recordWithSentry = true, extraInfo = {}) {
+export function StringifyError(error: Error, allowAddErrorOccurredPrefix = true) {
 	error = error || {message: "[empty error]"} as any;
 	const message = (error.message || error.toString()).replace(/\r/g, "").TrimStart("\n");
-	/*let stackWithoutMessage = (
-		error.stack && error.message && error.stack.Contains(error.message)
-			? error.stack.replace(error.message, "")
-			: error.stack || ""
-	).TrimStart("\r", "\n");*/
 	const stack = (error.stack || "").replace(/\r/g, "").TrimStart("\n");
+	//const stackWithoutMessage = stack && message && stack.startsWith(message) ? error.stack.slice(message.length) : stack;
 
-	//alert("An error occurred: " + error);
 	let errorStr = "";
-	if (!message.startsWith("Assert failed) ")) {errorStr += `An error has occurred: `;}
-	if (!stack.Contains(message)) {errorStr += message;}
+	if (allowAddErrorOccurredPrefix) {
+		const alreadyHasPrefix = message.startsWith("Assert failed) ");
+		if (!alreadyHasPrefix) errorStr += `An error has occurred: `;
+	}
+	if (!stack.includes(message)) errorStr += message;
 	errorStr += (errorStr.length ? "\n" : "") + stack;
-	LogError(errorStr);
+	return errorStr;
+}
+export function HandleError(error: Error, recordWithSentry = true, extraInfo = {}) {
+	const errorStr = StringifyError(error);
+	//alert("An error has occurred: " + error);
 
 	if (recordWithSentry) {
 		/*(()=> {

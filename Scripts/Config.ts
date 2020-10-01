@@ -2,6 +2,7 @@ import debug_base from "debug";
 import ip from "ip";
 import path from "path";
 import yargs from "yargs";
+
 const {argv} = yargs;
 
 // const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -43,6 +44,9 @@ const config_base = {
 	dir_dist: "Dist",
 	dir_server: "Scripts/Server",
 	dir_test: "Tests",
+	//resourceFolders: [{sourcePath: "Resources"}] as {sourcePath: string, destSubpath?: string}[], // destSubpath avoided for now, since requires special handling in Server.ts
+	resourceFolders: [{sourcePath: "Resources"}] as {sourcePath: string}[],
+	resourceFiles: [] as {sourcePath: string, destSubpath?: string}[],
 
 	// server
 	server_host: ip.address(), // use string "localhost" to prevent exposure on local network
@@ -84,6 +88,8 @@ const config_base = {
 	useHotReloading: false,
 };
 
+// What should be defined in this generic Config structure, rather than Serve() arguments, etc?
+// Rule of thumb: Put information here if it's used by more than one of those entry-points. (or is likely to become so in the future)
 export function CreateConfig(ext: Partial<typeof config_base> & {path_base: string, server_port: string | number}) {
 	debug("Creating default configuration.");
 	const config = Object.assign(
@@ -98,5 +104,8 @@ export function CreateConfig(ext: Partial<typeof config_base> & {path_base: stri
 			},
 		},
 	);
+	/*if (ext.extraResourceFolders) { // commented, since realized user-project can just modify resource-folders array itself
+		config.resourceFolders.push(...ext.extraResourceFolders);
+	}*/
 	return config;
 }
