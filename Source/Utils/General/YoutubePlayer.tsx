@@ -1,4 +1,4 @@
-import {Timer, Assert, CE, ObjectCE, E} from "js-vextensions";
+import {Timer, Assert, CE, ObjectCE, E, AssertWarn} from "js-vextensions";
 import {manager} from "../../Manager";
 import {g} from "../../PrivateExports";
 
@@ -212,19 +212,33 @@ export class YoutubePlayer {
 	}*/
 
 	loadedClipInfo: YoutubeClipInfo;
-	LoadVideo(info: YoutubeClipInfo, autoplay = true, markOwned = true) {
+	/** Promise is resolved once video has completed loading/buffering. */
+	async LoadVideo(info: YoutubeClipInfo, autoplay = false, markOwned = true) {
 		this.AssertReady();
-		if (this.loadedClipInfo == null || info.videoID != this.loadedClipInfo.videoID || info.quality != this.loadedClipInfo.quality) {
-			this.internalPlayer[autoplay ? "loadVideoById" : "cueVideoById"]({
+		const oldInfo = this.loadedClipInfo;
+		this.loadedClipInfo = null;
+
+		if (oldInfo == null || info.videoID != oldInfo.videoID || info.quality != oldInfo.quality) {
+			//this.internalPlayer[autoplay ? "loadVideoById" : "cueVideoById"]({
+			this.internalPlayer["cueVideoById"]({
 				videoId: info.videoID,
 				startSeconds: info.startTime || undefined,
 				//endSeconds: info.endTime || undefined, // handle end-time ourselves, for consistency (and because built-in end-time doesn't seem reliable)
 				suggestedQuality: YoutubeQuality[info.quality || YoutubeQuality.default],
 			});
+			//await this.WaitTillState(autoplay ? YoutubePlayerState.PLAYING : YoutubePlayerState.CUED);
 		} else {
 			this.internalPlayer.seekTo(info.startTime, true);
 		}
+		// to detect video-load completion, call play(), and wait for state to reflect (only way I know atm)
+		this.internalPlayer.playVideo();
+		await this.WaitTillState(YoutubePlayerState.PLAYING);
+		if (!autoplay) {
+			this.internalPlayer.pauseVideo();
+			await this.WaitTillState(YoutubePlayerState.PAUSED);
+		}
 		this.loadedClipInfo = info;
+
 		if (markOwned) this.hasOwner = true;
 	}
 	SetPlaybackRate(speed: number) {
@@ -236,18 +250,20 @@ export class YoutubePlayer {
 		this.internalPlayer.setVolume(volume * 100);
 	}
 
+	/** Before calling, make sure video-load has completed, ie. "await LoadVideo()". (else, this call can fail, and even disrupt video-load's start-time) */
 	SetPosition(timeInSec: number) {
 		this.AssertReady();
-		this.internalPlayer.seekTo(timeInSec);
-		this.NotifyCurrentPosChanged(timeInSec, "setPosition"); // we need to just tell it the new time, because the seekTo command does not apply instantly
+		this.internalPlayer.seekTo(timeInSec, true);
+		// we need to just tell it the new time, because the seekTo command does not apply instantly (which is needed for some call-paths, apparently)
+		this.NotifyCurrentPosChanged(timeInSec, "setPosition");
 	}
 
 	lastPlayTime: number;
 	Play() {
 		this.AssertReady();
-		if (this.lastPlayTime != null) {
+		/*if (this.lastPlayTime != null) {
 			this.SetPosition(this.loadedClipInfo.startTime || 0);
-		}
+		}*/
 		this.internalPlayer.playVideo();
 		this.lastPlayTime = Date.now();
 	}

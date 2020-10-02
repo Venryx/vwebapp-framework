@@ -39,10 +39,14 @@ export class YoutubePlayerUI extends BaseComponentPlus(
 
 		if (onPlayerInitialized) onPlayerInitialized(player);
 		player.LoadVideo({videoID, startTime}, autoplay);
-		if (onPosChanged_callForStartTime && startTime != null && onPosChanged) {
-			onPosChanged(startTime, "playback"); // it's not really either source, but it's closer to playback
-		}
+		/*await player.LoadVideo({videoID, startTime});
+		if (autoplay) player.Play();*/
 
-		if (onPosChanged) player.onPositionChanged = onPosChanged;
+		if (onPosChanged) {
+			player.onPositionChanged = onPosChanged;
+			if (onPosChanged_callForStartTime && startTime != null) {
+				onPosChanged(startTime, "playback"); // it's not really either source, but it's closer to playback
+			}
+		}
 	}
 }
