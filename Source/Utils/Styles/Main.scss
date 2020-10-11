@@ -42,7 +42,9 @@ html, body {
 	padding: 0;
 	height: 100%;
 	//background-color: $background;
-	font-family: 'Roboto', 'Open Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+	font-family: 'Roboto', 'Open Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif,
+		// add these fonts at end, for providing colored emojis (otherwise it falls back to non-colored ones for, eg. ✔ and ⚙ -- though not 🚧)
+		'segoe ui emoji', 'noto color emoji', 'android emoji', 'emojisymbols', 'emojione mozilla', 'twemoji mozilla', 'segoe ui symbol';
 	font-size: 15px;
 	/*@include desktop {
 		font-size: 15px;
