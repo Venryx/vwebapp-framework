@@ -42,7 +42,7 @@
 		"js-vextensions": "^1.0.44",
 		"mobx": "^5.15.4",
 		"mobx-firelink": "~1.0.48",
-		"mobx-react": "^6.1.4",
+		"mobx-react": "^6.3.1",
 		"raven-js": "^3.27.0",
 		"react": "^16.11.0",
 		"react-beautiful-dnd": "^13.0.0",

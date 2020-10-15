@@ -1,10 +1,10 @@
-import {runInAction, observable, autorun, configure, onReactionError, ObservableMap, ObservableSet, $mobx} from "mobx";
-import {observer, IReactComponent} from "mobx-react";
-import {EnsureClassProtoRenderFunctionIsWrapped, BaseComponent} from "react-vextensions";
+import {enableES5, setAutoFreeze, setUseProxies} from "immer";
+import {E, emptyArray, RemoveCircularLinks, ToJSON} from "js-vextensions";
+import {$mobx, autorun, configure, observable, ObservableMap, ObservableSet, onReactionError, runInAction, _getGlobalState} from "mobx";
+import {observer} from "mobx-react";
+import {IReactComponent} from "mobx-react/dist/types/IReactComponent";
 import React, {Component, useRef} from "react";
-import {ToJSON, E, RemoveCircularLinks, emptyArray} from "js-vextensions";
-import produce, {setUseProxies, setAutoFreeze, enableES5} from "immer";
-import {manager} from "../../Manager";
+import {EnsureClassProtoRenderFunctionIsWrapped} from "react-vextensions";
 import {HandleError} from "../General/Errors";
 
 // old: call ConfigureMobX() before any part of mobx tree is created (ie. at start of Store/index.ts); else, immer produce() doesn't work properly
@@ -24,6 +24,11 @@ export function ConfigureMobX() {
 	enableES5(); // es5 mode is needed, since we're not using proxies
 	setUseProxies(false);
 	setAutoFreeze(false);
+}
+
+/** Useful for checking if the current call-stack is within a mobx computed value/function. (where mobx changes/side-effects are disallowed, eg. runInAction) */
+export function MobXComputationDepth() {
+	return _getGlobalState().computationDepth;
 }
 
 export type ActionFunc<StoreType> = (store: StoreType)=>void;
