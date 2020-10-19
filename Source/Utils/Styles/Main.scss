@@ -224,6 +224,13 @@ div, span, p, th, td {
 	will-change: transform;
 }
 
+// temp-fix for "ResizeObserver loop limit exceeded" error, for video element
+// see: https://stackoverflow.com/questions/63653605/resizeobserver-loop-limit-exceeded-api-is-never-used and https://bugs.chromium.org/p/chromium/issues/detail?id=809574
+video::-webkit-media-controls-timeline {
+	align-self: center;
+	width: calc(100% - 64px);
+}
+
 .triangle {
 	position: relative;
 	background-color: orange;
