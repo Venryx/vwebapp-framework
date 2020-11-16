@@ -1,12 +1,25 @@
 import Raven from "raven-js";
-import {LogError} from "./Logging";
 import {manager} from "../../Manager";
+
+export function ShouldErrorBeIgnored(errorStr: string) {
+	errorStr = typeof errorStr == "string" ? errorStr : ""; // defensive
+
+	// ignore these "errors"; they occur during normal operation, and are not a problem
+	if (errorStr.includes("ResizeObserver loop limit exceeded")) return true;
+	if (errorStr.includes("ResizeObserver loop completed with undelivered notifications.")) return true;
+
+	return false;
+}
 
 //g.onerror = function(message: string, filePath: string, line: number, column: number, error: Error) {
 window.addEventListener("error", e=>{
 	const {message, filename: filePath, lineno: line, colno: column, error} = e as {message: string, filename: string, lineno: number, colno: number, error: Error};
-	/*LogError(`JS) ${message} (at ${filePath}:${line}:${column})
-Stack) ${error.stack}`);*/
+
+	if (ShouldErrorBeIgnored(e.message)) {
+		e.stopImmediatePropagation();
+		return false;
+	}
+
 	// sentry already picks up errors that make it here; so don't send it to sentry again
 	if (error != null) {
 		HandleError(error, false);
