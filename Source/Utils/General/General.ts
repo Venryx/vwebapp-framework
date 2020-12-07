@@ -71,17 +71,6 @@ export function CopyText(text) {
 	(document as any).execCommand("copy", false, null);
 }
 
-export function GetRandomNumber(options: {min: number, max: number, mustBeInteger?: boolean}) {
-	var {min, max, mustBeInteger} = options;
-	/*Assert(IsNumber(min), `Min must be a number. (not: ${min})`);
-	Assert(IsNumber(max), `Max must be a number. (not: ${max})`);*/
-	var range = max - min;
-	if (mustBeInteger) {
-		return min + Math.floor(Math.random() * (range + 1));
-	}
-	return min + (Math.random() * range);
-}
-
 export type ReadAsString_FuncName = "readAsBinaryString" | "readAsDataURL" | "readAsText";
 export function BlobToString(blob: Blob, readAsFuncName = "readAsText" as ReadAsString_FuncName) {
 	return new Promise((resolve, reject)=>{

@@ -9,7 +9,7 @@ declare const ENV, DEV, PROD, TEST;
 declare const {CreateConfig}: typeof import("../Config");
 const debug = debug_base("app:server");
 
-export function Serve(config: ReturnType<typeof CreateConfig>, webpackConfig: webpack.Configuration) {
+export function Serve(config: ReturnType<typeof CreateConfig>, webpackConfig: webpack.Configuration, extToServe = ["html", "js", "css", "png", "jpg", "wasm"]) {
 	const paths = config.utils_paths;
 	const app = express();
 
@@ -18,7 +18,7 @@ export function Serve(config: ReturnType<typeof CreateConfig>, webpackConfig: we
 	app.use(connectHistoryAPIFallback({
 		rewrites: [
 			{
-				from: /^(.(?!\.(html|js|css|png|jpg|wasm)))+$/, // paths with these extensions will NOT be redirected to "index.html""
+				from: new RegExp(`^(.(?!\\.(${extToServe.join("|")})))+$`), // paths with these extensions will NOT be redirected to "index.html""
 				to(context) {
 					return "/index.html";
 				},
