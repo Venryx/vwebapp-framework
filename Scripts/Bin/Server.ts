@@ -9,7 +9,7 @@ declare const ENV, DEV, PROD, TEST;
 declare const {CreateConfig}: typeof import("../Config");
 const debug = debug_base("app:server");
 
-export function Serve(config: ReturnType<typeof CreateConfig>, webpackConfig: webpack.Configuration, extToServe = ["html", "js", "css", "png", "jpg", "wasm"]) {
+export function Serve(config: ReturnType<typeof CreateConfig>, webpackConfig: webpack.Configuration, extToServe = ["html", "js", "css", "png", "jpg", "wasm"], writeToDisk = null) {
 	const paths = config.utils_paths;
 	const app = express();
 
@@ -53,39 +53,38 @@ export function Serve(config: ReturnType<typeof CreateConfig>, webpackConfig: we
 				//ignored: "**#/*",
 				ignored: "!./Source_JS/TSCompileDone.marker",
 			} */
+			writeToDisk,
 		}));
 		if (config.useHotReloading) {
-			app.use(devMiddleware(compiler));
-		}
-
-		// serve static assets from resource folders, since webpack is unaware of these files (in dev-mode only, since resources are hard-copied into ~/Dist when app is compiled, in Compile.ts)
-		for (const resourceFolder of config.resourceFolders) {
-			app.use(express.static(paths.base(resourceFolder.sourcePath)));
-		}
-		// for resource-file entries, just serve each one's containing folder (this only happens for devs, so should be fine; for prod, Compile.ts only copies the specific files listed)
-		//const resourceFileFolders = config.resourceFiles.map(a=>pathModule.dirname(a.sourcePath)).filter((entry, i, arr)=>arr.indexOf(entry) == i);
-		/*const resourceFileFolders = [...new Set(config.resourceFiles.map(a=>pathModule.dirname(a.sourcePath)))];
-		for (const resourceFileFolder of resourceFileFolders) {
-			app.use(express.static(paths.base(resourceFileFolder)));
-		}*/
-		// for resource-file entries, serve each one to its specific destination path (since "app.use(express.static(...))" is built for folders and doesn't let you specify dest-subpath)
-		for (const resourceFile of config.resourceFiles) {
-			const fileName = pathModule.basename(resourceFile.sourcePath);
-			app.use(`/${resourceFile.destSubpath ?? fileName}`, express.static(paths.base(resourceFile.sourcePath)));
+			//app.use(hotMiddleware(compiler));
 		}
 
 		// app.use(express.static(paths.dist())); // enable static loading of files in Dist, for dll.vendor.js
 	} else {
 		debug(
-			"Server is being run outside of live development mode, meaning it will "
-			+ "only serve the compiled application bundle in ~/Dist. Generally you "
-			+ "do not need an application server for this and can instead use a web "
-			+ 'server such as nginx to serve your static files. See the "deployment" '
-			+ "section in the README for more information on deployment strategies.",
+			`Server is being run outside of live development mode, meaning it will only serve the compiled application bundle in ~/Dist.${""
+			} Generally you do not need an application server for this and can instead use a web server such as nginx to serve your static files. ${""
+			} See the "deployment" section in the README for more information on deployment strategies.`,
 		);
 
 		// Serving ~/Dist by default. Ideally these files should be served by the web server and not the app server, but this helps to demo the server in production.
 		app.use(express.static(paths.dist()));
+	}
+
+	// serve static assets from resource folders, since webpack is unaware of these files (in dev-mode only, since resources are hard-copied into ~/Dist when app is compiled, in Compile.ts)
+	for (const resourceFolder of config.resourceFolders) {
+		app.use(express.static(paths.base(resourceFolder.sourcePath)));
+	}
+	// for resource-file entries, just serve each one's containing folder (this only happens for devs, so should be fine; for prod, Compile.ts only copies the specific files listed)
+	//const resourceFileFolders = config.resourceFiles.map(a=>pathModule.dirname(a.sourcePath)).filter((entry, i, arr)=>arr.indexOf(entry) == i);
+	/*const resourceFileFolders = [...new Set(config.resourceFiles.map(a=>pathModule.dirname(a.sourcePath)))];
+	for (const resourceFileFolder of resourceFileFolders) {
+		app.use(express.static(paths.base(resourceFileFolder)));
+	}*/
+	// for resource-file entries, serve each one to its specific destination path (since "app.use(express.static(...))" is built for folders and doesn't let you specify dest-subpath)
+	for (const resourceFile of config.resourceFiles) {
+		const fileName = pathModule.basename(resourceFile.sourcePath);
+		app.use(`/${resourceFile.destSubpath ?? fileName}`, express.static(paths.base(resourceFile.sourcePath)));
 	}
 
 	// module.exports = app;
