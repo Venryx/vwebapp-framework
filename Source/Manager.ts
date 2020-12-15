@@ -9,7 +9,7 @@ export class Manager {
 	/*onPopulated = new Promise((resolve, reject)=>this.onPopulated_resolve = resolve);
 	onPopulated_resolve: Function;*/
 	//Populate(data: Omit<Manager, "onPopulated" | "onPopulated_resolve" | "Populate">) {
-	Populate(data: Omit<Manager, "Populate" | "store" | "rootState" | "firestoreDB">) {
+	Populate(data: Omit<Manager, "Populate" | "store" | "rootState">) {
 		this.Extend(data);
 		//G({Log: Log}); // set globals
 		//this.onPopulated_resolve();
@@ -17,7 +17,7 @@ export class Manager {
 	}
 	// shortcuts
 	get store() { return this.GetStore(); }
-	get firestoreDB() { return this.store.firebase.firestore(); }
+	//get firestoreDB() { return this.store.firebase.firestore(); }
 
 	// styling and such
 	// ==========
@@ -54,7 +54,8 @@ export class Manager {
 	// store+db
 	// ==========
 
-	GetStore: ()=>any;
+	//GetStore: ()=>RootStore;
+	GetStore: ()=>any; // due to RootStore's interface-extend approach, we can't add fields from framework code; so might as well leave as "any"
 	GetAuth: ()=>any;
 	GetUserID: ()=>string;
 	// If provided, Command.ts will apply each Command's db-updates to a local copy of the db-data, then send this modified data to the ValidateDBData function (for assertions). Should probably disable in production.

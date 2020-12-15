@@ -59,6 +59,7 @@ export * from "./Utils/Store/MobX";
 
 export * from "./Utils/UI/DNDHelpers";
 export * from "./Utils/UI/General";
+export * from "./Utils/UI/NavBar";
 export * from "./Utils/UI/ReactHooks";
 export * from "./Utils/UI/SubNavBar";
 

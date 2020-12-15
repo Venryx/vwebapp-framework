@@ -24,7 +24,11 @@ Note: If npm linking this module, it's recommended to add this to your tsconfig.
 */
 
 export interface RootStore {
-	//main: any;
+	/*main: {
+		page: string;
+		topLeftOpenPanel: string;
+		topRightOpenPanel: string;
+	};*/
 }
 //export interface DBShape {}
 /*export class LogTypes {
