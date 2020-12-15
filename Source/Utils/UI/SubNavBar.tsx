@@ -1,15 +1,16 @@
-// todo: complete this, then export it as part of vwaf
-/*import {E} from "js-vextensions";
+import {E} from "js-vextensions";
 import {BaseComponent, BaseComponentPlus} from "react-vextensions";
-import {Page} from "Utils/URL/URLs";
 import React from "react";
+import {Page} from "../../Utils/URL/URLs";
 import {manager} from "../../Manager";
-import {Observer} from "../Store/MobX";
+import {ActionFunc, Observer} from "../Store/MobX";
+import {RootStore} from "../../UserTypes";
+import {Link} from "../ReactComponents/Link";
 
 export class SubNavBar_Auto extends BaseComponent<{page: string, fullWidth?: boolean, filter?: (subpage: Page)=>boolean}, {}> {
 	render() {
 		const {page, filter, ...rest} = this.props;
-		const subpages = pageTree.children[page]?.children.VValues() ?? [];
+		const subpages = manager.pageTree.children[page]?.children.VValues() ?? [];
 		return (
 			<SubNavBar>
 				{subpages.filter(filter ?? (page=>true)).map(subpage=>{
@@ -20,20 +21,20 @@ export class SubNavBar_Auto extends BaseComponent<{page: string, fullWidth?: boo
 	}
 }
 
-// @Observer
+@Observer // in case manager.useExpandedNavBar() uses mobx-getters
 export class SubNavBar extends BaseComponent<{fullWidth?: boolean}, {}> {
 	render() {
 		const {fullWidth, children} = this.props;
-		if (!useNavBarLargeVersion()) return null; // handled in NavBar.tsx
+		if (!manager.useExpandedNavBar()) return null; // if sub-nav-bar hidden, subpage selection is handled in project's NavBar.tsx
 
 		return (
 			<nav className="clickThrough" style={{
-				position: "absolute", zIndex: zIndexes.subNavBar, top: 0, width: "100%", textAlign: "center",
+				position: "absolute", zIndex: manager.zIndexes.subNavBar, top: 0, width: "100%", textAlign: "center",
 				// background: "#000 url('/Images/Tiling/TopMenu.png') repeat-x scroll",
 				// background: "rgba(0,0,0,.5)", boxShadow: "3px 3px 7px rgba(0,0,0,.07)",
 			}}>
 				<div style={E(
-					{display: "inline-block", background: "rgba(0,0,0,.7)", boxShadow: colors.navBarBoxShadow},
+					{display: "inline-block", background: "rgba(0,0,0,.7)", boxShadow: manager.colors.navBarBoxShadow},
 					fullWidth ? {width: "100%"} : {borderRadius: "0 0 10px 10px"},
 				)}>
 					{children}
@@ -44,21 +45,21 @@ export class SubNavBar extends BaseComponent<{fullWidth?: boolean}, {}> {
 }
 
 @Observer
-export class SubNavBarButton extends BaseComponentPlus({} as {page: string, subpage: string, text: string, actionFuncIfAlreadyActive?: ActionFunc<RootState>}, {}) {
+export class SubNavBarButton extends BaseComponentPlus({} as {page: string, subpage: string, text: string, actionFuncIfAlreadyActive?: ActionFunc<RootStore>}, {}) {
 	render() {
 		const {page, subpage, text, actionFuncIfAlreadyActive} = this.props;
-		const currentSubpage = store.main[page].subpage || rootPageDefaultChilds[page];
+		const currentSubpage = manager.store.main[page].subpage ?? manager.pageTree.children[page]?.DefaultChild;
 		const active = subpage == currentSubpage;
 
-		let actionFunc: ActionFunc<RootState>;
+		let actionFunc: ActionFunc<RootStore>;
 		if (!active) {
-			actionFunc = s=>s.main[page].subpage = subpage;
+			actionFunc = s=>s["main"][page].subpage = subpage;
 		} else if (actionFuncIfAlreadyActive) {
 			actionFunc = actionFuncIfAlreadyActive;
 		}
 
 		return (
-			<manager.Link actionFunc={actionFunc} text={text} style={E(
+			<Link actionFunc={actionFunc} text={text} style={E(
 				{
 					display: "inline-block", cursor: "pointer", verticalAlign: "middle",
 					lineHeight: "30px", color: "#FFF", padding: "0 15px", fontSize: 12, textDecoration: "none", opacity: 0.9,
@@ -68,4 +69,4 @@ export class SubNavBarButton extends BaseComponentPlus({} as {page: string, subp
 			)}/>
 		);
 	}
-}*/
+}

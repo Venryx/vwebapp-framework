@@ -23,7 +23,9 @@ Note: If npm linking this module, it's recommended to add this to your tsconfig.
 ==========
 */
 
-export interface RootStore {}
+export interface RootStore {
+	//main: any;
+}
 //export interface DBShape {}
 /*export class LogTypes {
 	dbRequests = false;
