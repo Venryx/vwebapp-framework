@@ -12,7 +12,7 @@ g.onYouTubeIframeAPIReady = ()=>{
 };
 
 export function EnsureYoutubeAPIReady() {
-	return new Promise((resolve, reject)=>{
+	return new Promise<void>((resolve, reject)=>{
 		if (youtubeAPIReady) {
 			resolve();
 		} else {
@@ -97,7 +97,7 @@ export class YoutubePlayer {
 		Assert(this.internalPlayer && this.ready, "Must first call, and await completion of, the asynchronous player.EnsureReady().");
 	}
 	EnsureReady() {
-		return new Promise(async(resolve, reject)=>{
+		return new Promise<void>(async(resolve, reject)=>{
 			if (this.ready) resolve();
 			this.readyListeners.push(resolve);
 
@@ -181,7 +181,7 @@ export class YoutubePlayer {
 	}
 
 	WaitTillState(...waitForStates: YoutubePlayerState[]) {
-		return new Promise((resolve, reject)=>{
+		return new Promise<void>((resolve, reject)=>{
 			this.AddStateListener((state, removeListener)=>{
 				if (waitForStates.Contains(state)) {
 					resolve();

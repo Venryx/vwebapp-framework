@@ -151,7 +151,7 @@ export class SpeechRecognizer {
 	}
 	async StopRecognizing() {
 		// todo: make so this insta-resolves if recording never started in the first place (eg. when on non-https domain)
-		return new Promise((resolve, reject)=>{
+		return new Promise<void>((resolve, reject)=>{
 			this.userStopInProgress = true;
 			const onEndListener = ()=>{
 				resolve();

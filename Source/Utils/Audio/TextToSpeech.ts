@@ -41,7 +41,7 @@ export type SpeakInfo = {
 export class TextSpeaker {
 	speaking = false;
 	Speak(info: SpeakInfo, stopOtherSpeech = true) {
-		return new Promise((resolve, reject)=>{
+		return new Promise<void>((resolve, reject)=>{
 			if (g.speechSynthesis == null) return reject(new Error("Speech-synthesis not supported."));
 			const voice = GetVoices().find(a=>a.name == info.voice);
 			//Assert(voice != null, `Could not find voice named "${info.voice}".`);
