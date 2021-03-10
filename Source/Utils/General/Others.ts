@@ -12,7 +12,7 @@ export function GetUpdates(oldData, newData, useJSONCompare = false, useNullInst
 			}
 		}
 	}*/
-	const result = GetPropChanges(oldData, newData, false, useJSONCompare).ToMap(a=>a.key, a=>a.newVal);
+	const result = GetPropChanges(oldData, newData, false, useJSONCompare).ToMapObj(a=>a.key, a=>a.newVal);
 	if (useNullInsteadOfUndefined) {
 		result.Pairs().filter(a=>a.value === undefined).forEach(a=>result[a.key] = null);
 	}

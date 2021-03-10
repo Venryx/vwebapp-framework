@@ -39,15 +39,15 @@
 	"devDependencies": {
 		"codemirror": "^5.54.0",
 		"firebase": "^7.23.0",
-		"js-vextensions": "^1.0.44",
+		"js-vextensions": "^1.0.50",
 		"mobx": "^5.15.4",
-		"mobx-firelink": "~1.0.48",
+		"mobx-firelink": "^1.0.60",
 		"mobx-react": "^6.3.1",
 		"raven-js": "^3.27.0",
 		"react": "^16.11.0",
 		"react-beautiful-dnd": "^13.0.0",
 		"react-dom": "^16.7.0",
-		"react-vcomponents": "^1.0.22",
+		"react-vcomponents": "^1.0.27",
 		"react-vextensions": "^1.0.5",
 		"react-vscrollview": "~1.0.0",
 		"webpack-runtime-require": "~0.3.1"

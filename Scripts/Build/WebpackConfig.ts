@@ -52,7 +52,7 @@ function GetAliases(opt: CreateWebpackConfig_Options) {
 	//const map = {};
 
 	const flatList_existent = flatList.filter(a=>fs.existsSync(paths.base("node_modules", a)));
-	return CE(flatList_existent).ToMap(name=>name, name=>paths.base("node_modules", name));
+	return CE(flatList_existent).ToMapObj(name=>name, name=>paths.base("node_modules", name));
 }
 
 
