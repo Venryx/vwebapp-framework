@@ -2,6 +2,8 @@
 
 The framework code for my web-apps, collected into a library for easy reuse.
 
+> MOVED: https://github.com/Venryx/web-vcore
+
 ### Installation
 
 ```
